@@ -3,3 +3,6 @@ docs.json
 __dummy.html
 *.o
 *.obj
+tests/base/base
+*.a
+**/**/dub.selections.json

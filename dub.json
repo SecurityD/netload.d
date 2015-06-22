@@ -4,6 +4,7 @@
 	"copyright": "Copyright © 2015, main",
 	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer"],
 	"dependencies": {
-		
-	}
+
+	},
+	"targetType": "library"
 }

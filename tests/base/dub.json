@@ -1,0 +1,10 @@
+{
+	"name": "base",
+	"description": "Base test for netload.",
+	"dependencies": {
+		"netload.d": {
+			"version": "~master",
+			"path": "../../"
+		}
+	}
+}
