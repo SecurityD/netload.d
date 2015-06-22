@@ -4,7 +4,7 @@
 	"copyright": "Copyright © 2015, main",
 	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer"],
 	"dependencies": {
-
+		"vibe-d": ">=0.7.24-beta.1"
 	},
 	"targetType": "library"
 }
