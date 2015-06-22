@@ -7,7 +7,7 @@ interface Protocol {
     void prepare();
     Json toJson();
     void fromJson(Json json);
-    byte[] toBytes();
-    void fromBytes(byte[]);
+    ubyte[] toBytes();
+    void fromBytes(ubyte[]);
     string toString();
 }

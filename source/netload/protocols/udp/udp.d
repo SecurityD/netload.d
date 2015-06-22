@@ -2,6 +2,7 @@ module netload.protocols.udp;
 
 import netload.core.protocol;
 import vibe.data.json;
+import std.bitmanip;
 
 class UDP : Protocol {
   public:
@@ -35,11 +36,22 @@ class UDP : Protocol {
 
     }
 
-    byte[] toBytes() {
-      return null;
+    ubyte[] toBytes() {
+      ubyte[] packet = new ubyte[8];
+      packet.write!ushort(_srcPort, 0);
+      packet.write!ushort(_destPort, 2);
+      packet.write!ushort(_length, 4);
+      packet.write!ushort(_checksum, 6);
+      return packet;
     }
 
-    void fromBytes(byte[]) {
+    unittest {
+      import std.stdio;
+      auto packet = new UDP(8000, 7000);
+      auto bytes = packet.toBytes;
+    }
+
+    void fromBytes(ubyte[]) {
 
     }
 
