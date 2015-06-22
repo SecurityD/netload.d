@@ -6,3 +6,4 @@ __dummy.html
 tests/base/base
 *.a
 **/**/dub.selections.json
+__test__library__
