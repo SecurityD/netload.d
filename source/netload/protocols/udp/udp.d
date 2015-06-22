@@ -32,10 +32,6 @@ class UDP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
-    void fromJson(Json json) {
-      
-    }
-
     ubyte[] toBytes() {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_srcPort, 0);
@@ -50,23 +46,6 @@ class UDP : Protocol {
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
-    }
-
-    void fromBytes(ubyte[] encodedPacket) {
-      _srcPort = encodedPacket.read!ushort;
-      _destPort = encodedPacket.read!ushort;
-      _length = encodedPacket.read!ushort;
-      _checksum = encodedPacket.read!ushort;
-    }
-
-    unittest {
-      UDP packet = new UDP(0, 0);
-      ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
-      packet.fromBytes(encoded);
-      assert(packet.srcPort == 8000);
-      assert(packet.destPort == 7000);
-      assert(packet.length == 0);
-      assert(packet.checksum == 0);
     }
 
     override string toString() {
@@ -95,4 +74,40 @@ class UDP : Protocol {
       ushort _destPort = 0;
       ushort _length = 0;
       ushort _checksum = 0;
+}
+
+UDP toUDP(Json json) {
+  UDP packet = new UDP(json.src_port.to!ushort, json.dest_port.to!ushort);
+  packet.length = json.len.to!ushort;
+  packet.checksum = json.checksum.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.src_port = 8000;
+  json.dest_port = 7000;
+  json.len = 0;
+  json.checksum = 0;
+  UDP packet = toUDP(json);
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.length == 0);
+  assert(packet.checksum == 0);
+}
+
+UDP toUDP(ubyte[] encodedPacket) {
+  UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
+  packet.length = encodedPacket.read!ushort;
+  packet.checksum = encodedPacket.read!ushort;
+  return packet;
+}
+
+unittest {
+  ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
+  UDP packet = encoded.toUDP;
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.length == 0);
+  assert(packet.checksum == 0);
 }
