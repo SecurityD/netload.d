@@ -1,0 +1,9 @@
+{
+	"name": "netload.d",
+	"description": "Packet manipulation framework for D Language",
+	"copyright": "Copyright © 2015, main",
+	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer"],
+	"dependencies": {
+		
+	}
+}
