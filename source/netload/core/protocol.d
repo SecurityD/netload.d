@@ -6,8 +6,6 @@ interface Protocol {
     @property Protocol data();
     void prepare();
     Json toJson();
-    void fromJson(Json json);
-    byte[] toBytes();
-    void fromBytes(byte[]);
+    ubyte[] toBytes();
     string toString();
 }
