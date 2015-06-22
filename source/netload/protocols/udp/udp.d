@@ -49,6 +49,7 @@ class UDP : Protocol {
       import std.stdio;
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
+      assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
     }
 
     void fromBytes(ubyte[]) {
