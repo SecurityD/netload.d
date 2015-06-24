@@ -363,6 +363,13 @@ class DNSQR : Protocol {
       assert(packet.toString == `{"qname":"google.fr","qtype":1,"qclass":1}`);
     }
 
+    @property string qname() { return _qname; }
+    @property void qname(string qname) { _qname = qname; }
+    @property string qtype() { return _qtype; }
+    @property void qtype(ushort qtype) { _qtype = qtype; }
+    @property string qclass() { return _qclass; }
+    @property void qclass(ushort qclass) { _qclass = qclass; }
+
   private:
     Protocol _data;
     string _qname = ".";
