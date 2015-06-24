@@ -33,10 +33,10 @@ union BitFields {
     bool, "rd", 1,
     bool, "tc", 1,
     bool, "aa", 1,
-    uint, "opcode", 4,
+    ubyte, "opcode", 4,
     bool, "qr", 1,
-    uint, "rcode", 4,
-    uint, "z", 3,
+    ubyte, "rcode", 4,
+    ubyte, "z", 3,
     bool, "ra", 1
     ));
   };
@@ -135,8 +135,8 @@ class DNS : Protocol {
 
     @property bool qr() { return _bits.qr; }
     @property void qr(bool qr) { _bits.qr = qr; }
-    @property uint opcode() { return _bits.opcode; }
-    @property void opcode(uint opcode) { _bits.opcode = opcode; }
+    @property ubyte opcode() { return _bits.opcode; }
+    @property void opcode(ubyte opcode) { _bits.opcode = opcode; }
     @property bool aa() { return _bits.aa; }
     @property void aa(bool aa) { _bits.aa = aa; }
     @property bool tc() { return _bits.tc; }
@@ -145,10 +145,10 @@ class DNS : Protocol {
     @property void rd(bool rd) { _bits.rd = rd; }
     @property bool ra() { return _bits.ra; }
     @property void ra(bool ra) { _bits.ra = ra; }
-    @property uint z() { return _bits.z; }
-    @property void z(uint z) { _bits.z = z; }
-    @property uint rcode() { return _bits.rcode; }
-    @property void rcode(uint rcode) { _bits.rcode = rcode; }
+    @property ubyte z() { return _bits.z; }
+    @property void z(ubyte z) { _bits.z = z; }
+    @property ubyte rcode() { return _bits.rcode; }
+    @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 
   private:
     Protocol _data;
@@ -162,7 +162,7 @@ class DNS : Protocol {
 
 class DNSQuery : DNS {
   public:
-    this(ushort id, bool truncation, uint opcode, bool recDesired) {
+    this(ushort id, bool truncation, ubyte opcode, bool recDesired) {
       super(id, truncation);
       _bits.opcode = opcode;
       _bits.rd = recDesired;
@@ -174,15 +174,15 @@ class DNSQuery : DNS {
   @disable override @property void aa(bool aa) { _bits.aa = aa; }
   @disable override @property bool ra() { return _bits.ra; }
   @disable override @property void ra(bool ra) { _bits.ra = ra; }
-  @disable override @property uint z() { return _bits.z; }
-  @disable override @property void z(uint z) { _bits.z = z; }
-  @disable override @property uint rcode() { return _bits.rcode; }
-  @disable override @property void rcode(uint rcode) { _bits.rcode = rcode; }
+  @disable override @property ubyte z() { return _bits.z; }
+  @disable override @property void z(ubyte z) { _bits.z = z; }
+  @disable override @property ubyte rcode() { return _bits.rcode; }
+  @disable override @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 }
 
 class DNSResponse : DNS {
   public:
-    this(ushort id, bool truncation, bool authAnswer, bool recAvail, uint rcode) {
+    this(ushort id, bool truncation, bool authAnswer, bool recAvail, ubyte rcode) {
       super(id, truncation);
       _bits.qr = 1;
       _bits.aa = authAnswer;
@@ -192,12 +192,12 @@ class DNSResponse : DNS {
 
     @disable override @property bool qr() { return _bits.qr; }
     @disable override @property void qr(bool qr) { _bits.qr = qr; }
-    @disable override @property uint opcode() { return _bits.opcode; }
-    @disable override @property void opcode(uint opcode) { _bits.opcode = opcode; }
+    @disable override @property ubyte opcode() { return _bits.opcode; }
+    @disable override @property void opcode(ubyte opcode) { _bits.opcode = opcode; }
     @disable override @property bool rd() { return _bits.rd; }
     @disable override @property void rd(bool rd) { _bits.rd = rd; }
-    @disable override @property uint z() { return _bits.z; }
-    @disable override @property void z(uint z) { _bits.z = z; }
+    @disable override @property ubyte z() { return _bits.z; }
+    @disable override @property void z(ubyte z) { _bits.z = z; }
 }
 
 enum QType {
@@ -365,9 +365,9 @@ class DNSQR : Protocol {
 
     @property string qname() { return _qname; }
     @property void qname(string qname) { _qname = qname; }
-    @property string qtype() { return _qtype; }
+    @property ushort qtype() { return _qtype; }
     @property void qtype(ushort qtype) { _qtype = qtype; }
-    @property string qclass() { return _qclass; }
+    @property ushort qclass() { return _qclass; }
     @property void qclass(ushort qclass) { _qclass = qclass; }
 
   private:
@@ -384,12 +384,12 @@ DNS toDNS(Json json) {
   packet.nscount = json.nscount.to!ushort;
   packet.arcount = json.arcount.to!ushort;
   packet.qr = json.qr.to!bool;
-  packet.opcode = json.opcode.to!uint;
+  packet.opcode = json.opcode.to!ubyte;
   packet.aa = json.auth_answer.to!bool;
   packet.rd = json.record_desired.to!bool;
   packet.ra = json.record_available.to!bool;
-  packet.z = json.zero.to!uint;
-  packet.rcode = json.rcode.to!uint;
+  packet.z = json.zero.to!ubyte;
+  packet.rcode = json.rcode.to!ubyte;
   return packet;
 }
 
@@ -467,7 +467,7 @@ unittest {
 }
 
 DNSQuery toDNSQuery(Json json) {
-  DNSQuery packet = new DNSQuery(json.id.to!ushort, json.truncation.to!bool, json.opcode.to!uint, json.record_desired.to!bool);
+  DNSQuery packet = new DNSQuery(json.id.to!ushort, json.truncation.to!bool, json.opcode.to!ubyte, json.record_desired.to!bool);
   packet.qdcount = json.qdcount.to!ushort;
   packet.ancount = json.ancount.to!ushort;
   packet.nscount = json.nscount.to!ushort;
@@ -533,7 +533,7 @@ unittest {
 
 
 DNSResponse toDNSResponse(Json json) {
-  DNSResponse packet = new DNSResponse(json.id.to!ushort, json.truncation.to!bool, json.auth_answer.to!bool, json.record_available.to!bool, json.rcode.to!uint);
+  DNSResponse packet = new DNSResponse(json.id.to!ushort, json.truncation.to!bool, json.auth_answer.to!bool, json.record_available.to!bool, json.rcode.to!ubyte);
   packet.qdcount = json.qdcount.to!ushort;
   packet.ancount = json.ancount.to!ushort;
   packet.nscount = json.nscount.to!ushort;
