@@ -5,16 +5,16 @@ import vibe.data.json;
 import std.bitmanip;
 
 union BitFields {
-  ushort raw;
+  ubyte[2] raw;
   mixin(bitfields!(
-    bool, "qr", 1,
-    uint, "opcode", 4,
-    bool, "aa", 1,
-    bool, "tc", 1,
     bool, "rd", 1,
-    bool, "ra", 1,
+    bool, "tc", 1,
+    bool, "aa", 1,
+    uint, "opcode", 4,
+    bool, "qr", 1,
+    uint, "rcode", 4,
     uint, "z", 3,
-    uint, "rcode", 4
+    bool, "ra", 1
     ));
   };
 
@@ -66,7 +66,8 @@ class DNS : Protocol {
     ubyte[] toBytes() {
       ubyte[] packet = new ubyte[12];
       packet.write!ushort(_id, 0);
-      packet.write!ushort(_bits.raw, 2);
+      packet.write!ubyte(_bits.raw[0], 2);
+      packet.write!ubyte(_bits.raw[1], 3);
       packet.write!ushort(_qdcount, 4);
       packet.write!ushort(_ancount, 6);
       packet.write!ushort(_nscount, 8);
@@ -77,8 +78,15 @@ class DNS : Protocol {
     unittest {
       import std.stdio;
       auto packet = new DNS(10, 1);
+      packet.rd = 1;
+      packet.aa = 1;
+      packet.opcode = 3;
+      packet.qr = 1;
+      packet.rcode = 2;
+      packet.z = 0;
+      packet.ra = 1;
       auto bytes = packet.toBytes;
-      assert(bytes == [0, 10, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0]);
+      assert(bytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
     override string toString() {
@@ -219,7 +227,8 @@ unittest {
 DNS toDNS(ubyte[] encodedPacket) {
   BitFields bits;
   ushort id = encodedPacket.read!ushort();
-  bits.raw = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
   ushort qdcount = encodedPacket.read!ushort();
   ushort ancount = encodedPacket.read!ushort();
   ushort nscount = encodedPacket.read!ushort();
@@ -240,21 +249,21 @@ DNS toDNS(ubyte[] encodedPacket) {
 }
 
 unittest {
-  ubyte[] encoded = [0, 10, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0];
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNS packet = encoded.toDNS;
   assert(packet.id == 10);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
   assert(packet.nscount == 0);
   assert(packet.arcount == 0);
-  assert(packet.qr == false);
-  assert(packet.opcode == 0);
-  assert(packet.aa == false);
-  assert(packet.rd == false);
+  assert(packet.qr == true);
+  assert(packet.opcode == 3);
+  assert(packet.aa == true);
+  assert(packet.rd == true);
   assert(packet.tc == true);
-  assert(packet.ra == false);
+  assert(packet.ra == true);
   assert(packet.z == 0);
-  assert(packet.rcode == 0);
+  assert(packet.rcode == 2);
 }
 
 DNSQuery toDNSQuery(Json json) {
@@ -295,7 +304,8 @@ unittest {
 DNSQuery toDNSQuery(ubyte[] encodedPacket) {
   BitFields bits;
   ushort id = encodedPacket.read!ushort();
-  bits.raw = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
   ushort qdcount = encodedPacket.read!ushort();
   ushort ancount = encodedPacket.read!ushort();
   ushort nscount = encodedPacket.read!ushort();
@@ -309,15 +319,15 @@ DNSQuery toDNSQuery(ubyte[] encodedPacket) {
 }
 
 unittest {
-  ubyte[] encoded = [0, 10, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0];
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNSQuery packet = encoded.toDNSQuery;
   assert(packet.id == 10);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
   assert(packet.nscount == 0);
   assert(packet.arcount == 0);
-  assert(packet.opcode == 0);
-  assert(packet.rd == false);
+  assert(packet.opcode == 3);
+  assert(packet.rd == true);
   assert(packet.tc == true);
 }
 
@@ -361,7 +371,8 @@ unittest {
 DNSResponse toDNSResponse(ubyte[] encodedPacket) {
   BitFields bits;
   ushort id = encodedPacket.read!ushort();
-  bits.raw = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
   ushort qdcount = encodedPacket.read!ushort();
   ushort ancount = encodedPacket.read!ushort();
   ushort nscount = encodedPacket.read!ushort();
@@ -375,15 +386,15 @@ DNSResponse toDNSResponse(ubyte[] encodedPacket) {
 }
 
 unittest {
-  ubyte[] encoded = [0, 10, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0];
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNS packet = encoded.toDNS;
   assert(packet.id == 10);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
   assert(packet.nscount == 0);
   assert(packet.arcount == 0);
-  assert(packet.aa == false);
+  assert(packet.aa == true);
   assert(packet.tc == true);
-  assert(packet.ra == false);
-  assert(packet.rcode == 0);
+  assert(packet.ra == true);
+  assert(packet.rcode == 2);
 }
