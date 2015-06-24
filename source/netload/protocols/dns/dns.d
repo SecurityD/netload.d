@@ -4,6 +4,28 @@ import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
 
+enum OpCode {
+  QUERY = 0,
+  IQUERY = 1,
+  STATUS = 2,
+  NOTIFY = 4,
+  UPDATE = 5
+};
+
+enum RCode {
+  NO_ERROR = 0,
+  FORMAT_ERROR = 1,
+  SERVER_FAILURE = 2,
+  NAME_ERROR = 3,
+  NOT_IMPLEMENTED = 4,
+  REFUSED = 5,
+  YX_DOMAIN = 6,
+  XY_RR_SET = 7,
+  NX_RR_SET = 8,
+  NOT_AUTH = 9,
+  NOT_ZONE = 10
+};
+
 union BitFields {
   ubyte[2] raw;
   mixin(bitfields!(
