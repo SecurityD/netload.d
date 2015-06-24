@@ -78,7 +78,9 @@ class TCP : Protocol {
     }
 
     unittest {
-
+      import std.stdio;
+      TCP packet = new TCP(8000, 7000);
+      writeln(packet.toBytes);
     }
 
     override string toString() {
@@ -87,7 +89,7 @@ class TCP : Protocol {
 
     unittest {
       TCP packet = new TCP(8000, 7000);
-      assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":0}`);
+      assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":8192}`);
     }
 
     @property ushort srcPort() { return _srcPort; }
@@ -130,7 +132,7 @@ class TCP : Protocol {
     uint _sequenceNumber = 0;
     uint _ackNumber = 0;
     FlagsAndOffset _flagsAndOffset;
-    ushort _window = 0;
+    ushort _window = 8192;
     ushort _checksum = 0;
     ushort _urgPtr = 0;
 }
