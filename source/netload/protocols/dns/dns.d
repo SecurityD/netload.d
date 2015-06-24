@@ -3,6 +3,7 @@ module netload.protocols.dns;
 import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
+import std.string;
 
 enum OpCode {
   QUERY = 0,
@@ -197,6 +198,176 @@ class DNSResponse : DNS {
     @disable override @property void rd(bool rd) { _bits.rd = rd; }
     @disable override @property uint z() { return _bits.z; }
     @disable override @property void z(uint z) { _bits.z = z; }
+}
+
+enum QType {
+  A	= 1,
+  NS = 2,
+  MD = 3,
+  MF = 4,
+  CNAME = 5,
+  SOA = 6,
+  MB = 7,
+  MG = 8,
+  MR = 9,
+  NULL = 10,
+  WKS = 11,
+  PTR = 12,
+  HINFO = 13,
+  MINFO = 14,
+  MX = 15,
+  TXT = 16,
+  RP = 17,
+  AFSDB = 18,
+  X25 = 19,
+  ISDN = 20,
+  RT = 21,
+  NSAP = 22,
+  NSAP_PTR = 23,
+  SIG = 24,
+  KEY = 25,
+  PX = 26,
+  GPOS = 27,
+  AAAA = 28,
+  LOC = 29,
+  NXT = 30,
+  EID = 31,
+  NIMLOC = 32,
+  SRV = 33,
+  ATMA = 34,
+  NAPTR = 35,
+  KX = 36,
+  CERT = 37,
+  A6 = 38,
+  DNAME = 39,
+  SINK = 40,
+  OPT = 41,
+  APL = 42,
+  DS = 43,
+  SSHFP = 44,
+  IPSECKEY = 45,
+  RRSIG = 46,
+  NSEC = 47,
+  DNSKEY = 48,
+  DHCID = 49,
+  NSEC3 = 50,
+  NSEC3PARAM = 51,
+  TLSA = 52,
+  HIP = 55,
+  NINFO = 56,
+  RKEY = 57,
+  TALINK = 58,
+  CDS = 59,
+  CDNSKEY = 60,
+  OPENPGPKEY = 61,
+  CSYNC = 62,
+  SPF = 99,
+  UINFO = 100,
+  UID = 101,
+  GID = 102,
+  UNSPEC = 103,
+  NID = 104,
+  L32 = 105,
+  L64 = 106,
+  LP = 107,
+  EUI48 =108,
+  EUI64 = 109,
+  TKEY = 249,
+  TSIG = 250,
+  IXFR = 251,
+  AXFR = 252,
+  MAILB	= 253,
+  MAILA	 =254,
+  QTYPE_ANY =	255,
+  URI = 256,
+  CAA = 257,
+  TA = 32768,
+  DLV = 32769
+}
+
+enum QClass {
+  IN = 1,
+  CH = 3,
+  HS = 4,
+  NONE = 254,
+  QCLASS_ANY = 255
+}
+
+class DNSQR : Protocol {
+  public:
+    this () {}
+
+    this (string qname, ushort qtype, ushort qclass) {
+      _qname = qname;
+      _qtype = qtype;
+      _qclass = qclass;
+    }
+
+    @property Protocol data() { return _data; }
+
+    void prepare() {
+
+    }
+
+    Json toJson() {
+      Json packet = Json.emptyObject;
+      packet.qname = _qname;
+      packet.qtype = _qtype;
+      packet.qclass = _qclass;
+      return packet;
+    }
+
+    unittest {
+      DNSQR packet = new DNSQR("google.fr", QType.A, QClass.IN);
+      assert(packet.toJson().qname == "google.fr");
+      assert(packet.toJson().qtype == 1);
+      assert(packet.toJson().qclass == 1);
+    }
+
+    ubyte[] toBytes() {
+      ubyte[] packet = new ubyte[6 + _qname.length];
+
+      ubyte[] b = cast(ubyte[])_qname;
+      ubyte len = 0;
+      ubyte idx;
+      for (idx = 1; idx <= _qname.length; idx++) {
+        if (b[idx - 1] != '.') {
+          packet.write!ubyte(b[idx - 1], idx);
+          ++len;
+        }
+        else {
+          packet.write!ubyte(len, idx - len - 1);
+          len = 0;
+        }
+      }
+      if (idx != 1)
+        packet.write!ubyte(len, idx - len - 1);
+      packet.write!ubyte(0, idx);
+      packet.write!ushort(_qtype, (2 + _qname.length));
+      packet.write!ushort(_qclass, (4 + _qname.length));
+      return packet;
+    }
+
+    unittest {
+      auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
+      auto bytes = packet.toBytes;
+      assert(bytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 01, 00, 01]);
+    }
+
+    override string toString() {
+      return toJson().toString;
+    }
+
+    unittest {
+      auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
+      assert(packet.toString == `{"qname":"google.fr","qtype":1,"qclass":1}`);
+    }
+
+  private:
+    Protocol _data;
+    string _qname = ".";
+    ushort _qtype = 1;
+    ushort _qclass = 1;
 }
 
 DNS toDNS(Json json) {
