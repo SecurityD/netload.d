@@ -78,9 +78,8 @@ class TCP : Protocol {
     }
 
     unittest {
-      import std.stdio;
       TCP packet = new TCP(8000, 7000);
-      writeln(packet.toBytes);
+      assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0]);
     }
 
     override string toString() {
@@ -160,7 +159,11 @@ TCP toTCP(ubyte[] encoded) {
 }
 
 unittest {
-
+  ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
+  TCP packet = encoded.toTCP;
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.window == 8192);
 }
 
 TCP toTCP(Json json) {
