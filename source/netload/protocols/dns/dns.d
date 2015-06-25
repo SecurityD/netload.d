@@ -576,6 +576,21 @@ class DNSSOAResource  : Protocol{
       assert(packet.toString == `{"minTtl":86420,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
     }
 
+    @property string primary() { return _primary; }
+    @property void primary(string primary) { _primary = primary; }
+    @property string admin() { return _admin; }
+    @property void admin(string admin) { _admin = admin; }
+    @property uint serial() { return _serial; }
+    @property void serial(uint serial) { _serial = serial; }
+    @property uint refresh() { return _refresh; }
+    @property void refresh(uint refresh) { _refresh = refresh; }
+    @property uint retry() { return _retry; }
+    @property void retry(uint retry) { _retry = retry; }
+    @property uint expirationLimit() { return _expirationLimit; }
+    @property void expirationLimit(uint expirationLimit) { _expirationLimit = expirationLimit; }
+    @property uint minTtl() { return _minTtl; }
+    @property void minTtl(uint minTtl) { _minTtl = minTtl; }
+
   private:
     Protocol _data;
     string _primary = ".";
