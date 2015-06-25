@@ -626,6 +626,59 @@ class DNSMXResource : Protocol {
     string _name = ".";
 }
 
+class DNSAResource : Protocol {
+  public:
+    this() {}
+
+    this(uint ip) {
+      _ip = ip;
+    }
+
+    @property Protocol data() { return _data; }
+
+    void prepare() {
+
+    }
+
+    Json toJson() {
+      Json packet = Json.emptyObject;
+      packet.ip = _ip;
+      return packet;
+    }
+
+    unittest {
+      DNSAResource packet = new DNSAResource();
+      assert(packet.toJson.ip == 2130706433);
+    }
+
+    ubyte[] toBytes() {
+      ubyte[] packet = new ubyte[4];
+      packet.write!uint(_ip, 0);
+      return packet;
+    }
+
+    unittest {
+      DNSAResource packet = new DNSAResource();
+      assert(packet.toBytes == [127, 0, 0, 1]);
+    }
+
+    override string toString() {
+      return toJson.toString;
+    }
+
+    unittest {
+      DNSAResource packet = new DNSAResource();
+      assert(packet.toString == `{"ip":2130706433}`);
+    }
+
+    @property uint ip() { return _ip; }
+    @property void ip(uint ip) { _ip = ip; }
+
+  private:
+    Protocol _data;
+    uint _ip = 2130706433;
+}
+
 DNS toDNS(Json json) {
   DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
   packet.qdcount = json.qdcount.to!ushort;
