@@ -162,6 +162,95 @@ class DNS : Protocol {
     ushort _arcount = 0;
 }
 
+DNS toDNS(Json json) {
+  DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
+  packet.qdcount = json.qdcount.to!ushort;
+  packet.ancount = json.ancount.to!ushort;
+  packet.nscount = json.nscount.to!ushort;
+  packet.arcount = json.arcount.to!ushort;
+  packet.qr = json.qr.to!bool;
+  packet.opcode = json.opcode.to!ubyte;
+  packet.aa = json.auth_answer.to!bool;
+  packet.rd = json.record_desired.to!bool;
+  packet.ra = json.record_available.to!bool;
+  packet.z = json.zero.to!ubyte;
+  packet.rcode = json.rcode.to!ubyte;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNS packet = toDNS(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.qr == false);
+  assert(packet.opcode == 0);
+  assert(packet.aa == false);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.z == 0);
+  assert(packet.rcode == 0);
+}
+
+DNS toDNS(ubyte[] encodedPacket) {
+  BitFields bits;
+  ushort id = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
+  ushort qdcount = encodedPacket.read!ushort();
+  ushort ancount = encodedPacket.read!ushort();
+  ushort nscount = encodedPacket.read!ushort();
+  ushort arcount = encodedPacket.read!ushort();
+  DNS packet = new DNS(id, bits.tc);
+  packet.qdcount = qdcount;
+  packet.ancount = ancount;
+  packet.nscount = nscount;
+  packet.arcount = arcount;
+  packet.qr = bits.qr;
+  packet.opcode = bits.opcode;
+  packet.aa = bits.aa;
+  packet.rd = bits.rd;
+  packet.ra = bits.ra;
+  packet.z = bits.z;
+  packet.rcode =  bits.rcode;
+  return packet;
+}
+
+unittest {
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
+  DNS packet = encoded.toDNS;
+  assert(packet.id == 10);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.qr == true);
+  assert(packet.opcode == 3);
+  assert(packet.aa == true);
+  assert(packet.rd == true);
+  assert(packet.tc == true);
+  assert(packet.ra == true);
+  assert(packet.z == 0);
+  assert(packet.rcode == 2);
+}
+
 class DNSQuery : DNS {
   public:
     this(ushort id, bool truncation, ubyte opcode, bool recDesired) {
@@ -182,6 +271,71 @@ class DNSQuery : DNS {
   @disable override @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 }
 
+DNSQuery toDNSQuery(Json json) {
+  DNSQuery packet = new DNSQuery(json.id.to!ushort, json.truncation.to!bool, json.opcode.to!ubyte, json.record_desired.to!bool);
+  packet.qdcount = json.qdcount.to!ushort;
+  packet.ancount = json.ancount.to!ushort;
+  packet.nscount = json.nscount.to!ushort;
+  packet.arcount = json.arcount.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 1;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = true;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNSQuery packet = toDNSQuery(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.opcode == 1);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+}
+
+DNSQuery toDNSQuery(ubyte[] encodedPacket) {
+  BitFields bits;
+  ushort id = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
+  ushort qdcount = encodedPacket.read!ushort();
+  ushort ancount = encodedPacket.read!ushort();
+  ushort nscount = encodedPacket.read!ushort();
+  ushort arcount = encodedPacket.read!ushort();
+  DNSQuery packet = new DNSQuery(id, bits.tc, bits.opcode, bits.rd);
+  packet.qdcount = qdcount;
+  packet.ancount = ancount;
+  packet.nscount = nscount;
+  packet.arcount = arcount;
+  return packet;
+}
+
+unittest {
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
+  DNSQuery packet = encoded.toDNSQuery;
+  assert(packet.id == 10);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.opcode == 3);
+  assert(packet.rd == true);
+  assert(packet.tc == true);
+}
+
 class DNSResource : DNS {
   public:
     this(ushort id, bool truncation, bool authAnswer, bool recAvail, ubyte rcode) {
@@ -200,6 +354,73 @@ class DNSResource : DNS {
     @disable override @property void rd(bool rd) { _bits.rd = rd; }
     @disable override @property ubyte z() { return _bits.z; }
     @disable override @property void z(ubyte z) { _bits.z = z; }
+}
+
+DNSResource toDNSResource(Json json) {
+  DNSResource packet = new DNSResource(json.id.to!ushort, json.truncation.to!bool, json.auth_answer.to!bool, json.record_available.to!bool, json.rcode.to!ubyte);
+  packet.qdcount = json.qdcount.to!ushort;
+  packet.ancount = json.ancount.to!ushort;
+  packet.nscount = json.nscount.to!ushort;
+  packet.arcount = json.arcount.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNSResource packet = toDNSResource(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.aa == false);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.rcode == 0);
+}
+
+DNSResource toDNSResource(ubyte[] encodedPacket) {
+  BitFields bits;
+  ushort id = encodedPacket.read!ushort();
+  bits.raw[0] = encodedPacket.read!ubyte();
+  bits.raw[1] = encodedPacket.read!ubyte();
+  ushort qdcount = encodedPacket.read!ushort();
+  ushort ancount = encodedPacket.read!ushort();
+  ushort nscount = encodedPacket.read!ushort();
+  ushort arcount = encodedPacket.read!ushort();
+  DNSResource packet = new DNSResource(id, bits.tc, bits.aa, bits.ra, bits.rcode);
+  packet.qdcount = qdcount;
+  packet.ancount = ancount;
+  packet.nscount = nscount;
+  packet.arcount = arcount;
+  return packet;
+}
+
+unittest {
+  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
+  DNSResource packet = encoded.toDNSResource;
+  assert(packet.id == 10);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.aa == true);
+  assert(packet.tc == true);
+  assert(packet.ra == true);
+  assert(packet.rcode == 2);
 }
 
 enum QType {
@@ -295,7 +516,7 @@ enum QClass {
   ANY = 255
 }
 
-uint handleLabels(in uint pos, in string src, ref ubyte[] dest) {
+uint writeLabels(in uint pos, in string src, ref ubyte[] dest) {
   ubyte[] b = cast(ubyte[])src;
   ubyte len = 0;
   uint idx = 0;
@@ -312,6 +533,21 @@ uint handleLabels(in uint pos, in string src, ref ubyte[] dest) {
   if (len != 0)
     dest.write!ubyte(len, idx + pos - len);
   return (idx + 1);
+}
+
+string readLabels(ref ubyte[] encodedPacket) {
+  ubyte[] buffer;
+  ubyte len = encodedPacket.read!ubyte();
+  while (len != 0) {
+    buffer ~= encodedPacket.read!ubyte();
+    len--;
+    if (len == 0) {
+      len = encodedPacket.read!ubyte();
+      if (len != 0)
+        buffer ~= '.';
+    }
+  }
+  return (cast(string)buffer);
 }
 
 class DNSQR : Protocol {
@@ -349,7 +585,7 @@ class DNSQR : Protocol {
       ulong inc = (_qname.length > 1 ? _qname.length + 1 : 0);
       ubyte[] packet = new ubyte[5 + inc];
 
-      handleLabels(0, _qname, packet);
+      writeLabels(0, _qname, packet);
       packet.write!ushort(_qtype, (1 + inc));
       packet.write!ushort(_qclass, (3 + inc));
       return packet;
@@ -382,6 +618,37 @@ class DNSQR : Protocol {
     string _qname = ".";
     ushort _qtype = 1;
     ushort _qclass = 1;
+}
+
+DNSQR toDNSQR(Json json) {
+  return (new DNSQR(json.qname.to!string, json.qtype.to!ushort, json.qclass.to!ushort));
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qname = "google.fr";
+  json.qtype = QType.A;
+  json.qclass = QClass.IN;
+  DNSQR packet = toDNSQR(json);
+  assert(packet.qname == "google.fr");
+  assert(packet.qtype == 1);
+  assert(packet.qclass == 1);
+}
+
+DNSQR toDNSQR(ubyte[] encodedPacket) {
+  DNSQR packet = new DNSQR();
+  packet.qname = readLabels(encodedPacket);
+  packet.qtype = encodedPacket.read!ushort();
+  packet.qclass = encodedPacket.read!ushort();
+  return (packet);
+}
+
+unittest {
+  ubyte[] arr = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 00, 1];
+  DNSQR packet = arr.toDNSQR;
+  assert(packet.qname == "google.fr");
+  assert(packet.qtype == 1);
+  assert(packet.qclass == 1);
 }
 
 class DNSRR : Protocol {
@@ -424,7 +691,7 @@ class DNSRR : Protocol {
       ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
       ubyte[] packet = new ubyte[11 + inc];
 
-      handleLabels(0, _name, packet);
+      writeLabels(0, _name, packet);
       packet.write!ushort(_rtype, (1 + inc));
       packet.write!ushort(_rclass, (3 + inc));
       packet.write!uint(_ttl, (5 + inc));
@@ -464,6 +731,47 @@ class DNSRR : Protocol {
     ushort _rclass = 1;
     uint _ttl = 0;
     ushort _rdlength = 0;
+}
+
+DNSRR toDNSRR(Json json) {
+  DNSRR packet = new DNSRR(json.name.to!string, json.rtype.to!ushort, json.rclass.to!ushort, json.ttl.to!uint);
+  packet.rdlength = json.rdlength.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.name = "google.fr";
+  json.rtype = QType.A;
+  json.rclass = QClass.IN;
+  json.ttl = 600;
+  json.rdlength = 10;
+  DNSRR packet = toDNSRR(json);
+  assert(packet.name == "google.fr");
+  assert(packet.rtype == 1);
+  assert(packet.rclass == 1);
+  assert(packet.ttl == 600);
+  assert(packet.rdlength == 10);
+}
+
+DNSRR toDNSRR(ubyte[] encodedPacket) {
+  DNSRR packet = new DNSRR();
+  packet.name = readLabels(encodedPacket);
+  packet.rtype = encodedPacket.read!ushort();
+  packet.rclass = encodedPacket.read!ushort();
+  packet.ttl = encodedPacket.read!uint();
+  packet.rdlength = encodedPacket.read!ushort();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1, 0, 0, 9, 196, 0, 0];
+  DNSRR packet = encodedPacket.toDNSRR;
+  assert(packet.name == "google.fr");
+  assert(packet.rtype == 1);
+  assert(packet.rclass == 1);
+  assert(packet.ttl == 2500);
+  assert(packet.rdlength == 0);
 }
 
 class DNSSOAResource  : Protocol{
@@ -514,8 +822,8 @@ class DNSSOAResource  : Protocol{
       ubyte[] packet = new ubyte[22 + inc];
       uint pos = 0;
 
-      pos += handleLabels(pos, _primary, packet) + 1;
-      handleLabels(pos, _admin, packet);
+      pos += writeLabels(pos, _primary, packet) + 1;
+      writeLabels(pos, _admin, packet);
       packet.write!uint(_serial, (2 + inc));
       packet.write!uint(_refresh, (6 + inc));
       packet.write!uint(_retry, (10 + inc));
@@ -564,6 +872,61 @@ class DNSSOAResource  : Protocol{
     uint _minTtl = 0;
 }
 
+DNSSOAResource toDNSSOAResource(Json json) {
+  DNSSOAResource packet = new DNSSOAResource();
+  packet.primary = json.primary.to!string;
+  packet.admin = json.admin.to!string;
+  packet.serial = json.serial.to!uint;
+  packet.refresh = json.refresh.to!uint;
+  packet.retry = json.retry.to!uint;
+  packet.expirationLimit = json.expirationLimit.to!uint;
+  packet.minTtl = json.minTtl.to!uint;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.primary = "google.fr";
+  json.admin = "admin.google.fr";
+  json.serial = 8000;
+  json.refresh = 2500;
+  json.retry = 2500;
+  json.expirationLimit = 400;
+  json.minTtl = 10;
+  DNSSOAResource packet = toDNSSOAResource(json);
+  assert(packet.primary == "google.fr");
+  assert(packet.admin == "admin.google.fr");
+  assert(packet.serial == 8000);
+  assert(packet.refresh == 2500);
+  assert(packet.retry == 2500);
+  assert(packet.expirationLimit == 400);
+  assert(packet.minTtl == 10);
+}
+
+DNSSOAResource toDNSSOAResource(ubyte[] encodedPacket) {
+  DNSSOAResource packet = new DNSSOAResource();
+  packet.primary = readLabels(encodedPacket);
+  packet.admin = readLabels(encodedPacket);
+  packet.serial = encodedPacket.read!uint();
+  packet.refresh = encodedPacket.read!uint();
+  packet.retry = encodedPacket.read!uint();
+  packet.expirationLimit = encodedPacket.read!uint();
+  packet.minTtl = encodedPacket.read!uint();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148];
+  DNSSOAResource packet = encodedPacket.toDNSSOAResource;
+  assert(packet.primary == "ch1mgt0101dc120.prdmgt01.prod.exchangelabs");
+  assert(packet.admin == "msnhst.microsoft");
+  assert(packet.serial == 1500);
+  assert(packet.refresh == 600);
+  assert(packet.retry == 600);
+  assert(packet.expirationLimit == 3500);
+  assert(packet.minTtl == 86420);
+}
+
 class DNSMXResource : Protocol {
   public:
     this() {}
@@ -597,7 +960,7 @@ class DNSMXResource : Protocol {
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
 
-      handleLabels(2, _name, packet);
+      writeLabels(2, _name, packet);
       return packet;
     }
 
@@ -624,6 +987,36 @@ class DNSMXResource : Protocol {
     Protocol _data;
     ushort _pref = 0;
     string _name = ".";
+}
+
+DNSMXResource toDNSMXResource(Json json) {
+  DNSMXResource packet = new DNSMXResource;
+  packet.pref = json.pref.to!ushort;
+  packet.name = json.name.to!string;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.pref = 1;
+  json.name = "google.fr";
+  DNSMXResource packet = toDNSMXResource(json);
+  assert(packet.pref == 1);
+  assert(packet.name == "google.fr");
+}
+
+DNSMXResource toDNSMXResource(ubyte[] encodedPacket) {
+  DNSMXResource packet = new DNSMXResource();
+  packet.pref = encodedPacket.read!ushort;
+  packet.name = readLabels(encodedPacket);
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0];
+  DNSMXResource packet = encodedPacket.toDNSMXResource;
+  assert(packet.pref == 2);
+  assert(packet.name == "google.fr");
 }
 
 class DNSAResource : Protocol {
@@ -679,6 +1072,31 @@ class DNSAResource : Protocol {
     uint _ip = 2130706433;
 }
 
+DNSAResource toDNSAResource(Json json) {
+  DNSAResource packet = new DNSAResource();
+  packet.ip = json.ip.to!uint;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.ip = 128;
+  DNSAResource packet = toDNSAResource(json);
+  assert(packet.ip == 128);
+}
+
+DNSAResource toDNSAResource(ubyte[] encodedPacket) {
+  DNSAResource packet = new DNSAResource();
+  packet.ip = encodedPacket.read!uint;
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [127, 0, 0, 1];
+  DNSAResource packet = encodedPacket.toDNSAResource;
+  assert(packet.ip == 2130706433);
+}
+
 class DNSPTRResource : Protocol {
   public:
     this() {}
@@ -707,7 +1125,7 @@ class DNSPTRResource : Protocol {
     ubyte[] toBytes() {
       ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
       ubyte[] packet = new ubyte[1 + inc];
-      handleLabels(0, _name, packet);
+      writeLabels(0, _name, packet);
       return packet;
     }
 
@@ -733,223 +1151,27 @@ class DNSPTRResource : Protocol {
     string _name;
 }
 
-DNS toDNS(Json json) {
-  DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
-  packet.qdcount = json.qdcount.to!ushort;
-  packet.ancount = json.ancount.to!ushort;
-  packet.nscount = json.nscount.to!ushort;
-  packet.arcount = json.arcount.to!ushort;
-  packet.qr = json.qr.to!bool;
-  packet.opcode = json.opcode.to!ubyte;
-  packet.aa = json.auth_answer.to!bool;
-  packet.rd = json.record_desired.to!bool;
-  packet.ra = json.record_available.to!bool;
-  packet.z = json.zero.to!ubyte;
-  packet.rcode = json.rcode.to!ubyte;
+DNSPTRResource toDNSPTRResource(Json json) {
+  DNSPTRResource packet = new DNSPTRResource();
+  packet.name = json.name.to!string;
   return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNS packet = toDNS(json);
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.qr == false);
-  assert(packet.opcode == 0);
-  assert(packet.aa == false);
-  assert(packet.rd == true);
-  assert(packet.tc == false);
-  assert(packet.ra == false);
-  assert(packet.z == 0);
-  assert(packet.rcode == 0);
+  json.name = "google.fr";
+  DNSPTRResource packet = toDNSPTRResource(json);
+  assert(packet.name == "google.fr");
 }
 
-DNS toDNS(ubyte[] encodedPacket) {
-  BitFields bits;
-  ushort id = encodedPacket.read!ushort();
-  bits.raw[0] = encodedPacket.read!ubyte();
-  bits.raw[1] = encodedPacket.read!ubyte();
-  ushort qdcount = encodedPacket.read!ushort();
-  ushort ancount = encodedPacket.read!ushort();
-  ushort nscount = encodedPacket.read!ushort();
-  ushort arcount = encodedPacket.read!ushort();
-  DNS packet = new DNS(id, bits.tc);
-  packet.qdcount = qdcount;
-  packet.ancount = ancount;
-  packet.nscount = nscount;
-  packet.arcount = arcount;
-  packet.qr = bits.qr;
-  packet.opcode = bits.opcode;
-  packet.aa = bits.aa;
-  packet.rd = bits.rd;
-  packet.ra = bits.ra;
-  packet.z = bits.z;
-  packet.rcode =  bits.rcode;
+DNSPTRResource toDNSPTRResource(ubyte[] encodedPacket) {
+  DNSPTRResource packet = new DNSPTRResource();
+  packet.name = readLabels(encodedPacket);
   return packet;
 }
 
 unittest {
-  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
-  DNS packet = encoded.toDNS;
-  assert(packet.id == 10);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.qr == true);
-  assert(packet.opcode == 3);
-  assert(packet.aa == true);
-  assert(packet.rd == true);
-  assert(packet.tc == true);
-  assert(packet.ra == true);
-  assert(packet.z == 0);
-  assert(packet.rcode == 2);
-}
-
-DNSQuery toDNSQuery(Json json) {
-  DNSQuery packet = new DNSQuery(json.id.to!ushort, json.truncation.to!bool, json.opcode.to!ubyte, json.record_desired.to!bool);
-  packet.qdcount = json.qdcount.to!ushort;
-  packet.ancount = json.ancount.to!ushort;
-  packet.nscount = json.nscount.to!ushort;
-  packet.arcount = json.arcount.to!ushort;
-  return packet;
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 1;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = true;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSQuery packet = toDNSQuery(json);
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.opcode == 1);
-  assert(packet.rd == true);
-  assert(packet.tc == false);
-}
-
-DNSQuery toDNSQuery(ubyte[] encodedPacket) {
-  BitFields bits;
-  ushort id = encodedPacket.read!ushort();
-  bits.raw[0] = encodedPacket.read!ubyte();
-  bits.raw[1] = encodedPacket.read!ubyte();
-  ushort qdcount = encodedPacket.read!ushort();
-  ushort ancount = encodedPacket.read!ushort();
-  ushort nscount = encodedPacket.read!ushort();
-  ushort arcount = encodedPacket.read!ushort();
-  DNSQuery packet = new DNSQuery(id, bits.tc, bits.opcode, bits.rd);
-  packet.qdcount = qdcount;
-  packet.ancount = ancount;
-  packet.nscount = nscount;
-  packet.arcount = arcount;
-  return packet;
-}
-
-unittest {
-  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
-  DNSQuery packet = encoded.toDNSQuery;
-  assert(packet.id == 10);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.opcode == 3);
-  assert(packet.rd == true);
-  assert(packet.tc == true);
-}
-
-DNSResource toDNSResource(Json json) {
-  DNSResource packet = new DNSResource(json.id.to!ushort, json.truncation.to!bool, json.auth_answer.to!bool, json.record_available.to!bool, json.rcode.to!ubyte);
-  packet.qdcount = json.qdcount.to!ushort;
-  packet.ancount = json.ancount.to!ushort;
-  packet.nscount = json.nscount.to!ushort;
-  packet.arcount = json.arcount.to!ushort;
-  return packet;
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSResource packet = toDNSResource(json);
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.aa == false);
-  assert(packet.tc == false);
-  assert(packet.ra == false);
-  assert(packet.rcode == 0);
-}
-
-DNSResource toDNSResource(ubyte[] encodedPacket) {
-  BitFields bits;
-  ushort id = encodedPacket.read!ushort();
-  bits.raw[0] = encodedPacket.read!ubyte();
-  bits.raw[1] = encodedPacket.read!ubyte();
-  ushort qdcount = encodedPacket.read!ushort();
-  ushort ancount = encodedPacket.read!ushort();
-  ushort nscount = encodedPacket.read!ushort();
-  ushort arcount = encodedPacket.read!ushort();
-  DNSResource packet = new DNSResource(id, bits.tc, bits.aa, bits.ra, bits.rcode);
-  packet.qdcount = qdcount;
-  packet.ancount = ancount;
-  packet.nscount = nscount;
-  packet.arcount = arcount;
-  return packet;
-}
-
-unittest {
-  ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
-  DNSResource packet = encoded.toDNSResource;
-  assert(packet.id == 10);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.aa == true);
-  assert(packet.tc == true);
-  assert(packet.ra == true);
-  assert(packet.rcode == 2);
+  ubyte[] encodedPacket = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0];
+  DNSPTRResource packet = encodedPacket.toDNSPTRResource;
+  assert(packet.name == "google.fr");
 }
