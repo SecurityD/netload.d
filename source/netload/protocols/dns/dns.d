@@ -1023,7 +1023,7 @@ class DNSAResource : Protocol {
   public:
     this() {}
 
-    this(uint ip) {
+    this(ubyte[4] ip) {
       _ip = ip;
     }
 
@@ -1035,18 +1035,18 @@ class DNSAResource : Protocol {
 
     Json toJson() {
       Json packet = Json.emptyObject;
-      packet.ip = _ip;
+      packet.ip = serializeToJson(_ip);
       return packet;
     }
 
     unittest {
       DNSAResource packet = new DNSAResource();
-      assert(packet.toJson.ip == 2130706433);
+      assert(deserializeJson!(ubyte[4])(packet.toJson.ip) == [127, 0, 0, 1]);
     }
 
     ubyte[] toBytes() {
-      ubyte[] packet = new ubyte[4];
-      packet.write!uint(_ip, 0);
+      ubyte[] packet;
+      packet ~= _ip;
       return packet;
     }
 
@@ -1061,40 +1061,40 @@ class DNSAResource : Protocol {
 
     unittest {
       DNSAResource packet = new DNSAResource();
-      assert(packet.toString == `{"ip":2130706433}`);
+      assert(packet.toString == `{"ip":[127,0,0,1]}`);
     }
 
-    @property uint ip() { return _ip; }
-    @property void ip(uint ip) { _ip = ip; }
+    @property ubyte[4] ip() { return _ip; }
+    @property void ip(ubyte[4] ip) { _ip = ip; }
 
   private:
     Protocol _data;
-    uint _ip = 2130706433;
+    ubyte[4] _ip = [127, 0, 0, 1];
 }
 
 DNSAResource toDNSAResource(Json json) {
   DNSAResource packet = new DNSAResource();
-  packet.ip = json.ip.to!uint;
+  packet.ip = deserializeJson!(ubyte[4])(json.ip);
   return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
-  json.ip = 128;
+  json.ip = serializeToJson([127, 0, 0, 1]);
   DNSAResource packet = toDNSAResource(json);
-  assert(packet.ip == 128);
+  assert(packet.ip == [127, 0, 0, 1]);
 }
 
 DNSAResource toDNSAResource(ubyte[] encodedPacket) {
   DNSAResource packet = new DNSAResource();
-  packet.ip = encodedPacket.read!uint;
+  packet.ip[0..4] = encodedPacket[0..4];
   return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [127, 0, 0, 1];
   DNSAResource packet = encodedPacket.toDNSAResource;
-  assert(packet.ip == 2130706433);
+  assert(packet.ip == [127, 0, 0, 1]);
 }
 
 class DNSPTRResource : Protocol {
