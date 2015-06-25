@@ -679,6 +679,60 @@ class DNSAResource : Protocol {
     uint _ip = 2130706433;
 }
 
+class DNSPTRResource : Protocol {
+  public:
+    this() {}
+
+    this(string name) {
+      _name = name;
+    }
+
+    @property Protocol data() { return _data; }
+
+    void prepare() {
+
+    }
+
+    Json toJson() {
+      Json packet = Json.emptyObject;
+      packet.name = _name;
+      return packet;
+    }
+
+    unittest {
+      DNSPTRResource packet = new DNSPTRResource("google.fr");
+      assert(packet.toJson.name == "google.fr");
+    }
+
+    ubyte[] toBytes() {
+      ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
+      ubyte[] packet = new ubyte[1 + inc];
+      handleLabels(0, _name, packet);
+      return packet;
+    }
+
+    unittest {
+      DNSPTRResource packet = new DNSPTRResource("google.fr");
+      assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
+    }
+
+    override string toString() {
+      return toJson.toString;
+    }
+
+    unittest {
+      DNSPTRResource packet = new DNSPTRResource("google.fr");
+      assert(packet.toString == `{"name":"google.fr"}`);
+    }
+
+    @property string name() { return _name; }
+    @property void name(string name) { _name = name; }
+
+  private:
+    Protocol _data;
+    string _name;
+}
+
 DNS toDNS(Json json) {
   DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
   packet.qdcount = json.qdcount.to!ushort;
