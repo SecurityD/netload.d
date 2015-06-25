@@ -64,11 +64,11 @@ class Ethernet : Protocol {
       assert(packet.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"fcs":0}`);
     }
 
-    @property ubyte[7] prelude() { return _prelude; }
+    @property ref ubyte[7] prelude() { return _prelude; }
     @property void prelude(ubyte[7] value) { _prelude = value; }
-    @property ubyte[6] srcMacAddress() { return _srcMacAddress; }
+    @property ref ubyte[6] srcMacAddress() { return _srcMacAddress; }
     @property void srcMacAddress(ubyte[6] address) { _srcMacAddress = address; }
-    @property ubyte[6] destMacAddress() { return _destMacAddress; }
+    @property ref ubyte[6] destMacAddress() { return _destMacAddress; }
     @property void destMacAddress(ubyte[6] address) { _destMacAddress = address; }
     @property ushort protocolType() { return _protocolType; }
     @property void protocolType(ushort value) { _protocolType = value; }
@@ -109,13 +109,16 @@ unittest {
 Ethernet toEthernet(ubyte[] encoded) {
   Ethernet packet = new Ethernet();
   packet.prelude[0..7] = encoded[0..7];
-  packet.srcMacAddress[0..6] = encoded[7..13];
-  packet.destMacAddress[0..6] = encoded[13..19];
+  packet.destMacAddress[0..6] = encoded[7..13];
+  packet.srcMacAddress[0..6] = encoded[13..19];
   packet.protocolType = encoded.peek!(ushort)(19);
   packet.fcs = encoded.peek!(uint)(21);
   return packet;
 }
 
 unittest {
-
+  ubyte[] encoded = [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
+  Ethernet packet = encoded.toEthernet();
+  assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
+  assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
 }
