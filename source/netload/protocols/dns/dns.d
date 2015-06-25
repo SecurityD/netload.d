@@ -602,6 +602,77 @@ class DNSSOAResource  : Protocol{
     uint _minTtl = 0;
 }
 
+class DNSMXResource : Protocol {
+  public:
+    this() {}
+
+    this(ushort pref, string name) {
+      _pref = pref;
+      _name = name;
+    }
+
+    @property Protocol data() { return _data; }
+
+    void prepare() {
+
+    }
+
+    Json toJson() {
+      Json packet = Json.emptyObject;
+      packet.name = _name;
+      packet.pref = _pref;
+      return packet;
+    }
+
+    unittest {
+      DNSMXResource packet = new DNSMXResource(2, "google.fr");
+      assert(packet.toJson.name == "google.fr");
+      assert(packet.toJson.pref == 2);
+    }
+
+    ubyte[] toBytes() {
+      ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
+      ubyte[] packet = new ubyte[3 + inc];
+      packet.write!ushort(_pref, 0);
+
+      ubyte[] b = cast(ubyte[])_name;
+      ubyte len = 0;
+      ubyte idx;
+      for (idx = 3; (idx - 2) <= _name.length; idx++) {
+        if (b[idx - 3] != '.') {
+          packet.write!ubyte(b[idx - 3], idx);
+          ++len;
+        }
+        else {
+          packet.write!ubyte(len, idx - len - 1);
+          len = 0;
+        }
+      }
+      if (len != 0)
+        packet.write!ubyte(len, idx - len - 1);
+      return packet;
+    }
+
+    unittest {
+      DNSMXResource packet = new DNSMXResource(2, "google.fr");
+      assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
+    }
+
+    override string toString() {
+      return toJson.toString;
+    }
+
+    unittest {
+      DNSMXResource packet = new DNSMXResource(2, "google.fr");
+      assert(packet.toString == `{"name":"google.fr","pref":2}`);
+    }
+
+  private:
+    Protocol _data;
+    ushort _pref = 0;
+    string _name = ".";
+}
+
 DNS toDNS(Json json) {
   DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
   packet.qdcount = json.qdcount.to!ushort;
