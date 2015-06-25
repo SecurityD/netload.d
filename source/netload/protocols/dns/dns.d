@@ -295,6 +295,25 @@ enum QClass {
   ANY = 255
 }
 
+uint handleLabels(in uint pos, in string src, ref ubyte[] dest) {
+  ubyte[] b = cast(ubyte[])src;
+  ubyte len = 0;
+  uint idx = 0;
+  for (; idx < src.length; idx++) {
+    if (b[idx] != '.') {
+      dest.write!ubyte(b[idx], idx + pos + 1);
+      ++len;
+    }
+    else {
+      dest.write!ubyte(len, idx + pos - len);
+      len = 0;
+    }
+  }
+  if (len != 0)
+    dest.write!ubyte(len, idx + pos - len);
+  return (idx + 1);
+}
+
 class DNSQR : Protocol {
   public:
     this () {}
@@ -330,22 +349,7 @@ class DNSQR : Protocol {
       ulong inc = (_qname.length > 1 ? _qname.length + 1 : 0);
       ubyte[] packet = new ubyte[5 + inc];
 
-      ubyte[] b = cast(ubyte[])_qname;
-      ubyte len = 0;
-      ubyte idx;
-      for (idx = 1; idx <= _qname.length; idx++) {
-        if (b[idx - 1] != '.') {
-          packet.write!ubyte(b[idx - 1], idx);
-          ++len;
-        }
-        else {
-          packet.write!ubyte(len, idx - len - 1);
-          len = 0;
-        }
-      }
-      if (idx != 1)
-        packet.write!ubyte(len, idx - len - 1);
-      packet.write!ubyte(0, idx);
+      handleLabels(0, _qname, packet);
       packet.write!ushort(_qtype, (1 + inc));
       packet.write!ushort(_qclass, (3 + inc));
       return packet;
@@ -420,22 +424,7 @@ class DNSRR : Protocol {
       ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
       ubyte[] packet = new ubyte[11 + inc];
 
-      ubyte[] b = cast(ubyte[])_name;
-      ubyte len = 0;
-      ubyte idx;
-      for (idx = 1; idx <= _name.length; idx++) {
-        if (b[idx - 1] != '.') {
-          packet.write!ubyte(b[idx - 1], idx);
-          ++len;
-        }
-        else {
-          packet.write!ubyte(len, idx - len - 1);
-          len = 0;
-        }
-      }
-      if (idx != 1)
-        packet.write!ubyte(len, idx - len - 1);
-      packet.write!ubyte(0, idx);
+      handleLabels(0, _name, packet);
       packet.write!ushort(_rtype, (1 + inc));
       packet.write!ushort(_rclass, (3 + inc));
       packet.write!uint(_ttl, (5 + inc));
@@ -523,37 +512,10 @@ class DNSSOAResource  : Protocol{
     ubyte[] toBytes() {
       ulong inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
       ubyte[] packet = new ubyte[22 + inc];
+      uint pos = 0;
 
-      ubyte[] b = cast(ubyte[])_primary;
-      ubyte len = 0;
-      ubyte idx = 1;
-      for (ubyte pos = 1; pos <= _primary.length; pos++, idx++) {
-        if (b[pos - 1] != '.') {
-          packet.write!ubyte(b[pos - 1], idx);
-          ++len;
-        }
-        else {
-          packet.write!ubyte(len, idx - len - 1);
-          len = 0;
-        }
-      }
-      if (idx != 1)
-        packet.write!ubyte(len, idx - len - 1);
-      idx += 2;
-      b = cast(ubyte[])_admin;
-      len = 0;
-      for (ubyte pos = 1; pos <= _admin.length; pos++, idx++) {
-        if (b[pos - 1] != '.') {
-          packet.write!ubyte(b[pos - 1], idx);
-          ++len;
-        }
-        else {
-          packet.write!ubyte(len, idx - len - 1);
-          len = 0;
-        }
-      }
-      if (idx != 1)
-        packet.write!ubyte(len, idx - len - 1);
+      pos += handleLabels(pos, _primary, packet) + 1;
+      handleLabels(pos, _admin, packet);
       packet.write!uint(_serial, (2 + inc));
       packet.write!uint(_refresh, (6 + inc));
       packet.write!uint(_retry, (10 + inc));
@@ -635,21 +597,7 @@ class DNSMXResource : Protocol {
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
 
-      ubyte[] b = cast(ubyte[])_name;
-      ubyte len = 0;
-      ubyte idx;
-      for (idx = 3; (idx - 2) <= _name.length; idx++) {
-        if (b[idx - 3] != '.') {
-          packet.write!ubyte(b[idx - 3], idx);
-          ++len;
-        }
-        else {
-          packet.write!ubyte(len, idx - len - 1);
-          len = 0;
-        }
-      }
-      if (len != 0)
-        packet.write!ubyte(len, idx - len - 1);
+      handleLabels(2, _name, packet);
       return packet;
     }
 
