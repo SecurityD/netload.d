@@ -278,7 +278,7 @@ enum QType {
   AXFR = 252,
   MAILB	= 253,
   MAILA	 =254,
-  QTYPE_ANY =	255,
+  ANY =	255,
   URI = 256,
   CAA = 257,
   TA = 32768,
@@ -290,7 +290,7 @@ enum QClass {
   CH = 3,
   HS = 4,
   NONE = 254,
-  QCLASS_ANY = 255
+  ANY = 255
 }
 
 class DNSQR : Protocol {
@@ -325,7 +325,7 @@ class DNSQR : Protocol {
     }
 
     ubyte[] toBytes() {
-      ubyte[] packet = new ubyte[6 + _qname.length];
+      ubyte[] packet = new ubyte[5 + (_qname.length > 1 ? _qname.length + 1 : 0)];
 
       ubyte[] b = cast(ubyte[])_qname;
       ubyte len = 0;
@@ -343,15 +343,15 @@ class DNSQR : Protocol {
       if (idx != 1)
         packet.write!ubyte(len, idx - len - 1);
       packet.write!ubyte(0, idx);
-      packet.write!ushort(_qtype, (2 + _qname.length));
-      packet.write!ushort(_qclass, (4 + _qname.length));
+      packet.write!ushort(_qtype, (1 + (_qname.length > 1 ? _qname.length + 1 : 0)));
+      packet.write!ushort(_qclass, (3 + (_qname.length > 1 ? _qname.length + 1 : 0)));
       return packet;
     }
 
     unittest {
       auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
       auto bytes = packet.toBytes;
-      assert(bytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 01, 00, 01]);
+      assert(bytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 00, 1]);
     }
 
     override string toString() {
