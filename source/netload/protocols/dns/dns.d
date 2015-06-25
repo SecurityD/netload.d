@@ -477,6 +477,116 @@ class DNSRR : Protocol {
     ushort _rdlength = 0;
 }
 
+class DNSSOAResource  : Protocol{
+  public:
+    this() {}
+
+    this(string primary, string admin, uint serial, uint refresh, uint retry, uint expirationLimit, uint minTtl) {
+      _primary = primary;
+      _admin = admin;
+      _serial = serial;
+      _refresh = refresh;
+      _retry = retry;
+      _expirationLimit = expirationLimit;
+      _minTtl = minTtl;
+    }
+
+    @property Protocol data() { return _data; }
+
+    void prepare() {
+
+    }
+
+    Json toJson() {
+      Json packet = Json.emptyObject;
+      packet.primary = _primary;
+      packet.admin = _admin;
+      packet.serial = _serial;
+      packet.refresh = _refresh;
+      packet.retry = _retry;
+      packet.expirationLimit = _expirationLimit;
+      packet.minTtl = _minTtl;
+      return packet;
+    }
+
+    unittest {
+      DNSSOAResource packet = new DNSSOAResource();
+      assert(packet.toJson.primary == ".");
+      assert(packet.toJson.admin == ".");
+      assert(packet.toJson.serial == 0);
+      assert(packet.toJson.refresh == 0);
+      assert(packet.toJson.retry == 0);
+      assert(packet.toJson.expirationLimit == 0);
+      assert(packet.toJson.minTtl == 0);
+    }
+
+    ubyte[] toBytes() {
+      ulong inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
+      ubyte[] packet = new ubyte[22 + inc];
+
+      ubyte[] b = cast(ubyte[])_primary;
+      ubyte len = 0;
+      ubyte idx = 1;
+      for (ubyte pos = 1; pos <= _primary.length; pos++, idx++) {
+        if (b[pos - 1] != '.') {
+          packet.write!ubyte(b[pos - 1], idx);
+          ++len;
+        }
+        else {
+          packet.write!ubyte(len, idx - len - 1);
+          len = 0;
+        }
+      }
+      if (idx != 1)
+        packet.write!ubyte(len, idx - len - 1);
+      idx += 2;
+      b = cast(ubyte[])_admin;
+      len = 0;
+      for (ubyte pos = 1; pos <= _admin.length; pos++, idx++) {
+        if (b[pos - 1] != '.') {
+          packet.write!ubyte(b[pos - 1], idx);
+          ++len;
+        }
+        else {
+          packet.write!ubyte(len, idx - len - 1);
+          len = 0;
+        }
+      }
+      if (idx != 1)
+        packet.write!ubyte(len, idx - len - 1);
+      packet.write!uint(_serial, (2 + inc));
+      packet.write!uint(_refresh, (6 + inc));
+      packet.write!uint(_retry, (10 + inc));
+      packet.write!uint(_expirationLimit, (14 + inc));
+      packet.write!uint(_minTtl, (18 + inc));
+      return packet;
+    }
+
+    unittest {
+      DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
+      assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148]);
+    }
+
+    override string toString() {
+      return toJson.toString;
+    }
+
+    unittest {
+      DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
+      assert(packet.toString == `{"minTtl":86420,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
+    }
+
+  private:
+    Protocol _data;
+    string _primary = ".";
+    string _admin = ".";
+    uint _serial = 0;
+    uint _refresh = 0;
+    uint _retry = 0;
+    uint _expirationLimit = 0;
+    uint _minTtl = 0;
+}
+
 DNS toDNS(Json json) {
   DNS packet = new DNS(json.id.to!ushort, json.truncation.to!bool);
   packet.qdcount = json.qdcount.to!ushort;
