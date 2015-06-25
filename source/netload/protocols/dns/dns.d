@@ -667,6 +667,11 @@ class DNSMXResource : Protocol {
       assert(packet.toString == `{"name":"google.fr","pref":2}`);
     }
 
+    @property ushort pref() { return _pref; }
+    @property void pref(ushort pref) { _pref = pref; }
+    @property string name() { return _name; }
+    @property void name(string name) { _name = name; }
+
   private:
     Protocol _data;
     ushort _pref = 0;
