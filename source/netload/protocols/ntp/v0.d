@@ -1,10 +1,13 @@
-module netload.protocols.ntp;
+module netload.protocols.ntp.v0;
 
-import netload.core.protocol;
-import vibe.data.json;
 import std.bitmanip;
 
-class NTP : Protocol {
+import vibe.data.json;
+
+import netload.core.protocol;
+import netload.protocols.ntp.common;
+
+class NTPv0 : NTPCommon, Protocol {
   public:
     this() {
 
@@ -31,7 +34,7 @@ class NTP : Protocol {
     }
 
     unittest {
-      auto ntp = new NTP;
+      auto ntp = new NTPv0;
       ntp.leapIndicator = 2u;
       ntp.status = 4u;
       ntp.type = 50u;
@@ -76,7 +79,7 @@ class NTP : Protocol {
     }
 
     unittest {
-      auto ntp = new NTP;
+      auto ntp = new NTPv0;
       ntp.leapIndicator = 2u;
       ntp.status = 4u;
       ntp.type = 50u;
@@ -108,25 +111,6 @@ class NTP : Protocol {
       return toJson.toString;
     }
 
-    unittest {
-      auto ntp = new NTP;
-      ntp.leapIndicator = 2u;
-      ntp.status = 4u;
-      ntp.type = 50u;
-      ntp.precision = 100u;
-      ntp.estimatedError = 150u;
-      ntp.estimatedDriftRate = 200u;
-      ntp.referenceClockIdentifier = 250u;
-      ntp.referenceTimestamp = 300u;
-      ntp.originateTimestamp = 350u;
-      ntp.receiveTimestamp = 400u;
-      ntp.transmitTimestamp = 450u;
-      assert(ntp.toString == `{"originate_timestamp":350,"reference_timestamp":300,` ~
-      `"receive_timestamp":400,"reference_clock_identifier":250,"precision":100,` ~
-      `"status":4,"estimated_drift_rate":200,"type_":50,"leap_indicator":2,` ~
-      `"estimated_error":150,"transmit_timestamp":450}`);
-    }
-
     @property {
       override Protocol data() { return _data; }
 
@@ -147,21 +131,6 @@ class NTP : Protocol {
 
       uint estimatedDriftRate() { return _estimatedDriftRate; }
       void estimatedDriftRate(uint data) { _estimatedDriftRate = data; }
-
-      uint referenceClockIdentifier() { return _referenceClockIdentifier; }
-      void referenceClockIdentifier(uint data) { _referenceClockIdentifier = data; }
-
-      ulong referenceTimestamp() { return _referenceTimestamp; }
-      void referenceTimestamp(ulong data) { _referenceTimestamp = data; }
-
-      ulong originateTimestamp() { return _originateTimestamp; }
-      void originateTimestamp(ulong data) { _originateTimestamp = data; }
-
-      ulong receiveTimestamp() { return _receiveTimestamp; }
-      void receiveTimestamp(ulong data) { _receiveTimestamp = data; }
-
-      ulong transmitTimestamp() { return _transmitTimestamp; }
-      void transmitTimestamp(ulong data) { _transmitTimestamp = data; }
     }
 
   private:
@@ -175,15 +144,10 @@ class NTP : Protocol {
     ushort _precision;
     uint _estimatedError;
     uint _estimatedDriftRate;
-    uint _referenceClockIdentifier;
-    ulong _referenceTimestamp;
-    ulong _originateTimestamp;
-    ulong _receiveTimestamp;
-    ulong _transmitTimestamp;
 }
 
-NTP toNTP(Json json) {
-  auto packet = new NTP;
+NTPv0 toNTPv0(Json json) {
+  auto packet = new NTPv0;
   packet.leapIndicator = json.leap_indicator.to!ubyte;
   packet.status = json.status.to!ubyte;
   packet.type = json.type_.to!ubyte;
@@ -212,7 +176,7 @@ unittest {
   json.receive_timestamp = 400u;
   json.transmit_timestamp = 450u;
 
-  auto packet = toNTP(json);
+  auto packet = toNTPv0(json);
 
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
@@ -227,8 +191,8 @@ unittest {
   assert(packet.transmitTimestamp == 450u);
 }
 
-NTP toNTP(ubyte[] encodedPacket) {
-  auto packet = new NTP;
+NTPv0 toNTPv0(ubyte[] encodedPacket) {
+  auto packet = new NTPv0;
   ubyte tmp = encodedPacket.read!ubyte;
   packet.leapIndicator = (tmp >> 6) & 0b0000_0011;
   packet.status = tmp & 0b0011_1111;
@@ -258,7 +222,7 @@ unittest {
       0,   0,   1, 144,
       0,   0,   0,   0,
       0,   0,   1, 194
-  ].toNTP;
+  ].toNTPv0;
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
   assert(packet.type == 50u);
