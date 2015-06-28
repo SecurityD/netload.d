@@ -33,15 +33,22 @@ class IP : Protocol {
         _destIpAddress = dest;
       }
 
-      @property Protocol data() {
-        return _data;
+      override @property immutable string name() { return "IP"; }
+      override @property Protocol data() { return _data; }
+      override @property int layer() const { return 3; }
+      override T layer(T)() {
+        static if (T == IP) {
+          return this;
+        } else {
+          static if (data is null) {
+            throw new Exception;
+          } else {
+            return data.layer!(T)();
+          }
+        }
       }
 
-      void prepare() {
-
-      }
-
-      Json toJson() {
+      override Json toJson() const {
         Json json = Json.emptyObject;
         json.ip_version = ipVersion;
         json.ihl = ihl;
@@ -65,7 +72,7 @@ class IP : Protocol {
         assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
-      ubyte[] toBytes() {
+      override ubyte[] toBytes() const {
         ubyte[] encoded = new ubyte[20];
         encoded.write!ubyte(_versionAndLength.versionAndLength, 0);
         encoded.write!ubyte(tos, 1);
@@ -85,42 +92,40 @@ class IP : Protocol {
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
 
-      override string toString() {
-        return toJson.toString;
-      }
+      override string toString() const { return toJson.toString; }
 
       unittest {
         IP packet = new IP();
         assert(packet.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
-      @property ubyte ipVersion() { return _versionAndLength.ipVersion; }
+      @property ubyte ipVersion() const { return _versionAndLength.ipVersion; }
       @property void ipVersion(ubyte newVersion) { _versionAndLength.ipVersion = newVersion; }
-      @property ubyte ihl() { return _versionAndLength.ihl; }
-      @property void ihl(ubyte newIhl) { return _versionAndLength.ihl = newIhl; }
-      @property ubyte tos() { return _tos; }
+      @property ubyte ihl() const { return _versionAndLength.ihl; }
+      @property void ihl(ubyte newIhl) { _versionAndLength.ihl = newIhl; }
+      @property ubyte tos() const { return _tos; }
       @property void tos(ubyte typeOfService) { _tos = typeOfService; }
-      @property ushort length() { return _length; }
+      @property ushort length() const { return _length; }
       @property void length(ushort totalLength) { _length = totalLength; }
-      @property ushort id() { return _id; }
+      @property ushort id() const { return _id; }
       @property void id(ushort newId) { _id = newId; }
-      @property ushort offset() { return _flagsAndOffset.offset; }
+      @property ushort offset() const { return _flagsAndOffset.offset; }
       @property void offset(ushort index) { _flagsAndOffset.offset = index; }
-      @property bool reserved() { return _flagsAndOffset.reserved; }
+      @property bool reserved() const { return _flagsAndOffset.reserved; }
       @property void reserved(bool value) { _flagsAndOffset.reserved = value; }
-      @property bool df() { return _flagsAndOffset.df; }
+      @property bool df() const { return _flagsAndOffset.df; }
       @property void df(bool value) { _flagsAndOffset.df = value; }
-      @property bool mf() { return _flagsAndOffset.mf; }
+      @property bool mf() const { return _flagsAndOffset.mf; }
       @property void mf(bool value) { _flagsAndOffset.mf = value; }
-      @property ubyte ttl() { return _ttl; }
+      @property ubyte ttl() const { return _ttl; }
       @property void ttl(ubyte timeToLive) { _ttl = timeToLive; }
-      @property ubyte protocol() { return _protocol; }
+      @property ubyte protocol() const { return _protocol; }
       @property void protocol(ubyte proto) { _protocol = proto; }
-      @property ushort checksum() { return _checksum; }
+      @property ushort checksum() const { return _checksum; }
       @property void checksum(ushort hash) { _checksum = hash; }
-      @property uint srcIpAddress() { return _srcIpAddress; }
+      @property uint srcIpAddress() const { return _srcIpAddress; }
       @property void srcIpAddress(uint address) { _srcIpAddress = address; }
-      @property uint destIpAddress() { return _destIpAddress; }
+      @property uint destIpAddress() const { return _destIpAddress; }
       @property void destIpAddress(uint address) { _destIpAddress = address; }
 
     private:
