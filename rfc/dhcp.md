@@ -11,7 +11,7 @@ The Dynamic Host Configuration Protocol (DHCP) is a standardized network protoco
 +---------------+---------------+---------------+---------------+
 |                            xid (4)                            |
 +-------------------------------+-------------------------------+
-|           secs (2)            |           flags (2)           |
+|           secs (2)            |B|            MBZ              |
 +-------------------------------+-------------------------------+
 |                          ciaddr  (4)                          |
 +---------------------------------------------------------------+
@@ -45,7 +45,8 @@ hlen      |   1    | Hardware address length (e.g.  '6' for 10mb ethernet).
 hops      |   1    | Client sets to zero, optionally used by relay agents when booting via a relay agent.
 xid       |   4    | Transaction ID, a random number chosen by the client, used by the client and server to associate messages and responses between a client and a server.
 secs      |   2    | Filled in by client, seconds elapsed since client began address acquisition or renewal process.
-flags     |   2    | Flags (see figure 2).
+B         | 1 bit  | Broadcast flag
+MBZ       | 15 bits| Must be zero
 ciaddr    |   4    | Client IP address; only filled in if client is in BOUND, RENEW or REBINDING state and can respond to ARP requests.
 yiaddr    |   4    | 'your' (client) IP address.
 siaddr    |   4    | IP address of next server to use in bootstrap; returned in DHCPOFFER, DHCPACK by server.
