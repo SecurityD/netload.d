@@ -1087,7 +1087,7 @@ unittest {
 
 DNSAResource toDNSAResource(ubyte[] encodedPacket) {
   DNSAResource packet = new DNSAResource();
-  packet.ip[0..3] = encodedPacket[0..3];
+  packet.ip[0..4] = encodedPacket[0..4];
   return packet;
 }
 
