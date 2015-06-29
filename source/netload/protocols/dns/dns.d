@@ -685,7 +685,7 @@ class DNSRR : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
+      ulong inc = (_rname.length > 1 ? _rname.length + 1 : 0);
       ubyte[] packet = new ubyte[11 + inc];
       writeLabels(0, _rname, packet);
       packet.write!ushort(_rtype, (1 + inc));
@@ -950,7 +950,7 @@ class DNSMXResource : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
+      ulong inc = (_mxname.length > 1 ? _mxname.length + 1 : 0);
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
       writeLabels(2, _mxname, packet);
@@ -1114,7 +1114,7 @@ class DNSPTRResource : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      ulong inc = (_name.length > 1 ? _name.length + 1 : 0);
+      ulong inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
       ubyte[] packet = new ubyte[1 + inc];
       writeLabels(0, _ptrname, packet);
       return packet;

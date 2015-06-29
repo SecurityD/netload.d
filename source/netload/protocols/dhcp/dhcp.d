@@ -34,13 +34,12 @@ class DHCP : Protocol {
       _giaddr = giaddr;
     }
 
-    @property Protocol data() { return null; }
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property inout string name() const { return "DHCP"; }
+    override @property int osiLayer() const { return 3; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.op = _op;
       packet.htype = _htype;
@@ -75,7 +74,7 @@ class DHCP : Protocol {
       assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[12];
       packet.write!ubyte(_op, 0);
       packet.write!ubyte(_htype, 1);
@@ -93,7 +92,7 @@ class DHCP : Protocol {
       assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -102,38 +101,39 @@ class DHCP : Protocol {
       assert(packet.toString == `{"op":2,"htype":1,"hops":0,"yiaddr":[127,0,1,1],"hlen":6,"chaddr":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"secs":0,"giaddr":[10,14,59,255],"broadcast":false,"sname":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"file":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"xid":42,"ciaddr":[127,0,0,1],"options":[],"siaddr":[10,14,19,42]}`);
     }
 
-    @property ubyte op() { return _op; };
+    @property ubyte op() const { return _op; };
     @property void op(ubyte op) { _op = op; };
-    @property ubyte htype() { return _htype; };
+    @property ubyte htype() const { return _htype; };
     @property void htype(ubyte htype) { _htype = htype; };
-    @property ubyte hlen() { return _hlen; };
+    @property ubyte hlen() const { return _hlen; };
     @property void hlen(ubyte hlen) { _hlen = hlen; };
-    @property ubyte hops() { return _hops; };
+    @property ubyte hops() const { return _hops; };
     @property void hops(ubyte hops) { _hops = hops; };
-    @property uint xid() { return _xid; };
+    @property uint xid() const { return _xid; };
     @property void xid(uint xid) { _xid = xid; };
-    @property ushort secs() { return _secs; };
+    @property ushort secs() const { return _secs; };
     @property void secs(ushort secs) { _secs = secs; };
-    @property bool broadcast() { return _flags.broadcast; };
+    @property bool broadcast() const { return _flags.broadcast; };
     @property void broadcast(bool broadcast) { _flags.broadcast = broadcast; };
-    @property ubyte[4] ciaddr() { return _ciaddr; };
+    @property const(ubyte[4]) ciaddr() const { return _ciaddr; };
     @property void ciaddr(ubyte[4] ciaddr) { _ciaddr = ciaddr; };
-    @property ubyte[4] yiaddr() { return _yiaddr; };
+    @property const(ubyte[4]) yiaddr() const { return _yiaddr; };
     @property void yiaddr(ubyte[4] yiaddr) { _yiaddr = yiaddr; };
-    @property ubyte[4] siaddr() { return _siaddr; };
+    @property const(ubyte[4]) siaddr() const { return _siaddr; };
     @property void siaddr(ubyte[4] siaddr) { _siaddr = siaddr; };
-    @property ubyte[4] giaddr() { return _giaddr; };
+    @property const(ubyte[4]) giaddr() const { return _giaddr; };
     @property void giaddr(ubyte[4] giaddr) { _giaddr = giaddr; };
-    @property ubyte[16] chaddr() { return _chaddr; };
+    @property const(ubyte[16]) chaddr() const { return _chaddr; };
     @property void chaddr(ubyte[16] chaddr) { _chaddr = chaddr; };
-    @property ubyte[64] sname() { return _sname; };
+    @property const(ubyte[64]) sname() const { return _sname; };
     @property void sname(ubyte[64] sname) { _sname = sname; };
-    @property ubyte[128] file() { return _file; };
+    @property const(ubyte[128]) file() const { return _file; };
     @property void file(ubyte[128] file) { _file = file; };
-    @property ubyte[] options() { return _options; };
+    @property const(ubyte[]) options() const { return _options; };
     @property void options(ubyte[] options) { _options = options; };
 
   private:
+    Protocol _data = null;
     ubyte _op = 1;
     ubyte _htype = 1;
     ubyte _hlen = 6;

@@ -15,11 +15,7 @@ class NTPv4 : NTPCommon, Protocol {
 
     }
 
-    override void prepare() {
-
-    }
-
-    override Json toJson() {
+    override Json toJson() const {
       auto json = Json.emptyObject;
       json.leap_indicator = leapIndicator;
       json.version_number = versionNumber;
@@ -77,7 +73,7 @@ class NTPv4 : NTPCommon, Protocol {
       assert(json.transmit_timestamp == 0xd9_39_0d_b3_58_3e_91_e8);
     }
 
-    override ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       auto packet = appender!(ubyte[])();
       packet.append!ubyte(cast(ubyte)((leapIndicator << 6) + (versionNumber << 3) + mode));
       packet.append!ubyte(stratum);
@@ -90,7 +86,7 @@ class NTPv4 : NTPCommon, Protocol {
       packet.append!ulong(originateTimestamp);
       packet.append!ulong(receiveTimestamp);
       packet.append!ulong(transmitTimestamp);
-      foreach (NTPv4ExtensionField extensionField ; _extensionFields) {
+      foreach (const(NTPv4ExtensionField) extensionField ; _extensionFields) {
         packet.append!ushort(extensionField.fieldType);
         packet.append!ushort(extensionField.length);
         foreach (ubyte b ; extensionField.value)
@@ -137,12 +133,15 @@ class NTPv4 : NTPCommon, Protocol {
       ]);
     }
 
-    override string toString() {
+    @property inout string name() { return "NTPv4"; }
+    override @property int osiLayer() const { return 7; };
+    override string toString() const {
       return toJson.toString;
     }
 
     @property {
       override Protocol data() { return _data; }
+      override void data(Protocol p) { _data = p; }
 
       inout ubyte leapIndicator() { return _leapIndicator; }
       void leapIndicator(ubyte data) { _leapIndicator = data; }
@@ -168,7 +167,7 @@ class NTPv4 : NTPCommon, Protocol {
       inout uint rootDispersion() { return _rootDispersion; }
       void rootDispersion(uint data) { _rootDispersion = data; }
 
-      ref NTPv4ExtensionField[] extensionFields() { return _extensionFields; }
+      ref const(NTPv4ExtensionField[]) extensionFields() { return _extensionFields; }
       void extensionFields(NTPv4ExtensionField[] data) { _extensionFields = data; }
 
       inout uint keyIdentifier() { return _keyIdentifier; }
@@ -209,7 +208,7 @@ class NTPv4ExtensionField {
       inout ushort length() { return _length; }
       void length(ushort data) { _length = data; }
 
-      ref ubyte[] value() { return _value; }
+      ref const(ubyte[]) value() const { return _value; }
       void value(ubyte[] data) { _value = data; }
     }
 

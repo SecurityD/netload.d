@@ -18,13 +18,12 @@ class ARP : Protocol {
       _targetProtocolAddr = new ubyte[_protocolAddrLen];
     }
 
-    @property Protocol data() { return null; }
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property inout string name() const { return "ARP"; }
+    override @property int osiLayer() const { return 3; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json json = Json.emptyObject;
       json.hwType = _hwType;
       json.protocolType = _protocolType;
@@ -55,7 +54,7 @@ class ARP : Protocol {
       assert(deserializeJson!(ubyte[])(packet.toJson.targetProtocolAddr) == [10, 14, 255, 255]);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_hwType, 0);
       packet.write!ushort(_protocolType, 2);
@@ -78,7 +77,7 @@ class ARP : Protocol {
       assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
@@ -91,26 +90,27 @@ class ARP : Protocol {
       assert(packet.toString == `{"protocolAddrLen":4,"senderHwAddr":[128,128,128,128,128,128],"hwAddrLen":6,"targetHwAddr":[0,0,0,0,0,0],"hwType":1,"protocolType":1,"opcode":0,"targetProtocolAddr":[10,14,255,255],"senderProtocolAddr":[127,0,0,1]}`);
     }
 
-    @property ushort hwType() { return _hwType; }
+    @property ushort hwType() const { return _hwType; }
     @property void hwType(ushort hwType) { _hwType = hwType; }
-    @property ushort protocolType() { return _protocolType; }
+    @property ushort protocolType() const { return _protocolType; }
     @property void protocolType(ushort protocolType) { _protocolType = protocolType; }
-    @property ubyte hwAddrLen() { return _hwAddrLen; }
+    @property ubyte hwAddrLen() const { return _hwAddrLen; }
     @property void hwAddrLen(ubyte hwAddrLen) { _hwAddrLen = hwAddrLen; }
-    @property ubyte protocolAddrLen() { return _protocolAddrLen; }
+    @property ubyte protocolAddrLen() const { return _protocolAddrLen; }
     @property void protocolAddrLen(ubyte protocolAddrLen) { _protocolAddrLen = protocolAddrLen; }
-    @property ushort opcode() { return _opcode; }
+    @property ushort opcode() const { return _opcode; }
     @property void opcode(ushort opcode) { _opcode = opcode; }
-    @property ubyte[] senderHwAddr() { return _senderHwAddr; }
+    @property const(ubyte[]) senderHwAddr() const { return _senderHwAddr; }
     @property void senderHwAddr(ubyte[] senderHwAddr) { _senderHwAddr = senderHwAddr; }
-    @property ubyte[] targetHwAddr() { return _targetHwAddr; }
+    @property const(ubyte[]) targetHwAddr() const { return _targetHwAddr; }
     @property void targetHwAddr(ubyte[] targetHwAddr) { _targetHwAddr = targetHwAddr; }
-    @property ubyte[] senderProtocolAddr() { return _senderProtocolAddr; }
+    @property const(ubyte[]) senderProtocolAddr() const { return _senderProtocolAddr; }
     @property void senderProtocolAddr(ubyte[] senderProtocolAddr) { _senderProtocolAddr = senderProtocolAddr; }
-    @property ubyte[] targetProtocolAddr() { return _targetProtocolAddr; }
+    @property const(ubyte[]) targetProtocolAddr() const { return _targetProtocolAddr; }
     @property void targetProtocolAddr(ubyte[] targetProtocolAddr) { _targetProtocolAddr = targetProtocolAddr; }
 
   private:
+    Protocol _data = null;
     ushort _hwType = 0;
     ushort _protocolType = 0;
     ubyte _hwAddrLen = 0;

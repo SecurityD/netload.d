@@ -21,12 +21,9 @@ interface Protocol {
       netload.protocols.udp.UDP packet = new netload.protocols.udp.UDP(80, 80);
       netload.protocols.ip.IP ip = new netload.protocols.ip.IP();
       packet.data = ip;
-      std.stdio.writeln("1");
       assert(packet.layer!(netload.protocols.udp.UDP)() is packet);
-      std.stdio.writeln("2");
       assert(packet.layer!(netload.protocols.ip.IP)() is ip);
       try {
-        std.stdio.writeln("3");
         packet.layer!(netload.protocols.tcp.TCP)();
         assert(false);
       } catch(Exception e) {
