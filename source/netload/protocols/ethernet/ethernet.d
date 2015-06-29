@@ -15,20 +15,10 @@ class Ethernet : Protocol {
       _destMacAddress = destMac;
     }
 
-    override @property immutable string name() { return "Ethernet"; }
+    override @property inout string name() { return "Ethernet"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 2; }
-    override T layer(T)() {
-      static if (T == Ethernet) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 2; }
 
     override Json toJson() const {
       Json json = Json.emptyObject;

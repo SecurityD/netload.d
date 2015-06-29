@@ -58,20 +58,10 @@ class DNS : Protocol {
       _bits.rcode = 0;
     }
 
-    override @property immutable string name() { return "DNS"; }
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNS) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property inout string name() { return "DNS"; };
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -569,20 +559,10 @@ class DNSQR : Protocol {
       _qclass = qclass;
     }
 
-    override @property immutable string name() { return "DNSQR"; }
+    override @property inout string name() { return "DNSQR"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSQR) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -680,20 +660,10 @@ class DNSRR : Protocol {
       _ttl = ttl;
     }
 
-    override @property immutable string name() { return "DNSRR"; }
+    override @property inout string name() { return "DNSRR"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSRR) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -814,20 +784,10 @@ class DNSSOAResource  : Protocol {
       _minTtl = minTtl;
     }
 
-    override @property immutable string name() { return "DNSSOAResource"; }
+    override @property inout string name() { return "DNSSOAResource"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSSOAResource) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -971,20 +931,10 @@ class DNSMXResource : Protocol {
       _mxname = mxname;
     }
 
-    override @property immutable string name() { return "DNSMXResource"; }
+    override @property inout string name() { return "DNSMXResource"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSMXResource) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -1070,20 +1020,10 @@ class DNSAResource : Protocol {
       _ip = ip;
     }
 
-    override @property immutable string name() { return "DNSAResource"; }
+    override @property inout string name() { return "DNSAResource"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSAResource) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -1157,20 +1097,10 @@ class DNSPTRResource : Protocol {
       _ptrname = ptrname;
     }
 
-    override @property immutable string name() { return "DNSPTRResource"; }
+    override @property inout string name() { return "DNSPTRResource"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == DNSPTRResource) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;

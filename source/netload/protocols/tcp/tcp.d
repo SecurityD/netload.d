@@ -30,20 +30,10 @@ class TCP : Protocol {
       _destPort = destinationPort;
     }
 
-    override @property immutable string name() { return "TCP"; }
+    override @property inout string name() { return "TCP"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 4; }
-    override T layer(T)() {
-      static if (T == TCP) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 4; }
 
     override Json toJson() const {
       Json json = Json.emptyObject;
@@ -132,7 +122,7 @@ class TCP : Protocol {
     @property void urgPtr(ushort ptr) { _urgPtr = ptr; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     ushort _srcPort = 0;
     ushort _destPort = 0;
     uint _sequenceNumber = 0;

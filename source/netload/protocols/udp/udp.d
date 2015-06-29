@@ -11,21 +11,10 @@ class UDP : Protocol {
       _destPort = destPort;
     }
 
-    override @property immutable string name() { return "UDP"; }
+    override @property inout string name() { return "UDP"; };
     override @property Protocol data() { return _data; }
-    override @property int layer() const { return 4; }
-
-    override T layer(T)() {
-      static if (T == UDP) {
-        return this;
-      } else {
-        static if (data is null) {
-          throw new Exception;
-        } else {
-          return data.layer!(T)();
-        }
-      }
-    }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 4; }
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
@@ -79,7 +68,7 @@ class UDP : Protocol {
 
 
   private:
-      Protocol _data;
+      Protocol _data = null;
       ushort _srcPort = 0;
       ushort _destPort = 0;
       ushort _length = 0;

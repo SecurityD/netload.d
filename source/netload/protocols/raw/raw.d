@@ -14,16 +14,10 @@ class Raw : Protocol {
       _bytes = array;
     }
 
-    override @property immutable string name() { return "Raw"; }
-    override @property Protocol data() { return null; }
-    override @property int layer() const { return 7; }
-    override T layer(T)() {
-      static if (T == Raw) {
-        return this;
-      } else {
-        throw new Exception;
-      }
-    }
+    override @property inout string name() { return "Raw"; };
+    @disable override @property Protocol data() { return null; }
+    override @property void data(Protocol p) { }
+    override @property int osiLayer() const { return 7; }
 
     override Json toJson() const {
       Json json = Json.emptyObject;
