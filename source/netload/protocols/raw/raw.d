@@ -14,15 +14,12 @@ class Raw : Protocol {
       _bytes = array;
     }
 
-    @property Protocol data() {
-      return null;
-    }
+    override @property inout string name() { return "Raw"; };
+    @disable override @property Protocol data() { return null; }
+    override @property void data(Protocol p) { }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json json = Json.emptyObject;
       json.bytes = serializeToJson(_bytes);
       return json;
@@ -33,11 +30,9 @@ class Raw : Protocol {
       assert(packet.toJson.toString == `{"bytes":[0,1,2]}`);
     }
 
-    ubyte[] toBytes() {
-      return _bytes;
-    }
+    override ubyte[] toBytes() const { return _bytes.dup; }
 
-    override string toString() {
+    override string toString() const {
       OutBuffer b = new OutBuffer();
       b.writef("%(\\x%02x %)", bytes);
       return b.toString;
@@ -48,8 +43,8 @@ class Raw : Protocol {
       assert(packet.toString == "\\x00 \\x01 \\x02");
     }
 
-    @property ref ubyte[] bytes() { return _bytes; }
-    @property void bytes(ref ubyte[] array) { _bytes = array; }
+    @property const(ubyte[]) bytes() const { return _bytes; }
+    @property void bytes(ubyte[] array) { _bytes = array; }
   private:
     ubyte[] _bytes;
 }

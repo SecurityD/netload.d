@@ -11,13 +11,12 @@ class UDP : Protocol {
       _destPort = destPort;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "UDP"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 4; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.src_port = _srcPort;
       packet.dest_port = _destPort;
@@ -32,7 +31,7 @@ class UDP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_srcPort, 0);
       packet.write!ushort(_destPort, 2);
@@ -48,7 +47,7 @@ class UDP : Protocol {
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -58,18 +57,18 @@ class UDP : Protocol {
       assert(packet.toString == `{"checksum":0,"dest_port":7000,"src_port":8000,"len":0}`);
     }
 
-    @property ushort srcPort() { return _srcPort; }
+    @property ushort srcPort() const { return _srcPort; }
     @property void srcPort(ushort port) { _srcPort = port; }
-    @property ushort destPort() { return _destPort; }
+    @property ushort destPort() const { return _destPort; }
     @property void destPort(ushort port) { _destPort = port; }
-    @property ushort length() { return _length; }
+    @property ushort length() const { return _length; }
     @property void length(ushort length) { _length = length; }
-    @property ushort checksum() { return _checksum; }
+    @property ushort checksum() const { return _checksum; }
     @property void checksum(ushort checksum) { _checksum = checksum; }
 
 
   private:
-      Protocol _data;
+      Protocol _data = null;
       ushort _srcPort = 0;
       ushort _destPort = 0;
       ushort _length = 0;

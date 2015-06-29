@@ -13,11 +13,7 @@ class NTPv0 : NTPCommon, Protocol {
 
     }
 
-    override void prepare() {
-
-    }
-
-    override Json toJson() {
+    override Json toJson() const {
       auto json = Json.emptyObject;
       json.leap_indicator = leapIndicator;
       json.status = status;
@@ -63,7 +59,7 @@ class NTPv0 : NTPCommon, Protocol {
       assert(ntp.toJson == test);
     }
 
-    override ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       auto packet = new ubyte[48];
       packet.write!ubyte(cast(ubyte)((leapIndicator << 6) + status), 0);
       packet.write!ubyte(type, 1);
@@ -107,29 +103,30 @@ class NTPv0 : NTPCommon, Protocol {
       ]);
     }
 
-    override string toString() {
-      return toJson.toString;
-    }
+    @property inout string name() { return "NTPv0"; }
+    override @property int osiLayer() const { return 7; };
+    override string toString() const { return toJson.toString; }
 
     @property {
       override Protocol data() { return _data; }
+      override @property void data(Protocol p) { _data = p; } 
 
-      ubyte leapIndicator() { return _leapIndicator; }
+      ubyte leapIndicator() const { return _leapIndicator; }
       void leapIndicator(ubyte data) { _leapIndicator = data; }
 
-      ubyte status() { return _status; }
+      ubyte status() const { return _status; }
       void status(ubyte data) { _status = data; }
 
-      ubyte type() { return _type; }
+      ubyte type() const { return _type; }
       void type(ubyte data) { _type = data; }
 
-      ushort precision() { return _precision; }
+      ushort precision() const { return _precision; }
       void precision(ushort data) { _precision = data; }
 
-      uint estimatedError() { return _estimatedError; }
+      uint estimatedError() const { return _estimatedError; }
       void estimatedError(uint data) { _estimatedError = data; }
 
-      uint estimatedDriftRate() { return _estimatedDriftRate; }
+      uint estimatedDriftRate() const { return _estimatedDriftRate; }
       void estimatedDriftRate(uint data) { _estimatedDriftRate = data; }
     }
 

@@ -30,15 +30,12 @@ class TCP : Protocol {
       _destPort = destinationPort;
     }
 
-    @property Protocol data() {
-      return _data;
-    }
+    override @property inout string name() { return "TCP"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 4; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json json = Json.emptyObject;
       json.src_port = srcPort;
       json.dest_port = destPort;
@@ -64,7 +61,7 @@ class TCP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[20];
       packet.write!ushort(srcPort, 0);
       packet.write!ushort(destPort, 2);
@@ -82,7 +79,7 @@ class TCP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -91,41 +88,41 @@ class TCP : Protocol {
       assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":8192}`);
     }
 
-    @property ushort srcPort() { return _srcPort; }
+    @property ushort srcPort() const { return _srcPort; }
     @property void srcPort(ushort port) { _srcPort = port; }
-    @property ushort destPort() { return _destPort; }
+    @property ushort destPort() const { return _destPort; }
     @property void destPort(ushort port) { _destPort = port; }
-    @property uint sequenceNumber() { return _sequenceNumber; }
+    @property uint sequenceNumber() const { return _sequenceNumber; }
     @property void sequenceNumber(uint number) { _sequenceNumber = number; }
-    @property uint ackNumber() { return _ackNumber; }
+    @property uint ackNumber() const { return _ackNumber; }
     @property void ackNumber(uint number) { _ackNumber = number; }
 
-    @property bool fin() { return _flagsAndOffset.fin; }
+    @property bool fin() const { return _flagsAndOffset.fin; }
     @property void fin(bool value) { _flagsAndOffset.fin = value; }
-    @property bool syn() { return _flagsAndOffset.syn; }
+    @property bool syn() const { return _flagsAndOffset.syn; }
     @property void syn(bool value) { _flagsAndOffset.syn = value; }
-    @property bool rst() { return _flagsAndOffset.rst; }
+    @property bool rst() const { return _flagsAndOffset.rst; }
     @property void rst(bool value) { _flagsAndOffset.rst = value; }
-    @property bool psh() { return _flagsAndOffset.psh; }
+    @property bool psh() const { return _flagsAndOffset.psh; }
     @property void psh(bool value) { _flagsAndOffset.psh = value; }
-    @property bool ack() { return _flagsAndOffset.ack; }
+    @property bool ack() const { return _flagsAndOffset.ack; }
     @property void ack(bool value) { _flagsAndOffset.ack = value; }
-    @property bool urg() { return _flagsAndOffset.urg; }
+    @property bool urg() const { return _flagsAndOffset.urg; }
     @property void urg(bool value) { _flagsAndOffset.urg = value; }
-    @property ubyte reserved() { return _flagsAndOffset.reserved; }
+    @property ubyte reserved() const { return _flagsAndOffset.reserved; }
     @property void reserved(ubyte value) { _flagsAndOffset.reserved = value; }
-    @property ubyte offset() { return _flagsAndOffset.offset; }
+    @property ubyte offset() const { return _flagsAndOffset.offset; }
     @property void offset(ubyte off) { _flagsAndOffset.offset = off; }
 
-    @property ushort window() { return _window; }
+    @property ushort window() const { return _window; }
     @property void window(ushort size) { _window = size; }
-    @property ushort checksum() { return _checksum; }
+    @property ushort checksum() const { return _checksum; }
     @property void checksum(ushort hash) { _checksum = hash; }
-    @property ushort urgPtr() { return _urgPtr; }
+    @property ushort urgPtr() const { return _urgPtr; }
     @property void urgPtr(ushort ptr) { _urgPtr = ptr; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     ushort _srcPort = 0;
     ushort _destPort = 0;
     uint _sequenceNumber = 0;

@@ -45,13 +45,12 @@ class Dot11 : Protocol {
       _addr[3] = addr4;
     }
 
-    @property Protocol data() { return _data; }
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 2; }
+    override @property inout string name() { return "Dot11"; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.duration = _duration;
       packet.seq = _seq;
@@ -96,7 +95,7 @@ class Dot11 : Protocol {
       assert(packet.toDS == 0);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[34];
       packet.write!ubyte(_frameControl.raw[0], 0);
       packet.write!ubyte(_frameControl.raw[1], 1);
@@ -116,7 +115,7 @@ class Dot11 : Protocol {
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -125,42 +124,42 @@ class Dot11 : Protocol {
       assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
     }
 
-    @property ushort duration() { return _duration; }
+    @property ushort duration() const { return _duration; }
     @property void duration(ushort duration) { _duration = duration; }
-    @property ubyte[6] addr1() { return _addr[0]; }
+    @property ubyte[6] addr1() const { return _addr[0]; }
     @property void addr1(ubyte[6] addr1) { _addr[0] = addr1; }
-    @property ubyte[6] addr2() { return _addr[1]; }
+    @property ubyte[6] addr2() const { return _addr[1]; }
     @property void addr2(ubyte[6] addr2) { _addr[1] = addr2; }
-    @property ubyte[6] addr3() { return _addr[2]; }
+    @property ubyte[6] addr3() const { return _addr[2]; }
     @property void addr3(ubyte[6] addr3) { _addr[2] = addr3; }
-    @property ubyte[6] addr4() { return _addr[3]; }
+    @property ubyte[6] addr4() const { return _addr[3]; }
     @property void addr4(ubyte[6] addr4) { _addr[3] = addr4; }
-    @property ushort seq() { return _seq; }
+    @property ushort seq() const { return _seq; }
     @property void seq(ushort seq) { _seq = seq; }
-    @property uint fcs() { return _fcs; }
+    @property uint fcs() const { return _fcs; }
     @property void fcs(uint fcs) { _fcs = fcs; }
 
-    @property ubyte subtype() { return _frameControl.subtype; }
+    @property ubyte subtype() const { return _frameControl.subtype; }
     @property void subtype(ubyte subtype) { _frameControl.subtype = subtype; }
-    @property ubyte type() { return _frameControl.type; }
+    @property ubyte type() const { return _frameControl.type; }
     @property void type(ubyte type) { _frameControl.type = type; }
-    @property ubyte vers() { return _frameControl.vers; }
+    @property ubyte vers() const { return _frameControl.vers; }
     @property void vers(ubyte vers) { _frameControl.vers = vers; }
-    @property bool rsvd() { return _frameControl.rsvd; }
+    @property bool rsvd() const { return _frameControl.rsvd; }
     @property void rsvd(bool rsvd) { _frameControl.rsvd = rsvd; }
-    @property bool wep() { return _frameControl.wep; }
+    @property bool wep() const { return _frameControl.wep; }
     @property void wep(bool wep) { _frameControl.wep = wep; }
-    @property bool moreData() { return _frameControl.moreData; }
+    @property bool moreData() const { return _frameControl.moreData; }
     @property void moreData(bool moreData) { _frameControl.moreData = moreData; }
-    @property bool power() { return _frameControl.power; }
+    @property bool power() const { return _frameControl.power; }
     @property void power(bool power) { _frameControl.power = power; }
-    @property bool retry() { return _frameControl.retry; }
+    @property bool retry() const { return _frameControl.retry; }
     @property void retry(bool retry) { _frameControl.retry = retry; }
-    @property bool moreFrag() { return _frameControl.moreFrag; }
+    @property bool moreFrag() const { return _frameControl.moreFrag; }
     @property void moreFrag(bool moreFrag) { _frameControl.moreFrag = moreFrag; }
-    @property bool fromDS() { return _frameControl.fromDS; }
+    @property bool fromDS() const { return _frameControl.fromDS; }
     @property void fromDS(bool fromDS) { _frameControl.fromDS = fromDS; }
-    @property bool toDS() { return _frameControl.toDS; }
+    @property bool toDS() const { return _frameControl.toDS; }
     @property void toDS(bool toDS) { _frameControl.toDS = toDS; }
 
   private:

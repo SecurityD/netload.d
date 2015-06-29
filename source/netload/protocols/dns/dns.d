@@ -58,13 +58,12 @@ class DNS : Protocol {
       _bits.rcode = 0;
     }
 
-    @property Protocol data() { return _data; }
+    override @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNS"; };
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.id = _id;
       packet.qr = _bits.qr;
@@ -88,7 +87,7 @@ class DNS : Protocol {
       assert(packet.toJson().truncation == true);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[12];
       packet.write!ushort(_id, 0);
       packet.write!ubyte(_bits.raw[0], 2);
@@ -114,7 +113,7 @@ class DNS : Protocol {
       assert(bytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -560,13 +559,12 @@ class DNSQR : Protocol {
       _qclass = qclass;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSQR"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.qname = _qname;
       packet.qtype = _qtype;
@@ -581,7 +579,7 @@ class DNSQR : Protocol {
       assert(packet.toJson().qclass == 1);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ulong inc = (_qname.length > 1 ? _qname.length + 1 : 0);
       ubyte[] packet = new ubyte[5 + inc];
 
@@ -597,7 +595,7 @@ class DNSQR : Protocol {
       assert(bytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 00, 1]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -606,11 +604,11 @@ class DNSQR : Protocol {
       assert(packet.toString == `{"qname":"google.fr","qtype":1,"qclass":1}`);
     }
 
-    @property string qname() { return _qname; }
+    @property string qname() const { return _qname; }
     @property void qname(string qname) { _qname = qname; }
-    @property ushort qtype() { return _qtype; }
+    @property ushort qtype() const { return _qtype; }
     @property void qtype(ushort qtype) { _qtype = qtype; }
-    @property ushort qclass() { return _qclass; }
+    @property ushort qclass() const { return _qclass; }
     @property void qclass(ushort qclass) { _qclass = qclass; }
 
   private:
@@ -662,13 +660,12 @@ class DNSRR : Protocol {
       _ttl = ttl;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSRR"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.rname = _rname;
       packet.rtype = _rtype;
@@ -687,10 +684,9 @@ class DNSRR : Protocol {
       assert(packet.toJson.rdlength == 0);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ulong inc = (_rname.length > 1 ? _rname.length + 1 : 0);
       ubyte[] packet = new ubyte[11 + inc];
-
       writeLabels(0, _rname, packet);
       packet.write!ushort(_rtype, (1 + inc));
       packet.write!ushort(_rclass, (3 + inc));
@@ -704,7 +700,7 @@ class DNSRR : Protocol {
       assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1, 0, 0, 9, 196, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson().toString;
     }
 
@@ -717,11 +713,11 @@ class DNSRR : Protocol {
     @property void rname(string rname) { _rname = rname; }
     @property ushort rtype() { return _rtype; }
     @property void rtype(ushort rtype) { _rtype = rtype; }
-    @property ushort rclass() { return _rclass; }
+    @property ushort rclass() const { return _rclass; }
     @property void rclass(ushort rclass) { _rclass = rclass; }
-    @property uint ttl() { return _ttl; }
+    @property uint ttl() const { return _ttl; }
     @property void ttl(uint ttl) { _ttl = ttl; }
-    @property ushort rdlength() { return _rdlength; }
+    @property ushort rdlength() const { return _rdlength; }
     @property void rdlength(ushort rdlength) { _rdlength = rdlength; }
 
   private:
@@ -774,7 +770,7 @@ unittest {
   assert(packet.rdlength == 0);
 }
 
-class DNSSOAResource  : Protocol{
+class DNSSOAResource  : Protocol {
   public:
     this() {}
 
@@ -788,13 +784,12 @@ class DNSSOAResource  : Protocol{
       _minTtl = minTtl;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSSOAResource"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.primary = _primary;
       packet.admin = _admin;
@@ -817,7 +812,7 @@ class DNSSOAResource  : Protocol{
       assert(packet.toJson.minTtl == 0);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ulong inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
       ubyte[] packet = new ubyte[22 + inc];
       uint pos = 0;
@@ -837,7 +832,7 @@ class DNSSOAResource  : Protocol{
       assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
@@ -846,19 +841,19 @@ class DNSSOAResource  : Protocol{
       assert(packet.toString == `{"minTtl":86420,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
     }
 
-    @property string primary() { return _primary; }
+    @property string primary() const { return _primary; }
     @property void primary(string primary) { _primary = primary; }
-    @property string admin() { return _admin; }
+    @property string admin() const { return _admin; }
     @property void admin(string admin) { _admin = admin; }
-    @property uint serial() { return _serial; }
+    @property uint serial() const { return _serial; }
     @property void serial(uint serial) { _serial = serial; }
-    @property uint refresh() { return _refresh; }
+    @property uint refresh() const { return _refresh; }
     @property void refresh(uint refresh) { _refresh = refresh; }
-    @property uint retry() { return _retry; }
+    @property uint retry() const { return _retry; }
     @property void retry(uint retry) { _retry = retry; }
-    @property uint expirationLimit() { return _expirationLimit; }
+    @property uint expirationLimit() const { return _expirationLimit; }
     @property void expirationLimit(uint expirationLimit) { _expirationLimit = expirationLimit; }
-    @property uint minTtl() { return _minTtl; }
+    @property uint minTtl() const { return _minTtl; }
     @property void minTtl(uint minTtl) { _minTtl = minTtl; }
 
   private:
@@ -872,7 +867,7 @@ class DNSSOAResource  : Protocol{
     uint _minTtl = 0;
 }
 
-DNSSOAResource toDNSSOAResource(Json json) {
+DNSSOAResource toDNSSOAResource(Json json)return {
   DNSSOAResource packet = new DNSSOAResource();
   packet.primary = json.primary.to!string;
   packet.admin = json.admin.to!string;
@@ -936,13 +931,12 @@ class DNSMXResource : Protocol {
       _mxname = mxname;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSMXResource"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.mxname = _mxname;
       packet.pref = _pref;
@@ -955,11 +949,10 @@ class DNSMXResource : Protocol {
       assert(packet.toJson.pref == 2);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ulong inc = (_mxname.length > 1 ? _mxname.length + 1 : 0);
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
-
       writeLabels(2, _mxname, packet);
       return packet;
     }
@@ -969,7 +962,7 @@ class DNSMXResource : Protocol {
       assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
@@ -978,7 +971,7 @@ class DNSMXResource : Protocol {
       assert(packet.toString == `{"mxname":"google.fr","pref":2}`);
     }
 
-    @property ushort pref() { return _pref; }
+    @property ushort pref() const { return _pref; }
     @property void pref(ushort pref) { _pref = pref; }
     @property string mxname() { return _mxname; }
     @property void mxname(string mxname) { _mxname = mxname; }
@@ -1027,13 +1020,12 @@ class DNSAResource : Protocol {
       _ip = ip;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSAResource"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.ip = serializeToJson(_ip);
       return packet;
@@ -1044,7 +1036,7 @@ class DNSAResource : Protocol {
       assert(deserializeJson!(ubyte[4])(packet.toJson.ip) == [127, 0, 0, 1]);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet;
       packet ~= _ip;
       return packet;
@@ -1055,7 +1047,7 @@ class DNSAResource : Protocol {
       assert(packet.toBytes == [127, 0, 0, 1]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
@@ -1064,7 +1056,7 @@ class DNSAResource : Protocol {
       assert(packet.toString == `{"ip":[127,0,0,1]}`);
     }
 
-    @property ubyte[4] ip() { return _ip; }
+    @property ubyte[4] ip() const { return _ip; }
     @property void ip(ubyte[4] ip) { _ip = ip; }
 
   private:
@@ -1105,13 +1097,12 @@ class DNSPTRResource : Protocol {
       _ptrname = ptrname;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "DNSPTRResource"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 7; }
 
-    void prepare() {
-
-    }
-
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.ptrname = _ptrname;
       return packet;
@@ -1122,7 +1113,7 @@ class DNSPTRResource : Protocol {
       assert(packet.toJson.ptrname == "google.fr");
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ulong inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
       ubyte[] packet = new ubyte[1 + inc];
       writeLabels(0, _ptrname, packet);
@@ -1134,7 +1125,7 @@ class DNSPTRResource : Protocol {
       assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
