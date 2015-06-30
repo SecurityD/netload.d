@@ -1,4 +1,4 @@
-module netload.protocols.icmp.v4;
+module netload.protocols.icmp.v4.communication;
 
 import netload.core.protocol;
 import netload.protocols.icmp.common;
@@ -12,10 +12,7 @@ class ICMPv4Communication : ICMP {
     }
 
     override Json toJson() const {
-      Json packet = Json.emptyObject;
-      packet.packetType = _type;
-      packet.code = _code;
-      packet.checksum = _checksum;
+      Json packet = super.toJson();
       packet.id = _id;
       packet.seq = _seq;
       return packet;
@@ -31,10 +28,8 @@ class ICMPv4Communication : ICMP {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = new ubyte[8];
-      packet.write!ubyte(_type, 0);
-      packet.write!ubyte(_code, 1);
-      packet.write!ushort(_checksum, 2);
+      ubyte[] packet = super.toBytes();
+      packet ~= [0, 0, 0, 0];
       packet.write!ushort(_id, 4);
       packet.write!ushort(_seq, 6);
       return packet;
@@ -206,12 +201,7 @@ class ICMPv4Timestamp : ICMPv4Communication {
     }
 
     override Json toJson() const {
-      Json packet = Json.emptyObject;
-      packet.packetType = _type;
-      packet.code = _code;
-      packet.checksum = _checksum;
-      packet.id = _id;
-      packet.seq = _seq;
+      Json packet = super.toJson();
       packet.originTime = _originTime;
       packet.receiveTime = _receiveTime;
       packet.transmitTime = _transmitTime;
@@ -231,12 +221,8 @@ class ICMPv4Timestamp : ICMPv4Communication {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = new ubyte[20];
-      packet.write!ubyte(_type, 0);
-      packet.write!ubyte(_code, 1);
-      packet.write!ushort(_checksum, 2);
-      packet.write!ushort(_id, 4);
-      packet.write!ushort(_seq, 6);
+      ubyte[] packet = super.toBytes();
+      packet ~= [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       packet.write!uint(_originTime, 8);
       packet.write!uint(_receiveTime, 12);
       packet.write!uint(_transmitTime, 16);
