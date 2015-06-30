@@ -68,7 +68,7 @@ class ICMP : Protocol {
       void checksum(ushort checksum) { _checksum = checksum; }
     }
 
-  private:
+  protected:
     Protocol _data;
     ubyte _type = 0;
     ubyte _code = 0;
