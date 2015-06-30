@@ -1,10 +1,10 @@
-module netload.protocols.icmp;
+module netload.protocols.icmp.v4;
 
 import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
 
-class ICMPEchoRequest : Protocol {
+class ICMPv4EchoRequest : Protocol {
   public:
     this() {}
 
@@ -21,7 +21,7 @@ class ICMPEchoRequest : Protocol {
     }
 
     unittest {
-      ICMPEchoRequest packet = new ICMPEchoRequest();
+      ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
       assert(packet.toJson.type == 8);
     }
 
@@ -32,7 +32,7 @@ class ICMPEchoRequest : Protocol {
     }
 
     unittest {
-      ICMPEchoRequest packet = new ICMPEchoRequest();
+      ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
       assert(packet.toBytes == [8, 0, 0, 0]);
     }
 
@@ -41,41 +41,41 @@ class ICMPEchoRequest : Protocol {
     }
 
     unittest {
-      ICMPEchoRequest packet = new ICMPEchoRequest();
+      ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
       assert(packet.toString == `{"packetType":8}`);
     }
 
-    @property ubyte type() { return _type; }
+    @property inout ubyte type() { return _type; }
 
   private:
     Protocol _data;
     ubyte _type = 8;
 }
 
-ICMPEchoRequest toICMPEchoRequest(Json json) {
-  ICMPEchoRequest packet = new ICMPEchoRequest();
+ICMPv4EchoRequest toICMPEchoRequest(Json json) {
+  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
   return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
   json.packeType = 8;
-  ICMPEchoRequest packet = toICMPEchoRequest(json);
+  ICMPv4EchoRequest packet = toICMPEchoRequest(json);
   assert(packet.type == 8);
 }
 
-ICMPEchoRequest toICMPEchoRequest(ubyte[] encodedPacket) {
-  ICMPEchoRequest packet = new ICMPEchoRequest();
+ICMPv4EchoRequest toICMPEchoRequest(ubyte[] encodedPacket) {
+  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
   return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0];
-  ICMPEchoRequest packet = encodedPacket.toICMPEchoRequest();
+  ICMPv4EchoRequest packet = encodedPacket.toICMPEchoRequest();
   assert(packet.type == 8);
 }
 
-class ICMPEchoReply : Protocol {
+class ICMPv4EchoReply : Protocol {
   public:
     this() {}
 
@@ -92,7 +92,7 @@ class ICMPEchoReply : Protocol {
     }
 
     unittest {
-      ICMPEchoReply packet = new ICMPEchoReply();
+      ICMPv4EchoReply packet = new ICMPv4EchoReply();
       assert(packet.toJson.packetType == 0);
     }
 
@@ -103,7 +103,7 @@ class ICMPEchoReply : Protocol {
     }
 
     unittest {
-      ICMPEchoReply packet = new ICMPEchoReply();
+      ICMPv4EchoReply packet = new ICMPv4EchoReply();
       assert(packet.toBytes == [0, 0, 0, 0]);
     }
 
@@ -112,36 +112,36 @@ class ICMPEchoReply : Protocol {
     }
 
     unittest {
-      ICMPEchoReply packet = new ICMPEchoReply();
+      ICMPv4EchoReply packet = new ICMPv4EchoReply();
       assert(packet.toString == `{"packetType":0}`);
     }
 
-    @property ubyte type() { return _type; }
+    @property inout ubyte type() { return _type; }
 
   private:
     Protocol _data;
     ubyte _type = 0;
 }
 
-ICMPEchoReply toICMPEchoReply(Json json) {
-  ICMPEchoReply packet = new ICMPEchoReply();
+ICMPv4EchoReply toICMPEchoReply(Json json) {
+  ICMPv4EchoReply packet = new ICMPv4EchoReply();
   return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
   json.packeType = 0;
-  ICMPEchoReply packet = toICMPEchoReply(json);
+  ICMPv4EchoReply packet = toICMPEchoReply(json);
   assert(packet.type == 0);
 }
 
-ICMPEchoReply toICMPEchoReply(ubyte[] encodedPacket) {
-  ICMPEchoReply packet = new ICMPEchoReply();
+ICMPv4EchoReply toICMPEchoReply(ubyte[] encodedPacket) {
+  ICMPv4EchoReply packet = new ICMPv4EchoReply();
   return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [0, 0, 0, 0];
-  ICMPEchoReply packet = encodedPacket.toICMPEchoReply();
+  ICMPv4EchoReply packet = encodedPacket.toICMPEchoReply();
   assert(packet.type == 0);
 }
