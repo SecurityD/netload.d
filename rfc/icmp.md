@@ -36,6 +36,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <th>Status</th>
     <th>Description</th>
     <th>Class</th>
+    <th>Properties</th>
   </tr>
   <tr>
     <td>0 - Echo reply</td>
@@ -43,12 +44,21 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Used to ping</td>
     <td>ICMPv4EchoReply</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>1 and 2</td>
     <td></td>
     <td>unassigned</td>
     <td><b>reserved</b></td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -57,6 +67,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Destination network unreachable</td>
     <td rowspan="16" >ICMPv4DestUnreach</td>
+    <td rowspan="16"></td>
   </tr>
   <tr>
     <td>1</td>
@@ -139,6 +150,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Source quench (congestion control)</td>
     <td>ICMPv4SourceQuench</td>
+    <td></td>
   </tr>
   <tr>
     <td rowspan="4">5 - Redirect Message</td>
@@ -146,6 +158,13 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Redirect Datagram for the Network</td>
     <td rowspan="4">ICMPv4Redirect</td>
+    <td>
+      <ul>
+        <li>
+          gateway : Address of the gateway to which traffic for the network specified in the internet destination network field of the original datagram's data should be sent.
+        </li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>1</td>
@@ -168,12 +187,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Alternate Host Address</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>7</td>
     <td></td>
     <td>unassigned</td>
     <td>**reserved**</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -182,6 +203,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Used to ping</td>
     <td>ICMPv4EchoRequest</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>9 - Router Advertisement</td>
@@ -189,6 +218,25 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Router Advertisement</td>
     <td>ICMPv4RouterAdvert</td>
+    <td>
+      <ul>
+        <li>
+          numAddr : The number of router addresses advertised in this message.
+        </li>
+        <li>
+          addrEntrySize : The number of 32-bit words of information per each router address (2, in the version of the protocol described here).
+        </li>
+        <li>
+          life : The maximum number of seconds that the router addresses may be considered valid.
+        </li>
+        <li>
+          Router Address[i], i = 1..numAddr : The sending router's IP address(es) on the interface from which this message is sent.
+        </li>
+        <li>
+          Preference Level[i], i = 1..numAddr : The preferability of each Router Address[i] as a default router address, relative to other router addresses on the same subnet. A signed, twos-complement value; higher values mean more preferable.
+        </li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>10 - Router Solicitation</td>
@@ -196,6 +244,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Router discovery/selection/solicitation</td>
     <td>ICMPv4RouterSollicitation</td>
+    <td></td>
   </tr>
   <tr>
     <td rowspan="2">11 - Time Exceeded</td>
@@ -203,6 +252,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>TTL expired in transit</td>
     <td rowspan="2">ICMPv4TimeExceed</td>
+    <td rowspan="2"></td>
   </tr>
   <tr>
     <td>1</td>
@@ -215,6 +265,13 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Pointer indicates the error</td>
     <td rowspan="3">ICMPv4ParamProblem</td>
+    <td rowspan="3">
+      <ul>
+        <li>
+          ptr : If code = 0, identifies the octet where an error was detected.
+        </li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>1</td>
@@ -232,6 +289,23 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Timestamp</td>
     <td>ICMPv4TimestampRequest</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          originTime : The Originate Timestamp is the time the sender last touched the message before sending it.
+        </li>
+        <li>
+          receiveTime : The Receive Timestamp is the time the echoer first touched it on receipt.
+        </li>
+        <li>
+          transmitTime : The Transmit Timestamp is the time the echoer last touched the message on sending it.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>14 - Timestamp Reply</td>
@@ -239,6 +313,23 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td></td>
     <td>Timestamp reply</td>
     <td>ICMPv4TimestampReply</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          originTime : The Originate Timestamp is the time the sender last touched the message before sending it.
+        </li>
+        <li>
+          receiveTime : The Receive Timestamp is the time the echoer first touched it on receipt.
+        </li>
+        <li>
+          transmitTime : The Transmit Timestamp is the time the echoer last touched the message on sending it.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>15 - Information Request</td>
@@ -246,6 +337,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Information Request</td>
     <td>ICMPv4InformationRequest</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>16 - Information Reply</td>
@@ -253,12 +352,21 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Information Reply</td>
     <td>ICMPv4InformationReply</td>
+    <td>
+        <li>
+          id : If code = 0, an identifier to aid in matching echos and replies, may be zero.
+        </li>
+        <li>
+          seq : If code = 0, a sequence number to aid in matching echos and replies, may be zero.
+        </li>
+    </td>
   </tr>
   <tr>
     <td>17 - Address Mask Request</td>
     <td>0</td>
     <td>deprecated</td>
     <td>Address Mask Request</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -267,12 +375,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Address Mask Reply</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>19</td>
     <td></td>
     <td>**reserved**</td>
     <td>Reserved for security</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -281,18 +391,13 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>**reserved**</td>
     <td>Reserved for robustness experiment</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>30 - Traceroute</td>
     <td>0</td>
     <td>deprecated</td>
     <td>Information Request</td>
-    <td></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td></td>
-    <td>deprecated</td>
     <td></td>
     <td></td>
   </tr>
@@ -302,12 +407,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Datagram Conversion Error</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>32</td>
     <td></td>
     <td>deprecated</td>
     <td>Mobile Host Redirect</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -316,12 +423,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Where-Are-You (originally meant for IPv6)</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>34</td>
     <td></td>
     <td>deprecated</td>
     <td>Here-I-Am (originally meant for IPv6)</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -330,12 +439,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Mobile Registration Request</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>36</td>
     <td></td>
     <td>deprecated</td>
     <td>Mobile Registration Reply</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -344,12 +455,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>Domain Name Request</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>38</td>
     <td></td>
     <td>deprecated</td>
     <td>Domain Name Reply</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -358,12 +471,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>deprecated</td>
     <td>SKIP Algorithm Discovery Protocol, Simple Key-Management for Internet Protocol</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>40</td>
     <td></td>
     <td></td>
     <td>Photuris, Security failures</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -372,12 +487,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>experimental</td>
     <td>ICMP for experimental mobility protocols such as Seamoby [RFC4065](https://www.ietf.org/rfc/rfc4065.txt)</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>42 through 252</td>
     <td></td>
     <td>unassigned</td>
     <td>**reserved**</td>
+    <td></td>
     <td></td>
   </tr>
   <tr>
@@ -386,6 +503,7 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>experimental</td>
     <td>RFC3692-style Experiment 1 [RFC 4727](https://www.ietf.org/rfc/rfc4727.txt)</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>254</td>
@@ -393,12 +511,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>experimental</td>
     <td>RFC3692-style Experiment 2 [RFC 4727](https://www.ietf.org/rfc/rfc4727.txt)</td>
     <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>255</td>
     <td></td>
     <td>reserved</td>
     <td>**reserved**</td>
+    <td></td>
     <td></td>
   </tr>
 </table>
