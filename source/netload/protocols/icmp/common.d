@@ -69,7 +69,7 @@ class ICMP : Protocol {
     }
 
   protected:
-    Protocol _data;
+    Protocol _data = null;
     ubyte _type = 0;
     ubyte _code = 0;
     ushort _checksum = 0;
