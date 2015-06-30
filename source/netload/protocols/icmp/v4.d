@@ -247,6 +247,28 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+class ICMPv4TimestampRequest : ICMPv4Timestamp {
+  public:
+    this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
+      super(13, originTime, receiveTime, transmitTime);
+    }
+
+    @disable @property {
+      override void type(ubyte type) { _type = type; }
+    }
+}
+
+class ICMPv4TimestampReply : ICMPv4Timestamp {
+  public:
+    this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
+      super(14, originTime, receiveTime, transmitTime);
+    }
+
+    @disable @property {
+      override void type(ubyte type) { _type = type; }
+    }
+}
+
 class ICMPv4InformationRequest : ICMPv4Communication {
   public:
     this() {
