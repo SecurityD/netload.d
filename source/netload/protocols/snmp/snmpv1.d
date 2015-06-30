@@ -9,19 +9,11 @@ import netload.protocols.snmp.asn_1;
 
 class SNMPv1 : Protocol {
   public:
-    @property Protocol data() {
-      return null;
-    }
-
-    override void prepare() {
-
-    }
-
-    override Json toJson() {
+    override Json toJson() const {
       auto json = Json.emptyObject;
       json.ver = ver;
       json.community_string = communityString;
-      json.pdu = serializeToJson(pdu);
+      json.pdu = serializeToJson(_pdu);
       return json;
     }
 
@@ -71,7 +63,7 @@ class SNMPv1 : Protocol {
       ]);
     }
 
-    override ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ASN1 seq;
       seq.type = ASN1.Type.SEQUENCE;
 
@@ -85,7 +77,7 @@ class SNMPv1 : Protocol {
       communityString.data = cast(ubyte[])(this.communityString);
       seq.data ~= communityString.toBytes;
 
-      seq.data ~= this.pdu.toBytes;
+      seq.data ~= this._pdu.toBytes;
 
       return seq.toBytes;
     }
@@ -134,11 +126,18 @@ class SNMPv1 : Protocol {
       ]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
     @property {
+      Protocol data() { return null; }
+      void data(Protocol) {}
+
+      inout string name() { return "SNMPv1"; }
+
+      int osiLayer() const { return 7; }
+
       int ver() const { return _version; }
       void ver(int data) { _version = data; }
 

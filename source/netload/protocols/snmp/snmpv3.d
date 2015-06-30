@@ -10,23 +10,15 @@ import netload.protocols.snmp.asn_1;
 
 class SNMPv3 : Protocol {
   public:
-    @property Protocol data() {
-      return null;
-    }
-
-    override void prepare() {
-
-    }
-
-    override Json toJson() {
+    override Json toJson() const {
       auto json = Json.emptyObject;
       json.ver = this.ver;
       json.identifier = this.identifier;
       json.max_size = this.maxSize;
       json.flags = this.flags;
       json.security_model = this.securityModel;
-      json.security_parameters = serializeToJson(this.securityParameters);
-      json.pdu = serializeToJson(this.pdu);
+      json.security_parameters = serializeToJson(_securityParameters);
+      json.pdu = serializeToJson(_pdu);
       return json;
     }
 
@@ -99,7 +91,7 @@ class SNMPv3 : Protocol {
       assert(json.pdu == serializeToJson(pdu));
     }
 
-    override ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ASN1 seq;
       seq.type = ASN1.Type.SEQUENCE;
 
@@ -157,11 +149,18 @@ class SNMPv3 : Protocol {
       assert (snmp.toBytes == raw);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
     @property {
+      Protocol data() { return null; }
+      void data(Protocol) {}
+
+      inout string name() { return "SNMPv3"; }
+
+      int osiLayer() const { return 7; }
+
       int ver() const { return _version; }
       void ver(int data) { _version = data; }
 

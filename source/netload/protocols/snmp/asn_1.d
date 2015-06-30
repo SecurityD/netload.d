@@ -136,7 +136,7 @@ unittest {
   ]);
 }
 
-ubyte[] toBytes(ASN1 asn) {
+ubyte[] toBytes(const ASN1 asn) {
   ubyte[] bytes;
   bytes ~= asn.type;
   if (asn.length & 0b10000000) {
