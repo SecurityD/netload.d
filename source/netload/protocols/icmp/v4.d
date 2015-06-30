@@ -113,6 +113,42 @@ class ICMPv4EchoRequest : ICMPv4Communication {
     }
 }
 
+ICMPv4EchoRequest toICMPv4EchoRequest(Json json) {
+  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
+  packet.checksum = json.checksum.to!ushort;
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+  ICMPv4EchoRequest packet = toICMPv4EchoRequest(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
+ICMPv4EchoRequest toICMPv4EchoRequest(ubyte[] encodedPacket) {
+  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
+  encodedPacket.read!ushort();
+  packet.checksum = encodedPacket.read!ushort();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
+  ICMPv4EchoRequest packet = encodedPacket.toICMPv4EchoRequest;
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
 class ICMPv4EchoReply : ICMPv4Communication {
   public:
     this() {
@@ -122,6 +158,42 @@ class ICMPv4EchoReply : ICMPv4Communication {
     @disable @property {
       override void type(ubyte type) { _type = type; }
     }
+}
+
+ICMPv4EchoReply toICMPv4EchoReply(Json json) {
+  ICMPv4EchoReply packet = new ICMPv4EchoReply();
+  packet.checksum = json.checksum.to!ushort;
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+  ICMPv4EchoReply packet = toICMPv4EchoReply(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
+ICMPv4EchoReply toICMPv4EchoReply(ubyte[] encodedPacket) {
+  ICMPv4EchoReply packet = new ICMPv4EchoReply();
+  encodedPacket.read!ushort();
+  packet.checksum = encodedPacket.read!ushort();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
+  ICMPv4EchoReply packet = encodedPacket.toICMPv4EchoReply;
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
 }
 
 class ICMPv4Timestamp : ICMPv4Communication {
@@ -178,6 +250,10 @@ class ICMPv4Timestamp : ICMPv4Communication {
       assert(packet.toBytes == [14, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84]);
     }
 
+    @disable @property {
+      override void checksum(ushort checksum) { _checksum = checksum; }
+    }
+
     @property {
       inout uint originTime() { return _originTime; }
       void originTime(uint originTime) { _originTime = originTime; }
@@ -195,7 +271,6 @@ class ICMPv4Timestamp : ICMPv4Communication {
 
 ICMPv4Timestamp toICMPv4Timestamp(Json json) {
   ICMPv4Timestamp packet = new ICMPv4Timestamp(json.packetType.to!ubyte);
-  packet.checksum = json.checksum.to!ushort;
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   packet.originTime = json.originTime.to!uint;
@@ -207,7 +282,6 @@ ICMPv4Timestamp toICMPv4Timestamp(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 14;
-  json.checksum = 0;
   json.id = 1;
   json.seq = 2;
   json.originTime = 21;
@@ -215,7 +289,6 @@ unittest {
   json.transmitTime = 84;
   ICMPv4Timestamp packet = toICMPv4Timestamp(json);
   assert(packet.type == 14);
-  assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
@@ -226,7 +299,7 @@ unittest {
 ICMPv4Timestamp toICMPv4Timestamp(ubyte[] encodedPacket) {
   ICMPv4Timestamp packet = new ICMPv4Timestamp(encodedPacket.read!ubyte());
   encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
+  encodedPacket.read!ushort();
   packet.id = encodedPacket.read!ushort();
   packet.seq = encodedPacket.read!ushort();
   packet.originTime = encodedPacket.read!uint();
@@ -239,7 +312,6 @@ unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
   ICMPv4Timestamp packet = encodedPacket.toICMPv4Timestamp;
   assert(packet.type == 8);
-  assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
@@ -258,6 +330,53 @@ class ICMPv4TimestampRequest : ICMPv4Timestamp {
     }
 }
 
+ICMPv4TimestampRequest toICMPv4TimestampRequest(Json json) {
+  ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest(json.packetType.to!ubyte);
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  packet.originTime = json.originTime.to!uint;
+  packet.receiveTime = json.receiveTime.to!uint;
+  packet.transmitTime = json.transmitTime.to!uint;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.packetType = 14;
+  json.id = 1;
+  json.seq = 2;
+  json.originTime = 21;
+  json.receiveTime = 42;
+  json.transmitTime = 84;
+  ICMPv4TimestampRequest packet = toICMPv4TimestampRequest(json);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+}
+
+ICMPv4TimestampRequest toICMPv4TimestampRequest(ubyte[] encodedPacket) {
+  ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest();
+  encodedPacket.read!uint();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  packet.originTime = encodedPacket.read!uint();
+  packet.receiveTime = encodedPacket.read!uint();
+  packet.transmitTime = encodedPacket.read!uint();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
+  ICMPv4TimestampRequest packet = encodedPacket.toICMPv4TimestampRequest;
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+}
+
 class ICMPv4TimestampReply : ICMPv4Timestamp {
   public:
     this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
@@ -267,6 +386,53 @@ class ICMPv4TimestampReply : ICMPv4Timestamp {
     @disable @property {
       override void type(ubyte type) { _type = type; }
     }
+}
+
+ICMPv4TimestampReply toICMPv4TimestampReply(Json json) {
+  ICMPv4TimestampReply packet = new ICMPv4TimestampReply(json.packetType.to!ubyte);
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  packet.originTime = json.originTime.to!uint;
+  packet.receiveTime = json.receiveTime.to!uint;
+  packet.transmitTime = json.transmitTime.to!uint;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.packetType = 14;
+  json.id = 1;
+  json.seq = 2;
+  json.originTime = 21;
+  json.receiveTime = 42;
+  json.transmitTime = 84;
+  ICMPv4TimestampReply packet = toICMPv4TimestampReply(json);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+}
+
+ICMPv4TimestampReply toICMPv4TimestampReply(ubyte[] encodedPacket) {
+  ICMPv4TimestampReply packet = new ICMPv4TimestampReply();
+  encodedPacket.read!uint();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  packet.originTime = encodedPacket.read!uint();
+  packet.receiveTime = encodedPacket.read!uint();
+  packet.transmitTime = encodedPacket.read!uint();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
+  ICMPv4TimestampReply packet = encodedPacket.toICMPv4TimestampReply;
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
 }
 
 class ICMPv4InformationRequest : ICMPv4Communication {
@@ -280,6 +446,42 @@ class ICMPv4InformationRequest : ICMPv4Communication {
     }
 }
 
+ICMPv4InformationRequest toICMPv4InformationRequest(Json json) {
+  ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
+  packet.checksum = json.checksum.to!ushort;
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+  ICMPv4InformationRequest packet = toICMPv4InformationRequest(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
+ICMPv4InformationRequest toICMPv4InformationRequest(ubyte[] encodedPacket) {
+  ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
+  encodedPacket.read!ushort();
+  packet.checksum = encodedPacket.read!ushort();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
+  ICMPv4InformationRequest packet = encodedPacket.toICMPv4InformationRequest;
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
 class ICMPv4InformationReply : ICMPv4Communication {
   public:
     this() {
@@ -289,4 +491,40 @@ class ICMPv4InformationReply : ICMPv4Communication {
     @disable @property {
       override void type(ubyte type) { _type = type; }
     }
+}
+
+ICMPv4InformationReply toICMPv4InformationReply(Json json) {
+  ICMPv4InformationReply packet = new ICMPv4InformationReply();
+  packet.checksum = json.checksum.to!ushort;
+  packet.id = json.id.to!ushort;
+  packet.seq = json.seq.to!ushort;
+  return packet;
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+  ICMPv4InformationReply packet = toICMPv4InformationReply(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+}
+
+ICMPv4InformationReply toICMPv4InformationReply(ubyte[] encodedPacket) {
+  ICMPv4InformationReply packet = new ICMPv4InformationReply();
+  encodedPacket.read!ushort();
+  packet.checksum = encodedPacket.read!ushort();
+  packet.id = encodedPacket.read!ushort();
+  packet.seq = encodedPacket.read!ushort();
+  return packet;
+}
+
+unittest {
+  ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
+  ICMPv4InformationReply packet = encodedPacket.toICMPv4InformationReply;
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
 }
