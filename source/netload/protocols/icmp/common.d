@@ -13,13 +13,16 @@ class ICMP : Protocol {
       _code = code;
     }
 
-    @property Protocol data() { return _data; }
+    override @property inout string name() { return "ICMP"; };
+    override @property Protocol data() { return _data; }
+    override @property void data(Protocol p) { _data = p; }
+    override @property int osiLayer() const { return 3; }
 
     void prepare() {
 
     }
 
-    Json toJson() {
+    override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.packetType = _type;
       packet.code = _code;
@@ -34,7 +37,7 @@ class ICMP : Protocol {
       assert(packet.toJson.checksum == 0);
     }
 
-    ubyte[] toBytes() {
+    override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[4];
       packet.write!ubyte(_type, 0);
       packet.write!ubyte(_code, 1);
@@ -47,7 +50,7 @@ class ICMP : Protocol {
       assert(packet.toBytes == [3, 2, 0, 0]);
     }
 
-    override string toString() {
+    override string toString() const {
       return toJson.toString;
     }
 
