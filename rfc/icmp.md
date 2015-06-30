@@ -188,14 +188,14 @@ In case of an error, the message body is composed of 2 fields whose one's is a 4
     <td>0</td>
     <td></td>
     <td>Router Advertisement</td>
-    <td></td>
+    <td>ICMPv4RouterAdvert</td>
   </tr>
   <tr>
     <td>10 - Router Solicitation</td>
     <td>0</td>
     <td></td>
     <td>Router discovery/selection/solicitation</td>
-    <td></td>
+    <td>ICMPv4RouterSollicitation</td>
   </tr>
   <tr>
     <td rowspan="2">11 - Time Exceeded</td>
@@ -410,3 +410,4 @@ A general class ICMP is also provided.
 - Internet Control Message Protocol [RFC 777](https://www.ietf.org/rfc/rfc777.txt)
 - Internet Control Message Protocol [RFC 792](https://www.ietf.org/rfc/rfc792.txt)
 - Internet Control Message Protocol (ICMPv6) for the Internet Protocol Version 6 (IPv6) Specification [RFC 4443](https://www.ietf.org/rfc/rfc4443.txt)
+- ICMP Router Discovery Messages [RFC 1256](https://www.ietf.org/rfc/rfc1256.txt)
