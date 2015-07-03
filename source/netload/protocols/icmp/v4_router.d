@@ -93,6 +93,9 @@ Protocol toICMPv4RouterAdvert(Json json) {
   packet.life = json.life.to!ushort;
   packet.routerAddr = deserializeJson!(ubyte[4][])(json.routerAddr);
   packet.prefAddr = deserializeJson!(ubyte[4][])(json.prefAddr);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -166,6 +169,9 @@ class ICMPv4RouterSollicitation : ICMP {
 Protocol toICMPv4RouterSollicitation(Json json) {
   ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

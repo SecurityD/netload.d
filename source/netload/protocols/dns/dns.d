@@ -179,6 +179,9 @@ Protocol toDNS(Json json) {
   packet.ra = json.record_available.to!bool;
   packet.z = json.zero.to!ubyte;
   packet.rcode = json.rcode.to!ubyte;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -281,6 +284,9 @@ Protocol toDNSQuery(Json json) {
   packet.ancount = json.ancount.to!ushort;
   packet.nscount = json.nscount.to!ushort;
   packet.arcount = json.arcount.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -366,6 +372,9 @@ Protocol toDNSResource(Json json) {
   packet.ancount = json.ancount.to!ushort;
   packet.nscount = json.nscount.to!ushort;
   packet.arcount = json.arcount.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -520,7 +529,7 @@ enum QClass {
   ANY = 255
 }
 
-uint writeLabels(in uint pos, in string src, ref ubyte[] dest) {
+private uint writeLabels(in uint pos, in string src, ref ubyte[] dest) {
   ubyte[] b = cast(ubyte[])src;
   ubyte len = 0;
   uint idx = 0;
@@ -539,7 +548,7 @@ uint writeLabels(in uint pos, in string src, ref ubyte[] dest) {
   return (idx + 1);
 }
 
-string readLabels(ref ubyte[] encodedPacket) {
+private string readLabels(ref ubyte[] encodedPacket) {
   ubyte[] buffer;
   ubyte len = encodedPacket.read!ubyte();
   while (len != 0) {
@@ -629,7 +638,11 @@ class DNSQR : Protocol {
 }
 
 Protocol toDNSQR(Json json) {
-  return (new DNSQR(json.qname.to!string, json.qtype.to!ushort, json.qclass.to!ushort));
+  DNSQR packet = new DNSQR(json.qname.to!string, json.qtype.to!ushort, json.qclass.to!ushort);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
+  return packet;
 }
 
 unittest {
@@ -747,6 +760,9 @@ class DNSRR : Protocol {
 Protocol toDNSRR(Json json) {
   DNSRR packet = new DNSRR(json.rname.to!string, json.rtype.to!ushort, json.rclass.to!ushort, json.ttl.to!uint);
   packet.rdlength = json.rdlength.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -896,6 +912,9 @@ Protocol toDNSSOAResource(Json json) {
   packet.retry = json.retry.to!uint;
   packet.expirationLimit = json.expirationLimit.to!uint;
   packet.minTtl = json.minTtl.to!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -1011,6 +1030,9 @@ Protocol toDNSMXResource(Json json) {
   DNSMXResource packet = new DNSMXResource;
   packet.pref = json.pref.to!ushort;
   packet.mxname = json.mxname.to!string;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -1097,6 +1119,9 @@ class DNSAResource : Protocol {
 Protocol toDNSAResource(Json json) {
   DNSAResource packet = new DNSAResource();
   packet.ip = deserializeJson!(ubyte[4])(json.ip);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -1180,6 +1205,9 @@ class DNSPTRResource : Protocol {
 Protocol toDNSPTRResource(Json json) {
   DNSPTRResource packet = new DNSPTRResource();
   packet.ptrname = json.ptrname.to!string;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

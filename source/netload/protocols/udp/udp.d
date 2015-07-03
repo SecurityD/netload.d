@@ -82,6 +82,9 @@ Protocol toUDP(Json json) {
   UDP packet = new UDP(json.src_port.to!ushort, json.dest_port.to!ushort);
   packet.length = json.len.to!ushort;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

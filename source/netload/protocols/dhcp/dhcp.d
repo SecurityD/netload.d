@@ -173,6 +173,9 @@ Protocol toDHCP(Json json) {
   packet.sname = deserializeJson!(ubyte[64])(json.sname);
   packet.file = deserializeJson!(ubyte[128])(json.file);
   packet.options = deserializeJson!(ubyte[])(json.options);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

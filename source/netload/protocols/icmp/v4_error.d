@@ -33,6 +33,9 @@ Protocol toICMPv4Error(Json json) {
   packet.type = json.packetType.to!ubyte;
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -83,6 +86,9 @@ Protocol toICMPv4DestUnreach(Json json) {
   ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -130,6 +136,9 @@ Protocol toICMPv4TimeExceed(Json json) {
   ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -212,6 +221,9 @@ Protocol toICMPv4ParamProblem(Json json) {
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
   packet.ptr = json.ptr.to!ubyte;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -264,6 +276,9 @@ Protocol toICMPv4SourceQuench(Json json) {
   ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -346,6 +361,9 @@ Protocol toICMPv4Redirect(Json json) {
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
   packet.gateway = json.gateway.to!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

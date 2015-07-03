@@ -153,6 +153,9 @@ Protocol toIP(Json json) {
   packet.checksum = json.checksum.get!ushort;
   packet.srcIpAddress = json.src_ip_address.get!uint;
   packet.destIpAddress = json.dest_ip_address.get!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

@@ -196,6 +196,9 @@ Protocol toDot11(Json json) {
   packet.addr4 = deserializeJson!(ubyte[6])(json.addr4);
   packet.seq = json.seq.to!ushort;
   packet.fcs = json.fcs.to!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

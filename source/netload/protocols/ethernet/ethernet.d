@@ -90,6 +90,9 @@ Protocol toEthernet(Json json) {
   packet.destMacAddress = deserializeJson!(ubyte[6])(json.dest_mac_address);
   packet.protocolType = json.protocol_type.get!ushort;
   packet.fcs = json.fcs.get!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 

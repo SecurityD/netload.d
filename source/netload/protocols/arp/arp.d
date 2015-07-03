@@ -133,6 +133,9 @@ Protocol toARP(Json json) {
   packet.targetHwAddr = deserializeJson!(ubyte[])(json.targetHwAddr);
   packet.senderProtocolAddr = deserializeJson!(ubyte[])(json.senderProtocolAddr);
   packet.targetProtocolAddr = deserializeJson!(ubyte[])(json.targetProtocolAddr);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
