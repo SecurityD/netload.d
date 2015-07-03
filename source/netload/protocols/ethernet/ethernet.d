@@ -74,7 +74,7 @@ class Ethernet : Protocol {
     ubyte[6] _srcMacAddress = [0, 0, 0, 0, 0, 0];
     ubyte[6] _destMacAddress = [0, 0, 0, 0, 0, 0];
     ushort _protocolType = 0x0800;
-    Protocol _data;
+    Protocol _data = null;
     uint _fcs = 0;
 }
 

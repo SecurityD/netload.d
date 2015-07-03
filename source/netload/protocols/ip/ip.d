@@ -119,7 +119,7 @@ class IP : Protocol {
       @property void destIpAddress(uint address) { _destIpAddress = address; }
 
     private:
-      Protocol _data;
+      Protocol _data = null;
       VersionAndLength _versionAndLength;
       ubyte _tos = 0;
       ushort _length = 0;

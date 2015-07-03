@@ -152,7 +152,7 @@ class DNS : Protocol {
     @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     ushort _id = 0;
     BitFields _bits;
     ushort _qdcount = 0;
@@ -612,7 +612,7 @@ class DNSQR : Protocol {
     @property void qclass(ushort qclass) { _qclass = qclass; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     string _qname = ".";
     ushort _qtype = 1;
     ushort _qclass = 1;
@@ -721,7 +721,7 @@ class DNSRR : Protocol {
     @property void rdlength(ushort rdlength) { _rdlength = rdlength; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     string _rname = ".";
     ushort _rtype = 1;
     ushort _rclass = 1;
@@ -857,7 +857,7 @@ class DNSSOAResource  : Protocol {
     @property void minTtl(uint minTtl) { _minTtl = minTtl; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     string _primary = ".";
     string _admin = ".";
     uint _serial = 0;
@@ -977,7 +977,7 @@ class DNSMXResource : Protocol {
     @property void mxname(string mxname) { _mxname = mxname; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     ushort _pref = 0;
     string _mxname = ".";
 }
@@ -1060,7 +1060,7 @@ class DNSAResource : Protocol {
     @property void ip(ubyte[4] ip) { _ip = ip; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     ubyte[4] _ip = [127, 0, 0, 1];
 }
 
@@ -1138,7 +1138,7 @@ class DNSPTRResource : Protocol {
     @property void ptrname(string ptrname) { _ptrname = ptrname; }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
     string _ptrname;
 }
 

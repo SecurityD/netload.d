@@ -178,7 +178,7 @@ class NTPv4 : NTPCommon, Protocol {
     }
 
   private:
-    Protocol _data;
+    Protocol _data = null;
 
     mixin(bitfields!(
       ubyte, "_leapIndicator", 2,

@@ -163,7 +163,7 @@ class Dot11 : Protocol {
     @property void toDS(bool toDS) { _frameControl.toDS = toDS; }
 
   private:
-      Protocol _data;
+      Protocol _data = null;
       Bitfields _frameControl;
       ushort _duration = 0;
       ubyte[6][4] _addr = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
