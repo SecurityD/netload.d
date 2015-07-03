@@ -49,7 +49,7 @@ class Raw : Protocol {
     ubyte[] _bytes;
 }
 
-Raw toRaw(Json json) {
+Protocol toRaw(Json json) {
   Raw packet = new Raw();
   packet.bytes = deserializeJson!(ubyte[])(json.bytes);
   return packet;
@@ -58,11 +58,11 @@ Raw toRaw(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.bytes = serializeToJson([0, 1, 2]);
-  Raw packet = toRaw(json);
+  Raw packet = cast(Raw)toRaw(json);
   assert(packet.bytes == [0, 1, 2]);
 }
 
-Raw toRaw(ubyte[] encoded) {
+Protocol toRaw(ubyte[] encoded) {
   Raw packet = new Raw(encoded);
   packet.bytes = encoded;
   return packet;
@@ -70,6 +70,6 @@ Raw toRaw(ubyte[] encoded) {
 
 unittest {
   ubyte[] encoded = [0, 1, 2];
-  Raw packet = encoded.toRaw();
+  Raw packet = cast(Raw)encoded.toRaw();
   assert(packet.bytes == [0, 1, 2]);
 }

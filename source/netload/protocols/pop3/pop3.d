@@ -51,7 +51,7 @@ class POP3 : Protocol {
     string _body;
 }
 
-POP3 toPOP3(Json json) {
+Protocol toPOP3(Json json) {
   POP3 packet = new POP3();
   packet.str = json.body_.to!string;
   return packet;
@@ -60,17 +60,17 @@ POP3 toPOP3(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  POP3 packet = toPOP3(json);
+  POP3 packet = cast(POP3)toPOP3(json);
   assert(packet.str == "test");
 }
 
-POP3 toPOP3(ubyte[] encoded) {
+Protocol toPOP3(ubyte[] encoded) {
   POP3 packet = new POP3(cast(string)(encoded));
   return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  POP3 packet = encoded.toPOP3();
+  POP3 packet = cast(POP3)encoded.toPOP3();
   assert(packet.str == "test");
 }

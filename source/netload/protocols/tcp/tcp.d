@@ -133,7 +133,7 @@ class TCP : Protocol {
     ushort _urgPtr = 0;
 }
 
-TCP toTCP(ubyte[] encoded) {
+Protocol toTCP(ubyte[] encoded) {
   TCP packet = new TCP();
   packet.srcPort = encoded.read!ushort();
   packet.destPort = encoded.read!ushort();
@@ -157,13 +157,13 @@ TCP toTCP(ubyte[] encoded) {
 
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
-  TCP packet = encoded.toTCP;
+  TCP packet = cast(TCP)encoded.toTCP;
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.window == 8192);
 }
 
-TCP toTCP(Json json) {
+Protocol toTCP(Json json) {
   TCP packet = new TCP();
   packet.srcPort = json.src_port.get!ushort;
   packet.destPort = json.dest_port.get!ushort;
@@ -200,7 +200,7 @@ unittest {
   json.window = 0;
   json.checksum = 0;
   json.urgent_ptr = 0;
-  TCP packet = toTCP(json);
+  TCP packet = cast(TCP)toTCP(json);
   assert(packet.srcPort == json.src_port.get!ushort);
   assert(packet.destPort == json.dest_port.get!ushort);
 }

@@ -122,7 +122,7 @@ class ARP : Protocol {
     ubyte[] _targetProtocolAddr;
 }
 
-ARP toARP(Json json) {
+Protocol toARP(Json json) {
   ARP packet = new ARP(json.hwType.to!ushort, json.protocolType.to!ushort, json.hwAddrLen.to!ubyte, json.protocolAddrLen.to!ubyte, json.opcode.to!ushort);
   packet.senderHwAddr = deserializeJson!(ubyte[])(json.senderHwAddr);
   packet.targetHwAddr = deserializeJson!(ubyte[])(json.targetHwAddr);
@@ -142,7 +142,7 @@ unittest  {
   json.targetHwAddr = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.senderProtocolAddr = serializeToJson([127, 0, 0, 1]);
   json.targetProtocolAddr = serializeToJson([10, 14, 255, 255]);
-  ARP packet = toARP(json);
+  ARP packet = cast(ARP)toARP(json);
   assert(packet.hwType == 1);
   assert(packet.protocolType == 1);
   assert(packet.hwAddrLen == 6);
@@ -154,7 +154,7 @@ unittest  {
   assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
-ARP toARP(ubyte[] encoded) {
+Protocol toARP(ubyte[] encoded) {
   ushort hwType = encoded.read!ushort();
   ushort protocolType = encoded.read!ushort();
   ubyte hwAddrLen = encoded.read!ubyte();
@@ -184,7 +184,7 @@ ARP toARP(ubyte[] encoded) {
 
 unittest {
   ubyte[] encodedPacket = [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255];
-  ARP packet = encodedPacket.toARP;
+  ARP packet = cast(ARP)encodedPacket.toARP;
   assert(packet.hwType == 1);
   assert(packet.protocolType == 1);
   assert(packet.hwAddrLen == 6);

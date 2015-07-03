@@ -171,7 +171,7 @@ class Dot11 : Protocol {
       uint _fcs = 0;
 }
 
-Dot11 toDot11(Json json) {
+Protocol toDot11(Json json) {
   Dot11 packet = new Dot11();
   packet.subtype = json.subtype.to!ubyte;
   packet.type = json.packet_type.to!ubyte;
@@ -214,7 +214,7 @@ unittest {
   json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.seq = 0;
   json.fcs = 0;
-  Dot11 packet = toDot11(json);
+  Dot11 packet = cast(Dot11)toDot11(json);
   assert(packet.type == 0);
   assert(packet.subtype == 8);
   assert(packet.addr1 == [255,255,255,255,255,255]);
@@ -235,7 +235,7 @@ unittest {
   assert(packet.toDS == 0);
 }
 
-Dot11 toDot11(ubyte[] encodedPacket) {
+Protocol toDot11(ubyte[] encodedPacket) {
   Dot11 packet = new Dot11();
   Bitfields frameControl;
   frameControl.raw[0] = encodedPacket.read!ubyte();
@@ -269,7 +269,7 @@ Dot11 toDot11(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  Dot11 packet = encodedPacket.toDot11;
+  Dot11 packet = cast(Dot11)encodedPacket.toDot11;
   assert(packet.type == 0);
   assert(packet.subtype == 8);
   assert(packet.addr1 == [255,255,255,255,255,255]);

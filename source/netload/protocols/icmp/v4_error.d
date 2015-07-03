@@ -28,7 +28,7 @@ class ICMPv4Error : ICMP {
     }
 }
 
-ICMPv4Error toICMPv4Error(Json json) {
+Protocol toICMPv4Error(Json json) {
   ICMPv4Error packet = new ICMPv4Error();
   packet.type = json.packetType.to!ubyte;
   packet.code = json.code.to!ubyte;
@@ -41,13 +41,13 @@ unittest {
   json.packetType = 3;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4Error packet = toICMPv4Error(json);
+  ICMPv4Error packet = cast(ICMPv4Error)toICMPv4Error(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
 
-ICMPv4Error toICMPv4Error(ubyte[] encodedPacket) {
+Protocol toICMPv4Error(ubyte[] encodedPacket) {
   ICMPv4Error packet = new ICMPv4Error();
   packet.type = encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -58,7 +58,7 @@ ICMPv4Error toICMPv4Error(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4Error packet = encodedPacket.toICMPv4Error;
+  ICMPv4Error packet = cast(ICMPv4Error)encodedPacket.toICMPv4Error;
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -79,7 +79,7 @@ class ICMPv4DestUnreach : ICMPv4Error {
     }
 }
 
-ICMPv4DestUnreach toICMPv4DestUnreach(Json json) {
+Protocol toICMPv4DestUnreach(Json json) {
   ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
@@ -90,12 +90,12 @@ unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4DestUnreach packet = toICMPv4DestUnreach(json);
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)toICMPv4DestUnreach(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
 
-ICMPv4DestUnreach toICMPv4DestUnreach(ubyte[] encodedPacket) {
+Protocol toICMPv4DestUnreach(ubyte[] encodedPacket) {
   ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
   encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -106,7 +106,7 @@ ICMPv4DestUnreach toICMPv4DestUnreach(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4DestUnreach packet = encodedPacket.toICMPv4DestUnreach;
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)encodedPacket.toICMPv4DestUnreach;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -126,7 +126,7 @@ class ICMPv4TimeExceed : ICMPv4Error {
     }
 }
 
-ICMPv4TimeExceed toICMPv4TimeExceed(Json json) {
+Protocol toICMPv4TimeExceed(Json json) {
   ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
@@ -137,12 +137,12 @@ unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4TimeExceed packet = toICMPv4TimeExceed(json);
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)toICMPv4TimeExceed(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
 
-ICMPv4TimeExceed toICMPv4TimeExceed(ubyte[] encodedPacket) {
+Protocol toICMPv4TimeExceed(ubyte[] encodedPacket) {
   ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
   encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -153,7 +153,7 @@ ICMPv4TimeExceed toICMPv4TimeExceed(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4TimeExceed packet = encodedPacket.toICMPv4TimeExceed;
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)encodedPacket.toICMPv4TimeExceed;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -207,7 +207,7 @@ class ICMPv4ParamProblem : ICMPv4Error {
     ubyte _ptr = 0;
 }
 
-ICMPv4ParamProblem toICMPv4ParamProblem(Json json) {
+Protocol toICMPv4ParamProblem(Json json) {
   ICMPv4ParamProblem packet = new ICMPv4ParamProblem();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
@@ -220,13 +220,13 @@ unittest {
   json.code = 2;
   json.checksum = 0;
   json.ptr = 1;
-  ICMPv4ParamProblem packet = toICMPv4ParamProblem(json);
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)toICMPv4ParamProblem(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.ptr == 1);
 }
 
-ICMPv4ParamProblem toICMPv4ParamProblem(ubyte[] encodedPacket) {
+Protocol toICMPv4ParamProblem(ubyte[] encodedPacket) {
   ICMPv4ParamProblem packet = new ICMPv4ParamProblem();
   encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -239,7 +239,7 @@ ICMPv4ParamProblem toICMPv4ParamProblem(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 1, 0, 0, 0];
-  ICMPv4ParamProblem packet = encodedPacket.toICMPv4ParamProblem;
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)encodedPacket.toICMPv4ParamProblem;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.ptr == 1);
@@ -260,7 +260,7 @@ class ICMPv4SourceQuench : ICMPv4Error {
     }
 }
 
-ICMPv4SourceQuench toICMPv4SourceQuench(Json json) {
+Protocol toICMPv4SourceQuench(Json json) {
   ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
@@ -271,12 +271,12 @@ unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4SourceQuench packet = toICMPv4SourceQuench(json);
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)toICMPv4SourceQuench(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
 
-ICMPv4SourceQuench toICMPv4SourceQuench(ubyte[] encodedPacket) {
+Protocol toICMPv4SourceQuench(ubyte[] encodedPacket) {
   ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
   encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -287,7 +287,7 @@ ICMPv4SourceQuench toICMPv4SourceQuench(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4SourceQuench packet = encodedPacket.toICMPv4SourceQuench;
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)encodedPacket.toICMPv4SourceQuench;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -341,7 +341,7 @@ class ICMPv4Redirect : ICMPv4Error {
     uint _gateway = 0;
 }
 
-ICMPv4Redirect toICMPv4Redirect(Json json) {
+Protocol toICMPv4Redirect(Json json) {
   ICMPv4Redirect packet = new ICMPv4Redirect();
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
@@ -354,13 +354,13 @@ unittest {
   json.code = 2;
   json.checksum = 0;
   json.gateway = 42;
-  ICMPv4Redirect packet = toICMPv4Redirect(json);
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)toICMPv4Redirect(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);
 }
 
-ICMPv4Redirect toICMPv4Redirect(ubyte[] encodedPacket) {
+Protocol toICMPv4Redirect(ubyte[] encodedPacket) {
   ICMPv4Redirect packet = new ICMPv4Redirect();
   encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -371,7 +371,7 @@ ICMPv4Redirect toICMPv4Redirect(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 42];
-  ICMPv4Redirect packet = encodedPacket.toICMPv4Redirect;
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)encodedPacket.toICMPv4Redirect;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);

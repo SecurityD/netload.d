@@ -132,7 +132,7 @@ class IP : Protocol {
       uint _destIpAddress = 0;
 }
 
-IP toIP(Json json) {
+Protocol toIP(Json json) {
   IP packet = new IP();
   packet.ipVersion = json.ip_version.get!ubyte;
   packet.ihl = json.ihl.get!ubyte;
@@ -167,11 +167,11 @@ unittest {
   json.checksum = 0;
   json.src_ip_address = 20;
   json.dest_ip_address = 0;
-  IP packet = toIP(json);
+  IP packet = cast(IP)toIP(json);
   assert(packet.srcIpAddress == 20);
 }
 
-IP toIP(ubyte[] encoded) {
+Protocol toIP(ubyte[] encoded) {
   IP packet = new IP();
   VersionAndLength vl;
   vl.versionAndLength = encoded.read!ubyte();
@@ -196,6 +196,6 @@ IP toIP(ubyte[] encoded) {
 
 unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
- IP packet = encoded.toIP;
+ IP packet = cast(IP)encoded.toIP;
  assert(packet.destIpAddress == 1);
 }

@@ -234,7 +234,7 @@ class NTPv4ExtensionField {
     ubyte[] _value;
 }
 
-NTPv4 toNTPv4(Json json) {
+Protocol toNTPv4(Json json) {
   auto packet = new NTPv4;
   packet.leapIndicator = json.leap_indicator.to!ubyte;
   packet.versionNumber = json.version_number.to!ubyte;
@@ -273,7 +273,7 @@ unittest {
   json.originate_timestamp = 0xd9_39_0d_73_37_64_28_6d;
   json.receive_timestamp = 0xd9_39_0d_73_39_4d_93_98;
   json.transmit_timestamp = 0xd9_39_0d_b3_58_3e_91_e8;
-  auto packet = toNTPv4(json);
+  auto packet = cast(NTPv4)toNTPv4(json);
 }
 
 unittest {
@@ -298,7 +298,7 @@ unittest {
     json.digest ~= 0x00;
   }
 
-  auto packet = toNTPv4(json);
+  auto packet = cast(NTPv4)toNTPv4(json);
   assert(packet.leapIndicator == 0x00);
   assert(packet.versionNumber == 0x03);
   assert(packet.mode == 0x03);
@@ -314,7 +314,7 @@ unittest {
   assert(packet.transmitTimestamp == 0xd9_39_0d_b3_58_3e_91_e8);
 }
 
-NTPv4 toNTPv4(ubyte[] encodedPacket) {
+Protocol toNTPv4(ubyte[] encodedPacket) {
   auto packet = new NTPv4;
   {
     ubyte tmp = encodedPacket.read!ubyte;
@@ -348,7 +348,7 @@ NTPv4 toNTPv4(ubyte[] encodedPacket) {
 }
 
 unittest {
-  auto packet = [
+  auto packet = cast(NTPv4)[
     0x1b, 0x03, 0x06, 0xec,
     0x00, 0x00, 0x03, 0x53,
     0x00, 0x00, 0x03, 0x6c,

@@ -153,7 +153,7 @@ class SNMPv1 : Protocol {
     ASN1 _pdu;
 }
 
-SNMPv1 toSNMPv1(Json json) {
+Protocol toSNMPv1(Json json) {
   auto snmp = new SNMPv1;
   snmp.ver = json.ver.to!int;
   snmp.communityString = json.community_string.to!string;
@@ -187,7 +187,7 @@ unittest {
   json.community_string = "public";
   json.pdu = serializeToJson(pdu);
 
-  auto snmp = toSNMPv1(json);
+  auto snmp = cast(SNMPv1)toSNMPv1(json);
   assert(snmp.ver == 1);
   assert(snmp.communityString == "public");
   assert(snmp.pdu.type == ASN1.Type.SET_REQUEST_PDU);
@@ -211,7 +211,7 @@ unittest {
   ]);
 }
 
-SNMPv1 toSNMPv1(ubyte[] bytes) {
+Protocol toSNMPv1(ubyte[] bytes) {
   auto snmp = new SNMPv1;
   auto seq = bytes.toASN1.data.toASN1Seq;
   snmp.ver = seq[0].data[0] + 1;
@@ -240,7 +240,7 @@ unittest {
     0x01, 0x04, 0x01, 0x81, 0x7d, 0x08, 0x33, 0x08,
     0x02, 0x01, 0x05, 0x01, 0x02, 0x02, 0x01, 0x2c
   ];
-  auto snmp = raw.toSNMPv1;
+  auto snmp = cast(SNMPv1)raw.toSNMPv1;
   assert(snmp.ver == 1);
   assert(snmp.communityString == "public");
   assert(snmp.pdu.type == ASN1.Type.SET_REQUEST_PDU);

@@ -78,7 +78,7 @@ class Ethernet : Protocol {
     uint _fcs = 0;
 }
 
-Ethernet toEthernet(Json json) {
+Protocol toEthernet(Json json) {
   Ethernet packet = new Ethernet();
   packet.prelude = deserializeJson!(ubyte[7])(json.prelude);
   packet.srcMacAddress = deserializeJson!(ubyte[6])(json.src_mac_address);
@@ -95,12 +95,12 @@ unittest {
   json.dest_mac_address = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.protocol_type = 0x0800;
   json.fcs = 0;
-  Ethernet packet = toEthernet(json);
+  Ethernet packet = cast(Ethernet)toEthernet(json);
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.protocolType == 0x0800);
 }
 
-Ethernet toEthernet(ubyte[] encoded) {
+Protocol toEthernet(ubyte[] encoded) {
   Ethernet packet = new Ethernet();
   packet.prelude[0..7] = encoded[0..7];
   packet.destMacAddress[0..6] = encoded[7..13];
@@ -112,7 +112,7 @@ Ethernet toEthernet(ubyte[] encoded) {
 
 unittest {
   ubyte[] encoded = [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
-  Ethernet packet = encoded.toEthernet();
+  Ethernet packet = cast(Ethernet)encoded.toEthernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
 }

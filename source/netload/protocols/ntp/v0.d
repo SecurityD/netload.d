@@ -109,7 +109,7 @@ class NTPv0 : NTPCommon, Protocol {
 
     @property {
       override Protocol data() { return _data; }
-      override @property void data(Protocol p) { _data = p; } 
+      override @property void data(Protocol p) { _data = p; }
 
       ubyte leapIndicator() const { return _leapIndicator; }
       void leapIndicator(ubyte data) { _leapIndicator = data; }
@@ -143,7 +143,7 @@ class NTPv0 : NTPCommon, Protocol {
     uint _estimatedDriftRate;
 }
 
-NTPv0 toNTPv0(Json json) {
+Protocol toNTPv0(Json json) {
   auto packet = new NTPv0;
   packet.leapIndicator = json.leap_indicator.to!ubyte;
   packet.status = json.status.to!ubyte;
@@ -173,7 +173,7 @@ unittest {
   json.receive_timestamp = 400u;
   json.transmit_timestamp = 450u;
 
-  auto packet = toNTPv0(json);
+  auto packet = cast(NTPv0)toNTPv0(json);
 
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
@@ -188,7 +188,7 @@ unittest {
   assert(packet.transmitTimestamp == 450u);
 }
 
-NTPv0 toNTPv0(ubyte[] encodedPacket) {
+Protocol toNTPv0(ubyte[] encodedPacket) {
   auto packet = new NTPv0;
   ubyte tmp = encodedPacket.read!ubyte;
   packet.leapIndicator = (tmp >> 6) & 0b0000_0011;
@@ -206,7 +206,7 @@ NTPv0 toNTPv0(ubyte[] encodedPacket) {
 }
 
 unittest {
-  auto packet = [
+  auto packet = cast(NTPv0)[
     132,  50,   0, 100,
       0,   0,   0, 150,
       0,   0,   0, 200,

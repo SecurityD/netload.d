@@ -87,7 +87,7 @@ class ICMPv4RouterAdvert : ICMP {
     ubyte[4][] _prefAddr;
 }
 
-ICMPv4RouterAdvert toICMPv4RouterAdvert(Json json) {
+Protocol toICMPv4RouterAdvert(Json json) {
   ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(json.numAddr.to!ubyte, json.addrEntrySize.to!ubyte);
   packet.checksum = json.checksum.to!ushort;
   packet.life = json.life.to!ushort;
@@ -104,7 +104,7 @@ unittest {
   json.life = 1;
   json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
   json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  ICMPv4RouterAdvert packet = toICMPv4RouterAdvert(json);
+  ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)toICMPv4RouterAdvert(json);
   assert(packet.checksum == 0);
   assert(packet.life == 1);
   assert(packet.numAddr == 3);
@@ -113,7 +113,7 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
-ICMPv4RouterAdvert toICMPv4RouterAdvert(ubyte[] encodedPacket) {
+Protocol toICMPv4RouterAdvert(ubyte[] encodedPacket) {
   encodedPacket.read!ushort();
   ushort checksum = encodedPacket.read!ushort();
   ubyte numAddr = encodedPacket.read!ubyte();
@@ -131,7 +131,7 @@ ICMPv4RouterAdvert toICMPv4RouterAdvert(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [9, 0, 0, 0, 3, 2, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3];
-  ICMPv4RouterAdvert packet = encodedPacket.toICMPv4RouterAdvert;
+  ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)encodedPacket.toICMPv4RouterAdvert;
   assert(packet.checksum == 0);
   assert(packet.numAddr == 3);
   assert(packet.addrEntrySize == 2);
@@ -163,7 +163,7 @@ class ICMPv4RouterSollicitation : ICMP {
     }
 }
 
-ICMPv4RouterSollicitation toICMPv4RouterSollicitation(Json json) {
+Protocol toICMPv4RouterSollicitation(Json json) {
   ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
   packet.checksum = json.checksum.to!ushort;
   return packet;
@@ -172,11 +172,11 @@ ICMPv4RouterSollicitation toICMPv4RouterSollicitation(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.checksum = 0;
-  ICMPv4RouterSollicitation packet = toICMPv4RouterSollicitation(json);
+  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
   assert(packet.checksum == 0);
 }
 
-ICMPv4RouterSollicitation toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
+Protocol toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
   ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
   encodedPacket.read!ushort();
   packet.checksum = encodedPacket.read!ushort();
@@ -185,6 +185,6 @@ ICMPv4RouterSollicitation toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [10, 0, 0, 0, 0, 0, 0, 0];
-  ICMPv4RouterSollicitation packet = encodedPacket.toICMPv4RouterSollicitation;
+  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)encodedPacket.toICMPv4RouterSollicitation;
   assert(packet.checksum == 0);
 }

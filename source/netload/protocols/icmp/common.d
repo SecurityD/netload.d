@@ -75,7 +75,7 @@ class ICMP : Protocol {
     ushort _checksum = 0;
 }
 
-ICMP toICMP(Json json) {
+Protocol toICMP(Json json) {
   ICMP packet = new ICMP();
   packet.type = json.packetType.to!ubyte;
   packet.code = json.code.to!ubyte;
@@ -88,13 +88,13 @@ unittest {
   json.packetType = 3;
   json.code = 2;
   json.checksum = 0;
-  ICMP packet = toICMP(json);
+  ICMP packet = cast(ICMP)toICMP(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
 
-ICMP toICMP(ubyte[] encodedPacket) {
+Protocol toICMP(ubyte[] encodedPacket) {
   ICMP packet = new ICMP();
   packet.type = encodedPacket.read!ubyte();
   packet.code = encodedPacket.read!ubyte();
@@ -104,7 +104,7 @@ ICMP toICMP(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0];
-  ICMP packet = encodedPacket.toICMP;
+  ICMP packet = cast(ICMP)encodedPacket.toICMP;
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);

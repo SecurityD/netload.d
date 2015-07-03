@@ -191,7 +191,7 @@ class SNMPv3 : Protocol {
     ASN1 _pdu;
 }
 
-SNMPv3 toSNMPv3(Json json) {
+Protocol toSNMPv3(Json json) {
   auto snmp = new SNMPv3;
   snmp.ver = json.ver.to!int;
   snmp.identifier = json.identifier.to!uint;
@@ -243,7 +243,7 @@ unittest {
   ];
   json.pdu = serializeToJson(pdu);
 
-  auto snmp = toSNMPv3(json);
+  auto snmp = cast(SNMPv3)toSNMPv3(json);
   assert(snmp.ver == 3);
   assert(snmp.identifier == 1169574667);
   assert(snmp.maxSize == 65507);
@@ -271,7 +271,7 @@ unittest {
   ]);
 }
 
-SNMPv3 toSNMPv3(ubyte[] bytes) {
+Protocol toSNMPv3(ubyte[] bytes) {
   auto snmp = new SNMPv3;
   auto tmp = bytes.toASN1;
   auto seq = tmp.data.toASN1Seq;
@@ -318,7 +318,7 @@ unittest {
   0x02, 0x01, 0x12, 0x02, 0x05, 0x00
   ];
 
-  auto snmp = raw.toSNMPv3;
+  auto snmp = cast(SNMPv3)raw.toSNMPv3;
   assert(snmp.ver == 3);
   assert(snmp.identifier == 1169574667);
   assert(snmp.maxSize == 65507);

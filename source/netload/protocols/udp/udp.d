@@ -75,7 +75,7 @@ class UDP : Protocol {
       ushort _checksum = 0;
 }
 
-UDP toUDP(Json json) {
+Protocol toUDP(Json json) {
   UDP packet = new UDP(json.src_port.to!ushort, json.dest_port.to!ushort);
   packet.length = json.len.to!ushort;
   packet.checksum = json.checksum.to!ushort;
@@ -88,14 +88,14 @@ unittest {
   json.dest_port = 7000;
   json.len = 0;
   json.checksum = 0;
-  UDP packet = toUDP(json);
+  UDP packet = cast(UDP)toUDP(json);
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
   assert(packet.checksum == 0);
 }
 
-UDP toUDP(ubyte[] encodedPacket) {
+Protocol toUDP(ubyte[] encodedPacket) {
   UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
   packet.length = encodedPacket.read!ushort;
   packet.checksum = encodedPacket.read!ushort;
@@ -104,7 +104,7 @@ UDP toUDP(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
-  UDP packet = encoded.toUDP;
+  UDP packet = cast(UDP)encoded.toUDP;
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);

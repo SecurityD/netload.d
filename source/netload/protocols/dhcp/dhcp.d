@@ -151,7 +151,7 @@ class DHCP : Protocol {
     ubyte[] _options;
 }
 
-DHCP toDHCP(Json json) {
+Protocol toDHCP(Json json) {
   DHCP packet = new DHCP();
   packet.op = json.op.to!ubyte;
   packet.htype = json.htype.to!ubyte;
@@ -189,7 +189,7 @@ unittest {
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);
   json.options = serializeToJson(options);
-  DHCP packet = toDHCP(json);
+  DHCP packet = cast(DHCP)toDHCP(json);
   assert(packet.toJson.op == 2);
   assert(packet.toJson.htype == 1);
   assert(packet.toJson.hlen == 6);
@@ -203,7 +203,7 @@ unittest {
   assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
 }
 
-DHCP toDHCP(ubyte[] encodedPacket) {
+Protocol toDHCP(ubyte[] encodedPacket) {
   DHCP packet = new DHCP();
   Bitfields flags;
   packet.op = encodedPacket.read!ubyte();
@@ -227,7 +227,7 @@ DHCP toDHCP(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
-  DHCP packet = encodedPacket.toDHCP;
+  DHCP packet = cast(DHCP)encodedPacket.toDHCP;
   assert(packet.op == 2);
   assert(packet.htype == 1);
   assert(packet.hlen == 6);
