@@ -22,6 +22,11 @@ class UDP : Protocol {
       packet.dest_port = _destPort;
       packet.len = _length;
       packet.checksum = _checksum;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -41,7 +46,6 @@ class UDP : Protocol {
     }
 
     unittest {
-      import std.stdio;
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
@@ -52,9 +56,8 @@ class UDP : Protocol {
     }
 
     unittest {
-      import std.stdio;
       UDP packet = new UDP(8000, 7000);
-      assert(packet.toString == `{"checksum":0,"dest_port":7000,"src_port":8000,"len":0}`);
+      assert(packet.toString == `{"checksum":0,"name":"UDP","data":null,"dest_port":7000,"src_port":8000,"len":0}`);
     }
 
     @property ushort srcPort() const { return _srcPort; }

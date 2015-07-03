@@ -70,6 +70,11 @@ class Dot11 : Protocol {
       packet.more_frag = _frameControl.moreFrag;
       packet.from_DS = _frameControl.fromDS;
       packet.to_DS = _frameControl.toDS;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -121,7 +126,7 @@ class Dot11 : Protocol {
 
     unittest {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
-      assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
+      assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"name":"Dot11","data":null,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
     }
 
     @property ushort duration() const { return _duration; }

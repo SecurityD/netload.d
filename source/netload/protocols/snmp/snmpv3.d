@@ -19,6 +19,7 @@ class SNMPv3 : Protocol {
       json.security_model = this.securityModel;
       json.security_parameters = serializeToJson(_securityParameters);
       json.pdu = serializeToJson(_pdu);
+      json.name = name;
       return json;
     }
 

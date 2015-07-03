@@ -38,6 +38,11 @@ class NTPv4 : NTPCommon, Protocol {
         if (b)
           json.digest = serializeToJson(_digest);
       }
+      json.name = name;
+      if (_data is null)
+        json.data = null;
+      else
+        json.data = _data.toJson;
       return json;
     }
 

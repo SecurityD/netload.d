@@ -21,6 +21,7 @@ class HTTP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
@@ -28,6 +29,7 @@ class HTTP : Protocol {
       HTTP packet = new HTTP("test");
       auto json = Json.emptyObject;
       json.body_ = "test";
+      json.name = "HTTP";
       assert(packet.toJson == json);
     }
 

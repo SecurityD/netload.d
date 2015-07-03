@@ -78,6 +78,11 @@ class DNS : Protocol {
       packet.ancount = _ancount;
       packet.nscount = _nscount;
       packet.arcount = _arcount;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -120,7 +125,7 @@ class DNS : Protocol {
     unittest {
       import std.stdio;
       DNS packet = new DNS(10, true);
-      assert(packet.toString == `{"record_available":false,"zero":0,"id":10,"nscount":0,"opcode":0,"arcount":0,"auth_answer":false,"record_desired":false,"rcode":0,"qr":false,"truncation":true,"ancount":0,"qdcount":0}`);
+      assert(packet.toString == `{"record_available":false,"zero":0,"name":"DNS","data":null,"id":10,"nscount":0,"opcode":0,"arcount":0,"auth_answer":false,"record_desired":false,"rcode":0,"qr":false,"truncation":true,"ancount":0,"qdcount":0}`);
     }
 
     @property ushort id() { return _id; }
@@ -569,6 +574,11 @@ class DNSQR : Protocol {
       packet.qname = _qname;
       packet.qtype = _qtype;
       packet.qclass = _qclass;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -601,7 +611,7 @@ class DNSQR : Protocol {
 
     unittest {
       auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
-      assert(packet.toString == `{"qname":"google.fr","qtype":1,"qclass":1}`);
+      assert(packet.toString == `{"qname":"google.fr","name":"DNSQR","data":null,"qtype":1,"qclass":1}`);
     }
 
     @property string qname() const { return _qname; }
@@ -672,6 +682,11 @@ class DNSRR : Protocol {
       packet.rclass = _rclass;
       packet.ttl = _ttl;
       packet.rdlength = _rdlength;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -706,7 +721,7 @@ class DNSRR : Protocol {
 
     unittest {
       DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
-      assert(packet.toString == `{"rdlength":0,"ttl":2500,"rname":"google.fr","rtype":1,"rclass":1}`);
+      assert(packet.toString == `{"rdlength":0,"ttl":2500,"name":"DNSRR","data":null,"rname":"google.fr","rtype":1,"rclass":1}`);
     }
 
     @property string rname() { return _rname; }
@@ -798,6 +813,11 @@ class DNSSOAResource  : Protocol {
       packet.retry = _retry;
       packet.expirationLimit = _expirationLimit;
       packet.minTtl = _minTtl;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -838,7 +858,7 @@ class DNSSOAResource  : Protocol {
 
     unittest {
       DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
-      assert(packet.toString == `{"minTtl":86420,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
+      assert(packet.toString == `{"minTtl":86420,"name":"DNSSOAResource","data":null,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
     }
 
     @property string primary() const { return _primary; }
@@ -940,6 +960,11 @@ class DNSMXResource : Protocol {
       Json packet = Json.emptyObject;
       packet.mxname = _mxname;
       packet.pref = _pref;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -968,7 +993,7 @@ class DNSMXResource : Protocol {
 
     unittest {
       DNSMXResource packet = new DNSMXResource(2, "google.fr");
-      assert(packet.toString == `{"mxname":"google.fr","pref":2}`);
+      assert(packet.toString == `{"mxname":"google.fr","name":"DNSMXResource","data":null,"pref":2}`);
     }
 
     @property ushort pref() const { return _pref; }
@@ -1028,6 +1053,11 @@ class DNSAResource : Protocol {
     override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.ip = serializeToJson(_ip);
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -1053,7 +1083,7 @@ class DNSAResource : Protocol {
 
     unittest {
       DNSAResource packet = new DNSAResource();
-      assert(packet.toString == `{"ip":[127,0,0,1]}`);
+      assert(packet.toString == `{"name":"DNSAResource","data":null,"ip":[127,0,0,1]}`);
     }
 
     @property ubyte[4] ip() const { return _ip; }
@@ -1105,6 +1135,11 @@ class DNSPTRResource : Protocol {
     override Json toJson() const {
       Json packet = Json.emptyObject;
       packet.ptrname = _ptrname;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -1131,7 +1166,7 @@ class DNSPTRResource : Protocol {
 
     unittest {
       DNSPTRResource packet = new DNSPTRResource("google.fr");
-      assert(packet.toString == `{"ptrname":"google.fr"}`);
+      assert(packet.toString == `{"ptrname":"google.fr","name":"DNSPTRResource","data":null}`);
     }
 
     @property string ptrname() { return _ptrname; }

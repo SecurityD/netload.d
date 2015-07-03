@@ -34,6 +34,11 @@ class ARP : Protocol {
       json.targetHwAddr = serializeToJson(_targetHwAddr);
       json.senderProtocolAddr = serializeToJson(_senderProtocolAddr);
       json.targetProtocolAddr = serializeToJson(_targetProtocolAddr);
+      json.name = name;
+      if (_data is null)
+        json.data = null;
+      else
+        json.data = _data.toJson;
       return json;
     }
 
@@ -87,7 +92,7 @@ class ARP : Protocol {
       packet.targetHwAddr = [0, 0, 0, 0, 0, 0];
       packet.senderProtocolAddr = [127, 0, 0, 1];
       packet.targetProtocolAddr = [10, 14, 255, 255];
-      assert(packet.toString == `{"protocolAddrLen":4,"senderHwAddr":[128,128,128,128,128,128],"hwAddrLen":6,"targetHwAddr":[0,0,0,0,0,0],"hwType":1,"protocolType":1,"opcode":0,"targetProtocolAddr":[10,14,255,255],"senderProtocolAddr":[127,0,0,1]}`);
+      assert(packet.toString == `{"protocolAddrLen":4,"senderHwAddr":[128,128,128,128,128,128],"hwAddrLen":6,"targetHwAddr":[0,0,0,0,0,0],"name":"ARP","data":null,"hwType":1,"protocolType":1,"opcode":0,"targetProtocolAddr":[10,14,255,255],"senderProtocolAddr":[127,0,0,1]}`);
     }
 
     @property ushort hwType() const { return _hwType; }

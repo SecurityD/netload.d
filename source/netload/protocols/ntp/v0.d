@@ -26,6 +26,11 @@ class NTPv0 : NTPCommon, Protocol {
       json.originate_timestamp = originateTimestamp;
       json.receive_timestamp = receiveTimestamp;
       json.transmit_timestamp = transmitTimestamp;
+      json.name = name;
+      if (_data is null)
+        json.data = null;
+      else
+        json.data = _data.toJson;
       return json;
     }
 
@@ -55,6 +60,8 @@ class NTPv0 : NTPCommon, Protocol {
       test.originate_timestamp = 350u;
       test.receive_timestamp = 400u;
       test.transmit_timestamp = 450u;
+      test.name = "NTPv0";
+      test.data = null;
 
       assert(ntp.toJson == test);
     }

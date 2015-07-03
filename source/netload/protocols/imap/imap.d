@@ -21,6 +21,7 @@ class IMAP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
@@ -28,6 +29,7 @@ class IMAP : Protocol {
       IMAP packet = new IMAP("test");
       auto json = Json.emptyObject;
       json.body_ = "test";
+      json.name = "IMAP";
       assert(packet.toJson == json);
     }
 

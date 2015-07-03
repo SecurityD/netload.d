@@ -14,6 +14,7 @@ class SNMPv1 : Protocol {
       json.ver = ver;
       json.community_string = communityString;
       json.pdu = serializeToJson(_pdu);
+      json.name = name;
       return json;
     }
 

@@ -52,6 +52,11 @@ class TCP : Protocol {
       json.window = window;
       json.checksum = checksum;
       json.urgent_ptr = urgPtr;
+      json.name = name;
+      if (_data is null)
+        json.data = null;
+      else
+        json.data = _data.toJson;
       return json;
     }
 
@@ -85,7 +90,7 @@ class TCP : Protocol {
 
     unittest {
       TCP packet = new TCP(8000, 7000);
-      assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":8192}`);
+      assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"name":"TCP","data":null,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":8192}`);
     }
 
     @property ushort srcPort() const { return _srcPort; }

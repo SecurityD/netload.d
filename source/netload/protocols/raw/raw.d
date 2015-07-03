@@ -22,12 +22,13 @@ class Raw : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.bytes = serializeToJson(_bytes);
+      json.name = name;
       return json;
     }
 
     unittest {
       Raw packet = new Raw([0, 1, 2]);
-      assert(packet.toJson.toString == `{"bytes":[0,1,2]}`);
+      assert(packet.toJson.toString == `{"name":"Raw","bytes":[0,1,2]}`);
     }
 
     override ubyte[] toBytes() const { return _bytes.dup; }

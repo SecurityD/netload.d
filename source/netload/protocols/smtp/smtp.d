@@ -21,12 +21,14 @@ class SMTP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
     unittest {
       SMTP packet = new SMTP("test");
       auto json = Json.emptyObject;
+      json.name = "SMTP";
       json.body_ = "test";
       assert(packet.toJson == json);
     }

@@ -21,12 +21,14 @@ class POP3 : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
     unittest {
       POP3 packet = new POP3("test");
       auto json = Json.emptyObject;
+      json.name = "POP3";
       json.body_ = "test";
       assert(packet.toJson == json);
     }

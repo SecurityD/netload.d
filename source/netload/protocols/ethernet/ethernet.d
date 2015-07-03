@@ -27,6 +27,11 @@ class Ethernet : Protocol {
       json.dest_mac_address = serializeToJson(destMacAddress);
       json.protocol_type = protocolType;
       json.fcs = fcs;
+      json.name = name;
+      if (_data is null)
+        json.data = null;
+      else
+        json.data = _data.toJson;
       return json;
     }
 
@@ -58,7 +63,7 @@ class Ethernet : Protocol {
 
     unittest {
       Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
-      assert(packet.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"fcs":0}`);
+      assert(packet.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"name":"Ethernet","data":null,"fcs":0}`);
     }
 
     @property ref inout(ubyte[7]) prelude() inout { return _prelude; }

@@ -54,12 +54,17 @@ class IP : Protocol {
         json.checksum = checksum;
         json.src_ip_address = srcIpAddress;
         json.dest_ip_address = destIpAddress;
+        json.name = name;
+        if (_data is null)
+          json.data = null;
+        else
+          json.data = _data.toJson;
         return json;
       }
 
       unittest {
         IP packet = new IP();
-        assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
+        assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":null,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
       override ubyte[] toBytes() const {
@@ -86,7 +91,7 @@ class IP : Protocol {
 
       unittest {
         IP packet = new IP();
-        assert(packet.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
+        assert(packet.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":null,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
       @property ubyte ipVersion() const { return _versionAndLength.ipVersion; }

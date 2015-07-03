@@ -27,6 +27,11 @@ class ICMP : Protocol {
       packet.packetType = _type;
       packet.code = _code;
       packet.checksum = _checksum;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -56,7 +61,7 @@ class ICMP : Protocol {
 
     unittest {
       ICMP packet = new ICMP(3, 2);
-      assert(packet.toString == `{"checksum":0,"code":2,"packetType":3}`);
+      assert(packet.toString == `{"checksum":0,"name":"ICMP","data":null,"code":2,"packetType":3}`);
     }
 
     @property {
