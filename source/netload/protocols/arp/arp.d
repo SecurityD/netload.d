@@ -70,6 +70,8 @@ class ARP : Protocol {
       packet ~= _senderProtocolAddr;
       packet ~= _targetHwAddr;
       packet ~= _targetProtocolAddr;
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

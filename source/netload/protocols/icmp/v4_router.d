@@ -44,15 +44,18 @@ class ICMPv4RouterAdvert : ICMP {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = super.toBytes();
-      ubyte[] append = new ubyte[4];
-      append.write!ubyte(_numAddr, 0);
-      append.write!ubyte(_addrEntrySize, 1);
-      append.write!ushort(_life, 2);
-      packet ~= append;
+      ubyte[] packet = new ubyte[8];
+      packet.write!ubyte(_type, 0);
+      packet.write!ubyte(_code, 1);
+      packet.write!ushort(_checksum, 2);
+      packet.write!ubyte(_numAddr, 4);
+      packet.write!ubyte(_addrEntrySize, 5);
+      packet.write!ushort(_life, 6);
       for (ubyte i = 0; i < _numAddr; i++) {
         packet ~= _routerAddr[i] ~ _prefAddr[i];
       }
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -150,8 +153,12 @@ class ICMPv4RouterSollicitation : ICMP {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = super.toBytes();
-      packet ~= [0, 0, 0, 0];
+      ubyte[] packet = new ubyte[8];
+      packet.write!ubyte(_type, 0);
+      packet.write!ubyte(_code, 1);
+      packet.write!ushort(_checksum, 2);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

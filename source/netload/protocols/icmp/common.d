@@ -47,6 +47,8 @@ class ICMP : Protocol {
       packet.write!ubyte(_type, 0);
       packet.write!ubyte(_code, 1);
       packet.write!ushort(_checksum, 2);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

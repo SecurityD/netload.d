@@ -16,14 +16,17 @@ class ICMPv4Error : ICMP {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = super.toBytes();
-      packet ~= [0, 0, 0, 0];
-      // append previous IP header + 8 first bytes of previous payload
+      ubyte[] packet = new ubyte[8];
+      packet.write!ubyte(_type, 0);
+      packet.write!ubyte(_code, 1);
+      packet.write!ushort(_checksum, 2);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
     unittest {
-      ICMPv4Error packet = new ICMPv4Error(3, 1, new IP());
+      ICMPv4Error packet = new ICMPv4Error(3, 1, null);
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0]);
     }
 }

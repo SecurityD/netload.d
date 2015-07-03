@@ -79,6 +79,8 @@ class IP : Protocol {
         encoded.write!ushort(checksum, 10);
         encoded.write!uint(srcIpAddress, 12);
         encoded.write!uint(destIpAddress, 16);
+        if (_data !is null)
+          encoded ~= _data.toBytes;
         return encoded;
       }
 

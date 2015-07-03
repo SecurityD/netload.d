@@ -78,6 +78,8 @@ class NTPv0 : NTPCommon, Protocol {
       packet.write!ulong(originateTimestamp, 24);
       packet.write!ulong(receiveTimestamp, 32);
       packet.write!ulong(transmitTimestamp, 40);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

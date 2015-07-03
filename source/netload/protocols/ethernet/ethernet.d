@@ -43,12 +43,16 @@ class Ethernet : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] encoded = new ubyte[25];
+      ubyte[] encoded = new ubyte[21];
       encoded[0..7] = prelude;
       encoded[7..13] = destMacAddress;
       encoded[13..19] = srcMacAddress;
       encoded.write!ushort(protocolType, 19);
-      encoded.write!uint(fcs, 21);
+      if (_data !is null)
+        encoded ~= _data.toBytes;
+      ubyte[] packetFcs = new ubyte[4];
+      packetFcs.write!uint(fcs, 0);
+      encoded ~= packetFcs;
       return encoded;
     }
 

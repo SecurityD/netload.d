@@ -42,6 +42,8 @@ class UDP : Protocol {
       packet.write!ushort(_destPort, 2);
       packet.write!ushort(_length, 4);
       packet.write!ushort(_checksum, 6);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

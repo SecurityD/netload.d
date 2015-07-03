@@ -103,6 +103,8 @@ class NTPv4 : NTPCommon, Protocol {
         if (b)
           return packet.data ~ _digest;
       }
+      if (_data !is null)
+        return packet.data ~ _data.toBytes;
       return packet.data;
     }
 

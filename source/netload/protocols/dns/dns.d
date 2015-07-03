@@ -101,6 +101,8 @@ class DNS : Protocol {
       packet.write!ushort(_ancount, 6);
       packet.write!ushort(_nscount, 8);
       packet.write!ushort(_arcount, 10);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -605,6 +607,8 @@ class DNSQR : Protocol {
       writeLabels(0, _qname, packet);
       packet.write!ushort(_qtype, (1 + inc));
       packet.write!ushort(_qclass, (3 + inc));
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -720,6 +724,8 @@ class DNSRR : Protocol {
       packet.write!ushort(_rclass, (3 + inc));
       packet.write!uint(_ttl, (5 + inc));
       packet.write!ushort(_rdlength, (9 + inc));
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -860,6 +866,8 @@ class DNSSOAResource  : Protocol {
       packet.write!uint(_retry, (10 + inc));
       packet.write!uint(_expirationLimit, (14 + inc));
       packet.write!uint(_minTtl, (18 + inc));
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -998,6 +1006,8 @@ class DNSMXResource : Protocol {
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
       writeLabels(2, _mxname, packet);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -1091,6 +1101,8 @@ class DNSAResource : Protocol {
     override ubyte[] toBytes() const {
       ubyte[] packet;
       packet ~= _ip;
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -1177,6 +1189,8 @@ class DNSPTRResource : Protocol {
       ulong inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
       ubyte[] packet = new ubyte[1 + inc];
       writeLabels(0, _ptrname, packet);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

@@ -76,6 +76,8 @@ class TCP : Protocol {
       packet.write!ushort(window, 14);
       packet.write!ushort(checksum, 16);
       packet.write!ushort(urgPtr, 18);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 

@@ -101,7 +101,7 @@ class Dot11 : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = new ubyte[34];
+      ubyte[] packet = new ubyte[30];
       packet.write!ubyte(_frameControl.raw[0], 0);
       packet.write!ubyte(_frameControl.raw[1], 1);
       packet.write!ushort(_duration, 2);
@@ -111,7 +111,11 @@ class Dot11 : Protocol {
         }
       }
       packet.write!ushort(_seq, 28);
-      packet.write!uint(_fcs, 30);
+      if (_data !is null)
+        packet ~= _data.toBytes;
+      ubyte[] packetFcs = new ubyte[4];
+      packetFcs.write!uint(_fcs, 0);
+      packet ~= packetFcs;
       return packet;
     }
 

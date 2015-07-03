@@ -89,6 +89,8 @@ class DHCP : Protocol {
       packet.write!ushort(_secs, 8);
       packet.write!ushort(_flags.raw, 10);
       packet ~= _ciaddr ~ _yiaddr ~ _siaddr ~ _giaddr ~ _chaddr ~ _sname ~ _file ~ _options;
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
