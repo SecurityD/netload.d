@@ -133,20 +133,23 @@ class PacketCapturer {
 
     this(string deviceName) {
       _dev = deviceName;
+      _header = new pcap_pkthdr;
     }
 
     void initialize() {
-      _cap = pcap_open_live(_dev.toStringz, 1518, false, 1000, cast(char*)_errbuf);
+      _cap = pcap_open_live(_dev.toStringz, 1518, false, 0, cast(char*)_errbuf);
       if (_cap == null) {
-        throw new Exception(cast(string)fromStringz(cast(char *)_errbuf));
+        throw new Exception(cast(string)fromStringz(_errbuf.toStringz));
       }
     }
 
     ubyte[] nextPacket() {
       ubyte* bytes = pcap_next(_cap, _header);
-      if (bytes == null) {
-        throw new Exception(cast(string)fromStringz(cast(char *)_errbuf));
+      if (bytes is null) {
+        throw new Exception(cast(string)_cap.errbuf);
       }
+      import std.stdio;
+      writeln(_header.ts);
       return bytes.toArray(_header.caplen);
     }
 
@@ -159,7 +162,7 @@ class PacketCapturer {
 
 unittest {
   import std.stdio;
-  PacketCapturer pc = new PacketCapturer;
+  PacketCapturer pc = new PacketCapturer("enp0s25");
   pc.initialize;
   ubyte[] p1 = pc.nextPacket;
   writeln(p1);
