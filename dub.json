@@ -9,5 +9,6 @@
 	"libs": [
 		"pcap"
 	],
+	"versions" : ["VibeCustomMain"],
 	"targetType": "library"
 }
