@@ -1,4 +1,4 @@
-module netload.protocols.udp;
+module netload.protocols.udp.udp;
 
 import netload.core.protocol;
 import vibe.data.json;

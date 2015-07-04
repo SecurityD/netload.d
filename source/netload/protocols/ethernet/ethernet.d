@@ -1,4 +1,4 @@
-module netload.protocols.ethernet;
+module netload.protocols.ethernet.ethernet;
 
 import netload.core.protocol;
 import vibe.data.json;

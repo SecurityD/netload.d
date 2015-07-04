@@ -1,4 +1,4 @@
-module netload.protocols.dns;
+module netload.protocols.dns.dns;
 
 import netload.core.protocol;
 import vibe.data.json;

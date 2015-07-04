@@ -1,4 +1,4 @@
-module netload.protocols.tcp;
+module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
 import vibe.data.json;

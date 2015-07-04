@@ -1,4 +1,4 @@
-module netload.protocols.imap;
+module netload.protocols.imap.imap;
 
 import vibe.data.json;
 import netload.core.protocol;
