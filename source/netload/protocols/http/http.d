@@ -1,4 +1,4 @@
-module netload.protocols.http;
+module netload.protocols.http.http;
 
 import vibe.data.json;
 import netload.core.protocol;

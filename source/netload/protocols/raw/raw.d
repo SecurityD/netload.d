@@ -1,4 +1,4 @@
-module netload.protocols.raw;
+module netload.protocols.raw.raw;
 
 import vibe.data.json;
 import netload.core.protocol;
