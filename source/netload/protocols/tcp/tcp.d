@@ -66,6 +66,30 @@ class TCP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      TCP tcp = new TCP(8000, 7000);
+      packet.data = tcp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "TCP");
+      assert(json.src_port == 8000);
+      assert(json.dest_port == 7000);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[20];
       packet.write!ushort(srcPort, 0);
@@ -84,6 +108,16 @@ class TCP : Protocol {
     unittest {
       TCP packet = new TCP(8000, 7000);
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      TCP packet = new TCP(8000, 7000);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     override string toString() const {

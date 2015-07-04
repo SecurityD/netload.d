@@ -66,6 +66,50 @@ class NTPv0 : NTPCommon, Protocol {
       assert(ntp.toJson == test);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      auto ntp = new NTPv0;
+      ntp.leapIndicator = 2u;
+      ntp.status = 4u;
+      ntp.type = 50u;
+      ntp.precision = 100u;
+      ntp.estimatedError = 150u;
+      ntp.estimatedDriftRate = 200u;
+      ntp.referenceClockIdentifier = 250u;
+      ntp.referenceTimestamp = 300u;
+      ntp.originateTimestamp = 350u;
+      ntp.receiveTimestamp = 400u;
+      ntp.transmitTimestamp = 450u;
+      packet.data = ntp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "NTPv0");
+      assert(json.leap_indicator == 2u);
+      assert(json.status == 4u);
+      assert(json.type_ == 50u);
+      assert(json.precision == 100u);
+      assert(json.estimated_error == 150u);
+      assert(json.estimated_drift_rate == 200u);
+      assert(json.reference_clock_identifier == 250u);
+      assert(json.reference_timestamp == 300u);
+      assert(json.originate_timestamp == 350u);
+      assert(json.receive_timestamp == 400u);
+      assert(json.transmit_timestamp == 450u);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       auto packet = new ubyte[48];
       packet.write!ubyte(cast(ubyte)((leapIndicator << 6) + status), 0);
@@ -110,6 +154,40 @@ class NTPv0 : NTPCommon, Protocol {
           0,   0,   0,   0,
           0,   0,   1, 194
       ]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      auto packet = new NTPv0;
+      packet.leapIndicator = 2u;
+      packet.status = 4u;
+      packet.type = 50u;
+      packet.precision = 100u;
+      packet.estimatedError = 150u;
+      packet.estimatedDriftRate = 200u;
+      packet.referenceClockIdentifier = 250u;
+      packet.referenceTimestamp = 300u;
+      packet.originateTimestamp = 350u;
+      packet.receiveTimestamp = 400u;
+      packet.transmitTimestamp = 450u;
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [
+        132,  50,   0, 100,
+          0,   0,   0, 150,
+          0,   0,   0, 200,
+          0,   0,   0, 250,
+          0,   0,   0,   0,
+          0,   0,   1,  44,
+          0,   0,   0,   0,
+          0,   0,   1,  94,
+          0,   0,   0,   0,
+          0,   0,   1, 144,
+          0,   0,   0,   0,
+          0,   0,   1, 194
+      ] ~ [42, 21, 84]);
     }
 
     @property inout string name() { return "NTPv0"; }

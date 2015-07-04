@@ -43,6 +43,36 @@ class ICMPv4RouterAdvert : ICMP {
       assert(deserializeJson!(ubyte[4][])(packet.toJson.prefAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4RouterAdvert icmp = new ICMPv4RouterAdvert(3, 2);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 9);
+      assert(json.code == 0);
+      assert(json.checksum == 0);
+      assert(json.numAddr == 3);
+      assert(json.addrEntrySize == 2);
+      assert(json.life == 2);
+      assert(deserializeJson!(ubyte[4][])(json.routerAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+      assert(deserializeJson!(ubyte[4][])(json.prefAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ubyte(_type, 0);
@@ -62,6 +92,16 @@ class ICMPv4RouterAdvert : ICMP {
     unittest {
       ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
       assert(packet.toBytes == [9, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [9, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     @property {
@@ -165,6 +205,16 @@ class ICMPv4RouterSollicitation : ICMP {
     unittest {
       ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
       assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     @disable @property {

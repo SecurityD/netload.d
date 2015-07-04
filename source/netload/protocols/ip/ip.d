@@ -67,6 +67,19 @@ class IP : Protocol {
         assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":null,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
+      unittest {
+        import netload.protocols.ethernet;
+        import netload.protocols.raw;
+        Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+        IP ip = new IP();
+        packet.data = ip;
+
+        packet.data.data = new Raw([42, 21, 84]);
+
+        assert(packet.toJson.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"name":"Ethernet","data":{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":{"name":"Raw","bytes":[42,21,84]},"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0},"fcs":0}`);
+      }
+
       override ubyte[] toBytes() const {
         ubyte[] encoded = new ubyte[20];
         encoded.write!ubyte(_versionAndLength.versionAndLength, 0);
@@ -87,6 +100,16 @@ class IP : Protocol {
       unittest {
         IP packet = new IP();
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      }
+
+      unittest {
+        import netload.protocols.raw;
+
+        IP packet = new IP();
+
+        packet.data = new Raw([42, 21, 84]);
+
+        assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
       }
 
       override string toString() const { return toJson.toString; }

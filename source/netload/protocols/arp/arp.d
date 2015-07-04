@@ -59,6 +59,41 @@ class ARP : Protocol {
       assert(deserializeJson!(ubyte[])(packet.toJson.targetProtocolAddr) == [10, 14, 255, 255]);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ARP arp = new ARP(1, 1, 6, 4);
+      arp.senderHwAddr = [128, 128, 128, 128, 128, 128];
+      arp.targetHwAddr = [0, 0, 0, 0, 0, 0];
+      arp.senderProtocolAddr = [127, 0, 0, 1];
+      arp.targetProtocolAddr = [10, 14, 255, 255];
+      packet.data = arp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ARP");
+      assert(json.hwType == 1);
+      assert(json.protocolType == 1);
+      assert(json.hwAddrLen == 6);
+      assert(json.protocolAddrLen == 4);
+      assert(json.opcode == 0);
+      assert(deserializeJson!(ubyte[])(json.senderHwAddr) == [128, 128, 128, 128, 128, 128]);
+      assert(deserializeJson!(ubyte[])(json.targetHwAddr) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[])(json.senderProtocolAddr) == [127, 0, 0, 1]);
+      assert(deserializeJson!(ubyte[])(json.targetProtocolAddr) == [10, 14, 255, 255]);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_hwType, 0);
@@ -82,6 +117,20 @@ class ARP : Protocol {
       packet.senderProtocolAddr = [127, 0, 0, 1];
       packet.targetProtocolAddr = [10, 14, 255, 255];
       assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ARP packet = new ARP(1, 1, 6, 4);
+      packet.senderHwAddr = [128, 128, 128, 128, 128, 128];
+      packet.targetHwAddr = [0, 0, 0, 0, 0, 0];
+      packet.senderProtocolAddr = [127, 0, 0, 1];
+      packet.targetProtocolAddr = [10, 14, 255, 255];
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255] ~ [42, 21, 84]);
     }
 
     override string toString() const {

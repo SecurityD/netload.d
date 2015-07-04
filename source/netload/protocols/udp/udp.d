@@ -36,6 +36,30 @@ class UDP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      UDP udp = new UDP(8000, 7000);
+      packet.data = udp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "UDP");
+      assert(json.src_port == 8000);
+      assert(json.dest_port == 7000);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_srcPort, 0);
@@ -51,6 +75,16 @@ class UDP : Protocol {
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      auto packet = new UDP(8000, 7000);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     override string toString() const {

@@ -42,6 +42,31 @@ class ICMP : Protocol {
       assert(packet.toJson.checksum == 0);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMP icmp = new ICMP(3, 2);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 3);
+      assert(json.code == 2);
+      assert(json.checksum == 0);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[4];
       packet.write!ubyte(_type, 0);
@@ -55,6 +80,16 @@ class ICMP : Protocol {
     unittest {
       ICMP packet = new ICMP(3, 2);
       assert(packet.toBytes == [3, 2, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMP packet = new ICMP(3, 2);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [3, 2, 0, 0] ~ [42, 21, 84]);
     }
 
     override string toString() const {

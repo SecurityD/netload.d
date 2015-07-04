@@ -27,6 +27,33 @@ class ICMPv4Communication : ICMP {
       assert(packet.toJson.seq == 0);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4Communication icmp = new ICMPv4Communication(8);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 8);
+      assert(json.code == 0);
+      assert(json.checksum == 0);
+      assert(json.id == 0);
+      assert(json.seq == 0);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ubyte(_type, 0);
@@ -44,6 +71,18 @@ class ICMPv4Communication : ICMP {
       packet.id = 1;
       packet.seq = 2;
       assert(packet.toBytes == [8, 0, 0, 0, 0, 1, 0, 2]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4Communication packet = new ICMPv4Communication(8);
+      packet.id = 1;
+      packet.seq = 2;
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [8, 0, 0, 0, 0, 1, 0, 2] ~ [42, 21, 84]);
     }
 
     @disable @property {
@@ -233,6 +272,36 @@ class ICMPv4Timestamp : ICMPv4Communication {
       assert(packet.toJson.transmitTime == 84);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4Timestamp icmp = new ICMPv4Timestamp(14, 21, 42, 84);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 14);
+      assert(json.code == 0);
+      assert(json.checksum == 0);
+      assert(json.id == 0);
+      assert(json.seq == 0);
+      assert(json.originTime == 21);
+      assert(json.receiveTime == 42);
+      assert(json.transmitTime == 84);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[20];
       packet.write!ubyte(_type, 0);
@@ -253,6 +322,18 @@ class ICMPv4Timestamp : ICMPv4Communication {
       packet.id = 1;
       packet.seq = 2;
       assert(packet.toBytes == [14, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
+      packet.id = 1;
+      packet.seq = 2;
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [14, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84] ~ [42, 21, 84]);
     }
 
     @disable @property {

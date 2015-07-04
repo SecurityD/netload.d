@@ -29,6 +29,16 @@ class ICMPv4Error : ICMP {
       ICMPv4Error packet = new ICMPv4Error(3, 1, null);
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0]);
     }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4Error packet = new ICMPv4Error(3, 1, null);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
+    }
 }
 
 Protocol toICMPv4Error(Json json) {
@@ -195,6 +205,32 @@ class ICMPv4ParamProblem : ICMPv4Error {
       assert(packet.toJson.ptr == 1);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4ParamProblem icmp = new ICMPv4ParamProblem(2, 1, null);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 12);
+      assert(json.code == 2);
+      assert(json.checksum == 0);
+      assert(json.ptr == 1);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = super.toBytes();
       packet.write!ubyte(_ptr, 4);
@@ -204,6 +240,16 @@ class ICMPv4ParamProblem : ICMPv4Error {
     unittest {
       ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
       assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     @disable @property {
@@ -335,6 +381,32 @@ class ICMPv4Redirect : ICMPv4Error {
       assert(packet.toJson.gateway == 42);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4Redirect icmp = new ICMPv4Redirect(2, 42, null);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 5);
+      assert(json.code == 2);
+      assert(json.checksum == 0);
+      assert(json.gateway == 42);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = super.toBytes();
       packet.write!uint(_gateway, 4);
@@ -344,6 +416,16 @@ class ICMPv4Redirect : ICMPv4Error {
     unittest {
       ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
       assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42] ~ [42, 21, 84]);
     }
 
     @disable @property {

@@ -78,6 +78,54 @@ class NTPv4 : NTPCommon, Protocol {
       assert(json.transmit_timestamp == 0xd9_39_0d_b3_58_3e_91_e8);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      auto ntp = new NTPv4;
+      ntp.leapIndicator = 0x00;
+      ntp.versionNumber = 0x03;
+      ntp.mode = 0x03;
+      ntp.stratum = 0x03;
+      ntp.poll = 0x06;
+      ntp.precision = 0xec;
+      ntp.rootDelay = 0x03_53;
+      ntp.rootDispersion = 0x03_6c;
+      ntp.referenceClockIdentifier = 0x5f_51_ad_08;
+      ntp.referenceTimestamp = 0xd9_39_0d_b2_a4_63_7a_91;
+      ntp.originateTimestamp = 0xd9_39_0d_73_37_64_28_6d;
+      ntp.receiveTimestamp = 0xd9_39_0d_73_39_4d_93_98;
+      ntp.transmitTimestamp = 0xd9_39_0d_b3_58_3e_91_e8;
+      packet.data = ntp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "NTPv4");
+      assert(json.leap_indicator == 0x00);
+      assert(json.version_number == 0x03);
+      assert(json.mode == 0x03);
+      assert(json.stratum == 0x03);
+      assert(json.poll == 0x06);
+      assert(json.precision == 0xec);
+      assert(json.root_delay == 0x03_53);
+      assert(json.root_dispersion == 0x03_6c);
+      assert(json.reference_clock_identifier == 0x5f_51_ad_08);
+      assert(json.reference_timestamp == 0xd9_39_0d_b2_a4_63_7a_91);
+      assert(json.originate_timestamp == 0xd9_39_0d_73_37_64_28_6d);
+      assert(json.receive_timestamp == 0xd9_39_0d_73_39_4d_93_98);
+      assert(json.transmit_timestamp == 0xd9_39_0d_b3_58_3e_91_e8);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       auto packet = appender!(ubyte[])();
       packet.append!ubyte(cast(ubyte)((leapIndicator << 6) + (versionNumber << 3) + mode));
@@ -138,6 +186,42 @@ class NTPv4 : NTPCommon, Protocol {
         0xd9, 0x39, 0x0d, 0xb3,
         0x58, 0x3e, 0x91, 0xe8
       ]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      auto packet = new NTPv4;
+      packet.leapIndicator = 0x00;
+      packet.versionNumber = 0x03;
+      packet.mode = 0x03;
+      packet.stratum = 0x03;
+      packet.poll = 0x06;
+      packet.precision = 0xec;
+      packet.rootDelay = 0x03_53;
+      packet.rootDispersion = 0x03_6c;
+      packet.referenceClockIdentifier = 0x5f_51_ad_08;
+      packet.referenceTimestamp = 0xd9_39_0d_b2_a4_63_7a_91;
+      packet.originateTimestamp = 0xd9_39_0d_73_37_64_28_6d;
+      packet.receiveTimestamp = 0xd9_39_0d_73_39_4d_93_98;
+      packet.transmitTimestamp = 0xd9_39_0d_b3_58_3e_91_e8;
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [
+        0x1b, 0x03, 0x06, 0xec,
+        0x00, 0x00, 0x03, 0x53,
+        0x00, 0x00, 0x03, 0x6c,
+        0x5f, 0x51, 0xad, 0x08,
+        0xd9, 0x39, 0x0d, 0xb2,
+        0xa4, 0x63, 0x7a, 0x91,
+        0xd9, 0x39, 0x0d, 0x73,
+        0x37, 0x64, 0x28, 0x6d,
+        0xd9, 0x39, 0x0d, 0x73,
+        0x39, 0x4d, 0x93, 0x98,
+        0xd9, 0x39, 0x0d, 0xb3,
+        0x58, 0x3e, 0x91, 0xe8
+      ] ~ [42, 21, 84]);
     }
 
     @property inout string name() { return "NTPv4"; }
