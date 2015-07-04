@@ -161,8 +161,6 @@ class PacketCapturer {
       if (bytes is null) {
         throw new Exception(cast(string)_cap.errbuf);
       }
-      import std.stdio;
-      writeln(_header.ts);
       return bytes.toArray(_header.caplen);
     }
 
@@ -175,13 +173,7 @@ class PacketCapturer {
 }
 
 unittest {
-  import std.stdio;
-  PacketCapturer pc = new PacketCapturer("enp0s25");
+  PacketCapturer pc = new PacketCapturer();
   pc.initialize;
   ubyte[] p1 = pc.nextPacket;
-  writeln(p1);
-  ubyte[] p2 = pc.nextPacket;
-  writeln(p2);
-  ubyte[] p3 = pc.nextPacket;
-  writeln(p3);
 }
