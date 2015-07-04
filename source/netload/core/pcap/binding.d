@@ -123,21 +123,34 @@ T[] toArray(T)(T* ptr, uint size) {
 class PacketCapturer {
   public:
     this() {
+      lookupDevice();
+    }
+
+    this(bool enablePromisc) {
+      _promisc = enablePromisc;
+      lookupDevice();
+    }
+
+    this(string deviceName) {
+      _dev = deviceName;
+    }
+
+    this(string deviceName, bool enablePromisc) {
+      _dev = deviceName;
+      _promisc = enablePromisc;
+    }
+
+    void lookupDevice() {
       char* dev = pcap_lookupdev(null);
       if (dev == null) {
         throw new Exception("Cannot find any device : " ~ (cast(string)fromStringz(cast(char *)_errbuf)));
       }
       _dev = cast(string)fromStringz(dev);
-      _header = new pcap_pkthdr;
-    }
-
-    this(string deviceName) {
-      _dev = deviceName;
-      _header = new pcap_pkthdr;
     }
 
     void initialize() {
-      _cap = pcap_open_live(_dev.toStringz, 1518, false, 0, cast(char*)_errbuf);
+      _header = new pcap_pkthdr;
+      _cap = pcap_open_live(_dev.toStringz, 1518, _promisc, 0, cast(char*)_errbuf);
       if (_cap == null) {
         throw new Exception(cast(string)fromStringz(_errbuf.toStringz));
       }
@@ -154,6 +167,7 @@ class PacketCapturer {
     }
 
   private:
+    bool _promisc = false;
     string _dev;
     pcap_t *_cap;
     char[PCAP_ERRBUF_SIZE] _errbuf;
