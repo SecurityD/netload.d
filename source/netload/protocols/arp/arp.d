@@ -213,6 +213,34 @@ unittest  {
   assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ARP";
+  json.hwType = 1;
+  json.protocolType = 1;
+  json.hwAddrLen = 6;
+  json.protocolAddrLen = 4;
+  json.opcode = 0;
+  json.senderHwAddr = serializeToJson([128, 128, 128, 128, 128, 128]);
+  json.targetHwAddr = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.senderProtocolAddr = serializeToJson([127, 0, 0, 1]);
+  json.targetProtocolAddr = serializeToJson([10, 14, 255, 255]);
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ARP packet = cast(ARP)toARP(json);
+  assert(packet.senderHwAddr == [128, 128, 128, 128, 128, 128]);
+  assert(packet.targetHwAddr == [0, 0, 0, 0, 0, 0]);
+  assert(packet.senderProtocolAddr == [127, 0, 0, 1]);
+  assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toARP(ubyte[] encoded) {
   ushort hwType = encoded.read!ushort();
   ushort protocolType = encoded.read!ushort();

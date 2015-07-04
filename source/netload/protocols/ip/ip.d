@@ -204,6 +204,36 @@ unittest {
   assert(packet.srcIpAddress == 20);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "IP";
+  json.ip_version = 0;
+  json.ihl = 0;
+  json.tos = 0;
+  json.header_length = 0;
+  json.id = 0;
+  json.offset = 0;
+  json.reserved = false;
+  json.df = false;
+  json.mf = false;
+  json.ttl = 0;
+  json.protocol = 0;
+  json.checksum = 0;
+  json.src_ip_address = 20;
+  json.dest_ip_address = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  IP packet = cast(IP)toIP(json);
+  assert(packet.srcIpAddress == 20);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toIP(ubyte[] encoded) {
   IP packet = new IP();
   VersionAndLength vl;

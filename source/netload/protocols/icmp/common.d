@@ -139,6 +139,27 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 3;
+  json.code = 2;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMP packet = cast(ICMP)toICMP(json);
+  assert(packet.type == 3);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMP(ubyte[] encodedPacket) {
   ICMP packet = new ICMP();
   packet.type = encodedPacket.read!ubyte();

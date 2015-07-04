@@ -278,6 +278,43 @@ unittest {
   assert(packet.transmitTimestamp == 450u);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "NTPv0";
+  json.leap_indicator = 2u;
+  json.status = 4u;
+  json.type_ = 50u;
+  json.precision = 100u;
+  json.estimated_error = 150u;
+  json.estimated_drift_rate = 200u;
+  json.reference_clock_identifier = 250u;
+  json.reference_timestamp = 300u;
+  json.originate_timestamp = 350u;
+  json.receive_timestamp = 400u;
+  json.transmit_timestamp = 450u;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  auto packet = cast(NTPv0)toNTPv0(json);
+  assert(packet.leapIndicator == 2u);
+  assert(packet.status == 4u);
+  assert(packet.type == 50u);
+  assert(packet.precision == 100u);
+  assert(packet.estimatedError == 150u);
+  assert(packet.estimatedDriftRate == 200u);
+  assert(packet.referenceClockIdentifier == 250u);
+  assert(packet.referenceTimestamp == 300u);
+  assert(packet.originateTimestamp == 350u);
+  assert(packet.receiveTimestamp == 400u);
+  assert(packet.transmitTimestamp == 450u);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toNTPv0(ubyte[] encodedPacket) {
   auto packet = new NTPv0;
   ubyte tmp = encodedPacket.read!ubyte;

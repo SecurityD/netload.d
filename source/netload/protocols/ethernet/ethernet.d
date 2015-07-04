@@ -146,6 +146,28 @@ unittest {
   assert(packet.protocolType == 0x0800);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "Ethernet";
+  json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
+  json.src_mac_address = serializeToJson([255, 255, 255, 255, 255, 255]);
+  json.dest_mac_address = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.protocol_type = 0x0800;
+  json.fcs = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  Ethernet packet = cast(Ethernet)toEthernet(json);
+  assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
+  assert(packet.protocolType == 0x0800);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toEthernet(ubyte[] encoded) {
   Ethernet packet = new Ethernet();
   packet.prelude[0..7] = encoded[0..7];

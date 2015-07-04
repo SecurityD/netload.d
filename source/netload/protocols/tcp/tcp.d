@@ -248,3 +248,35 @@ unittest {
   assert(packet.srcPort == json.src_port.get!ushort);
   assert(packet.destPort == json.dest_port.get!ushort);
 }
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "TCP";
+  json.src_port = 8000;
+  json.dest_port = 7000;
+  json.sequence_number = 0;
+  json.ack_number = 0;
+  json.fin = false;
+  json.syn = true;
+  json.rst = false;
+  json.psh = false;
+  json.ack = true;
+  json.urg = false;
+  json.reserved = 0;
+  json.offset = 0;
+  json.window = 0;
+  json.checksum = 0;
+  json.urgent_ptr = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  TCP packet = cast(TCP)toTCP(json);
+  assert(packet.srcPort == json.src_port.get!ushort);
+  assert(packet.destPort == json.dest_port.get!ushort);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}

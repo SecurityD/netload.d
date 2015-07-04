@@ -12,3 +12,4 @@
 ### TCP
 - Options
 ## Misc
+- Conversion from Json : be able to return the precise Protocol (e.g. for DNS, return DNSQuery if it's a query or a DNSResource if not and then let the user cast in DNS if he wants)

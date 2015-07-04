@@ -408,6 +408,53 @@ unittest {
   assert(packet.transmitTimestamp == 0xd9_39_0d_b3_58_3e_91_e8);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "NTPv0";
+  json.leap_indicator = 0x00;
+  json.version_number = 0x03;
+  json.mode = 0x03;
+  json.stratum = 0x03;
+  json.poll = 0x06;
+  json.precision = 0xec;
+  json.root_delay = 0x03_53;
+  json.root_dispersion = 0x03_6c;
+  json.reference_clock_identifier = 0x5f_51_ad_08;
+  json.reference_timestamp = 0xd9_39_0d_b2_a4_63_7a_91;
+  json.originate_timestamp = 0xd9_39_0d_73_37_64_28_6d;
+  json.receive_timestamp = 0xd9_39_0d_73_39_4d_93_98;
+  json.transmit_timestamp = 0xd9_39_0d_b3_58_3e_91_e8;
+  json.extension_fields = Json.emptyArray;
+  json.key_identifier = 0x00;
+  json.digest = Json.emptyArray;
+  for (int i = 0 ; i < 16 ; ++i) {
+    json.digest ~= 0x00;
+  }
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  auto packet = cast(NTPv4)toNTPv4(json);
+  assert(packet.leapIndicator == 0x00);
+  assert(packet.versionNumber == 0x03);
+  assert(packet.mode == 0x03);
+  assert(packet.stratum == 0x03);
+  assert(packet.poll == 0x06);
+  assert(packet.precision == 0xec);
+  assert(packet.rootDelay == 0x03_53);
+  assert(packet.rootDispersion == 0x03_6c);
+  assert(packet.referenceClockIdentifier == 0x5f_51_ad_08);
+  assert(packet.referenceTimestamp == 0xd9_39_0d_b2_a4_63_7a_91);
+  assert(packet.originateTimestamp == 0xd9_39_0d_73_37_64_28_6d);
+  assert(packet.receiveTimestamp == 0xd9_39_0d_73_39_4d_93_98);
+  assert(packet.transmitTimestamp == 0xd9_39_0d_b3_58_3e_91_e8);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toNTPv4(ubyte[] encodedPacket) {
   auto packet = new NTPv4;
   {

@@ -63,6 +63,27 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 3;
+  json.code = 2;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4Error packet = cast(ICMPv4Error)toICMPv4Error(json);
+  assert(packet.type == 3);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4Error(ubyte[] encodedPacket) {
   ICMPv4Error packet = new ICMPv4Error();
   packet.type = encodedPacket.read!ubyte();
@@ -114,6 +135,25 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.code = 2;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)toICMPv4DestUnreach(json);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4DestUnreach(ubyte[] encodedPacket) {
   ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
   encodedPacket.read!ubyte();
@@ -162,6 +202,25 @@ unittest {
   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)toICMPv4TimeExceed(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.code = 2;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)toICMPv4TimeExceed(json);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4TimeExceed(ubyte[] encodedPacket) {
@@ -287,6 +346,27 @@ unittest {
   assert(packet.ptr == 1);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.code = 2;
+  json.checksum = 0;
+  json.ptr = 1;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)toICMPv4ParamProblem(json);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert(packet.ptr == 1);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4ParamProblem(ubyte[] encodedPacket) {
   ICMPv4ParamProblem packet = new ICMPv4ParamProblem();
   encodedPacket.read!ubyte();
@@ -338,6 +418,25 @@ unittest {
   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)toICMPv4SourceQuench(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.code = 2;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)toICMPv4SourceQuench(json);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4SourceQuench(ubyte[] encodedPacket) {
@@ -461,6 +560,27 @@ unittest {
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.code = 2;
+  json.checksum = 0;
+  json.gateway = 42;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)toICMPv4Redirect(json);
+  assert(packet.code == 2);
+  assert(packet.checksum == 0);
+  assert(packet.gateway == 42);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4Redirect(ubyte[] encodedPacket) {

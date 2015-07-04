@@ -125,6 +125,29 @@ unittest {
   assert(packet.seq == 2);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 8;
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4Communication packet = cast(ICMPv4Communication)toICMPv4Communication(json);
+  assert(packet.type == 8);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4Communication(ubyte[] encodedPacket) {
   ICMPv4Communication packet = new ICMPv4Communication(encodedPacket.read!ubyte());
   encodedPacket.read!ubyte();
@@ -176,6 +199,27 @@ unittest {
   assert(packet.seq == 2);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)toICMPv4EchoRequest(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4EchoRequest(ubyte[] encodedPacket) {
   ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
   encodedPacket.read!ushort();
@@ -224,6 +268,27 @@ unittest {
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)toICMPv4EchoReply(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4EchoReply(ubyte[] encodedPacket) {
@@ -385,6 +450,33 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 14;
+  json.id = 1;
+  json.seq = 2;
+  json.originTime = 21;
+  json.receiveTime = 42;
+  json.transmitTime = 84;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)toICMPv4Timestamp(json);
+  assert(packet.type == 14);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4Timestamp(ubyte[] encodedPacket) {
   ICMPv4Timestamp packet = new ICMPv4Timestamp(encodedPacket.read!ubyte());
   encodedPacket.read!ubyte();
@@ -448,6 +540,32 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 14;
+  json.id = 1;
+  json.seq = 2;
+  json.originTime = 21;
+  json.receiveTime = 42;
+  json.transmitTime = 84;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)toICMPv4TimestampRequest(json);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4TimestampRequest(ubyte[] encodedPacket) {
   ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest();
   encodedPacket.read!uint();
@@ -509,6 +627,32 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.packetType = 14;
+  json.id = 1;
+  json.seq = 2;
+  json.originTime = 21;
+  json.receiveTime = 42;
+  json.transmitTime = 84;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)toICMPv4TimestampReply(json);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert(packet.originTime == 21);
+  assert(packet.receiveTime == 42);
+  assert(packet.transmitTime == 84);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4TimestampReply(ubyte[] encodedPacket) {
   ICMPv4TimestampReply packet = new ICMPv4TimestampReply();
   encodedPacket.read!uint();
@@ -563,6 +707,27 @@ unittest {
   assert(packet.seq == 2);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)toICMPv4InformationRequest(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4InformationRequest(ubyte[] encodedPacket) {
   ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
   encodedPacket.read!ushort();
@@ -611,6 +776,27 @@ unittest {
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+  json.id = 1;
+  json.seq = 2;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)toICMPv4InformationReply(json);
+  assert(packet.checksum == 0);
+  assert(packet.id == 1);
+  assert(packet.seq == 2);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4InformationReply(ubyte[] encodedPacket) {

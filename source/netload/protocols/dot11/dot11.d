@@ -297,6 +297,57 @@ unittest {
   assert(packet.toDS == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "Dot11";
+  json.subtype = 8;
+  json.packet_type = 0;
+  json.vers = 0;
+  json.rsvd = 0;
+  json.wep = 0;
+  json.more_data = 0;
+  json.power = 0;
+  json.retry = 0;
+  json.more_frag = 0;
+  json.from_DS = 0;
+  json.to_DS = 0;
+  json.duration = 0;
+  json.addr1 = serializeToJson([255, 255, 255, 255, 255, 255]);
+  json.addr2 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.addr3 = serializeToJson([1, 2, 3, 4, 5, 6]);
+  json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.seq = 0;
+  json.fcs = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  Dot11 packet = cast(Dot11)toDot11(json);
+  assert(packet.type == 0);
+  assert(packet.subtype == 8);
+  assert(packet.addr1 == [255,255,255,255,255,255]);
+  assert(packet.addr2 == [0,0,0,0,0,0]);
+  assert(packet.addr3 == [1,2,3,4,5,6]);
+  assert(packet.addr4 == [0,0,0,0,0,0]);
+  assert(packet.duration == 0);
+  assert(packet.seq == 0);
+  assert(packet.fcs == 0);
+  assert(packet.vers == 0);
+  assert(packet.rsvd == 0);
+  assert(packet.wep == 0);
+  assert(packet.moreData == 0);
+  assert(packet.power == 0);
+  assert(packet.retry == 0);
+  assert(packet.moreFrag == 0);
+  assert(packet.fromDS == 0);
+  assert(packet.toDS == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDot11(ubyte[] encodedPacket) {
   Dot11 packet = new Dot11();
   Bitfields frameControl;

@@ -258,6 +258,47 @@ unittest {
   assert(packet.rcode == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNS";
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNS packet = cast(DNS)toDNS(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.qr == false);
+  assert(packet.opcode == 0);
+  assert(packet.aa == false);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.z == 0);
+  assert(packet.rcode == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNS(ubyte[] encodedPacket) {
   BitFields bits;
   ushort id = encodedPacket.read!ushort();
@@ -358,6 +399,42 @@ unittest {
   assert(packet.tc == false);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNS";
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 1;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = true;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSQuery packet = cast(DNSQuery)toDNSQuery(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.opcode == 1);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNSQuery(ubyte[] encodedPacket) {
   BitFields bits;
   ushort id = encodedPacket.read!ushort();
@@ -445,6 +522,43 @@ unittest {
   assert(packet.tc == false);
   assert(packet.ra == false);
   assert(packet.rcode == 0);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNS";
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSResource packet = cast(DNSResource)toDNSResource(json);
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.aa == false);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.rcode == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toDNSResource(ubyte[] encodedPacket) {
@@ -735,6 +849,27 @@ unittest {
   assert(packet.qclass == 1);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSQR";
+  json.qname = "google.fr";
+  json.qtype = QType.A;
+  json.qclass = QClass.IN;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSQR packet = cast(DNSQR)toDNSQR(json);
+  assert(packet.qname == "google.fr");
+  assert(packet.qtype == 1);
+  assert(packet.qclass == 1);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNSQR(ubyte[] encodedPacket) {
   DNSQR packet = new DNSQR();
   packet.qname = readLabels(encodedPacket);
@@ -897,6 +1032,31 @@ unittest {
   assert(packet.rclass == 1);
   assert(packet.ttl == 600);
   assert(packet.rdlength == 10);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSRR";
+  json.rname = "google.fr";
+  json.rtype = QType.A;
+  json.rclass = QClass.IN;
+  json.ttl = 600;
+  json.rdlength = 10;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSRR packet = cast(DNSRR)toDNSRR(json);
+  assert(packet.rname == "google.fr");
+  assert(packet.rtype == 1);
+  assert(packet.rclass == 1);
+  assert(packet.ttl == 600);
+  assert(packet.rdlength == 10);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toDNSRR(ubyte[] encodedPacket) {
@@ -1096,6 +1256,35 @@ unittest {
   assert(packet.minTtl == 10);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSSOAResource";
+  json.primary = "google.fr";
+  json.admin = "admin.google.fr";
+  json.serial = 8000;
+  json.refresh = 2500;
+  json.retry = 2500;
+  json.expirationLimit = 400;
+  json.minTtl = 10;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSSOAResource packet = cast(DNSSOAResource)toDNSSOAResource(json);
+  assert(packet.primary == "google.fr");
+  assert(packet.admin == "admin.google.fr");
+  assert(packet.serial == 8000);
+  assert(packet.refresh == 2500);
+  assert(packet.retry == 2500);
+  assert(packet.expirationLimit == 400);
+  assert(packet.minTtl == 10);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNSSOAResource(ubyte[] encodedPacket) {
   DNSSOAResource packet = new DNSSOAResource();
   packet.primary = readLabels(encodedPacket);
@@ -1240,6 +1429,25 @@ unittest {
   assert(packet.mxname == "google.fr");
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSMXResource";
+  json.pref = 1;
+  json.mxname = "google.fr";
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSMXResource packet = cast(DNSMXResource)toDNSMXResource(json);
+  assert(packet.pref == 1);
+  assert(packet.mxname == "google.fr");
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNSMXResource(ubyte[] encodedPacket) {
   DNSMXResource packet = new DNSMXResource();
   packet.pref = encodedPacket.read!ushort;
@@ -1362,6 +1570,23 @@ unittest {
   assert(packet.ip == [127, 0, 0, 1]);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSAResource";
+  json.ip = serializeToJson([127, 0, 0, 1]);
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSAResource packet = cast(DNSAResource)toDNSAResource(json);
+  assert(packet.ip == [127, 0, 0, 1]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDNSAResource(ubyte[] encodedPacket) {
   DNSAResource packet = new DNSAResource();
   packet.ip[0..4] = encodedPacket[0..4];
@@ -1481,6 +1706,23 @@ unittest {
   json.ptrname = "google.fr";
   DNSPTRResource packet = cast(DNSPTRResource)toDNSPTRResource(json);
   assert(packet.ptrname == "google.fr");
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "DNSAResource";
+  json.ptrname = "google.fr";
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DNSPTRResource packet = cast(DNSPTRResource)toDNSPTRResource(json);
+  assert(packet.ptrname == "google.fr");
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toDNSPTRResource(ubyte[] encodedPacket) {

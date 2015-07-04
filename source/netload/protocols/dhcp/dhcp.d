@@ -256,6 +256,48 @@ unittest {
   assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+  ubyte[] options;
+
+  json.name = "DHCP";
+  json.op = 2;
+  json.htype = 1;
+  json.hlen = 6;
+  json.hops = 0;
+  json.xid = 42;
+  json.secs = 0;
+  json.broadcast = false;
+  json.ciaddr = serializeToJson([127, 0, 0, 1]);
+  json.yiaddr = serializeToJson([127, 0, 1, 1]);
+  json.siaddr = serializeToJson([10, 14, 19, 42]);
+  json.giaddr = serializeToJson([10, 14, 59, 255]);
+  json.chaddr = serializeToJson(new ubyte[16]);
+  json.sname = serializeToJson(new ubyte[64]);
+  json.file = serializeToJson(new ubyte[128]);
+  json.options = serializeToJson(options);
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DHCP packet = cast(DHCP)toDHCP(json);
+  assert(packet.op == 2);
+  assert(packet.htype == 1);
+  assert(packet.hlen == 6);
+  assert(packet.hops == 0);
+  assert(packet.xid == 42);
+  assert(packet.secs == 0);
+  assert(packet.broadcast == false);
+  assert(packet.ciaddr == [127, 0, 0, 1]);
+  assert(packet.yiaddr == [127, 0, 1, 1]);
+  assert(packet.siaddr == [10, 14, 19, 42]);
+  assert(packet.giaddr == [10, 14, 59, 255]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toDHCP(ubyte[] encodedPacket) {
   DHCP packet = new DHCP();
   Bitfields flags;

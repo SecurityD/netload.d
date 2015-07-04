@@ -137,6 +137,29 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "UDP";
+  json.src_port = 8000;
+  json.dest_port = 7000;
+  json.len = 0;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  UDP packet = cast(UDP)toUDP(json);
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.length == 0);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toUDP(ubyte[] encodedPacket) {
   UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
   packet.length = encodedPacket.read!ushort;

@@ -159,6 +159,33 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+  json.numAddr = 3;
+  json.addrEntrySize = 2;
+  json.life = 1;
+  json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)toICMPv4RouterAdvert(json);
+  assert(packet.checksum == 0);
+  assert(packet.life == 1);
+  assert(packet.numAddr == 3);
+  assert(packet.addrEntrySize == 2);
+  assert(packet.routerAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
 Protocol toICMPv4RouterAdvert(ubyte[] encodedPacket) {
   encodedPacket.read!ushort();
   ushort checksum = encodedPacket.read!ushort();
@@ -237,6 +264,23 @@ unittest {
   json.checksum = 0;
   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
   assert(packet.checksum == 0);
+}
+
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "ICMP";
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 Protocol toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
