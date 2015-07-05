@@ -1,4 +1,4 @@
-module netload.protocols.icmp.v4.error;
+module netload.protocols.icmp.v4_error;
 
 import netload.core.protocol;
 import netload.protocols.icmp.common;

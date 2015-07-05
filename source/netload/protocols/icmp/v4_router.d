@@ -1,4 +1,4 @@
-module netload.protocols.icmp.v4.router;
+module netload.protocols.icmp.v4_router;
 
 import netload.core.protocol;
 import netload.protocols.icmp.common;
