@@ -1,8 +1,17 @@
 module netload.protocols.ip.ip;
 
 import netload.core.protocol;
+import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
+
+private Protocol function(ubyte[])[ubyte] ipType;
+
+static this() {
+  ipType[0x01] = &toICMP;
+  ipType[0x06] = &toTCP;
+  ipType[0x11] = &toUDP;
+}
 
 union VersionAndLength {
   mixin(bitfields!(
@@ -254,6 +263,11 @@ Protocol toIP(ubyte[] encoded) {
   packet.checksum = encoded.read!ushort();
   packet.srcIpAddress = encoded.read!uint();
   packet.destIpAddress = encoded.read!uint();
+  auto func = (packet.protocol in ipType);
+  if (func !is null)
+    packet.data = ipType[packet.protocol](encoded);
+  else
+    packet.data = toRaw(encoded);
   return packet;
 }
 
@@ -261,4 +275,13 @@ unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
  IP packet = cast(IP)encoded.toIP;
  assert(packet.destIpAddress == 1);
+}
+
+unittest {
+  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
+  IP packet = cast(IP)encoded.toIP;
+  assert(packet.destIpAddress == 1);
+  assert((cast(TCP)packet.data).srcPort == 8000);
+  assert((cast(TCP)packet.data).destPort == 7000);
+  assert((cast(TCP)packet.data).window == 8192);
 }
