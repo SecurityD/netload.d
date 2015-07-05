@@ -1,8 +1,18 @@
 module netload.protocols.ethernet.ethernet;
 
 import netload.core.protocol;
+import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
+
+private Protocol function(ubyte[])[ushort] etherType;
+
+static this() {
+  etherType[0x0800] = &toIP;
+  etherType[0x0806] = &toARP;
+  etherType[0x8035] = &toARP;
+  etherType[0x814C] = &toSNMPv3;
+}
 
 class Ethernet : Protocol {
   public:
@@ -174,7 +184,14 @@ Protocol toEthernet(ubyte[] encoded) {
   packet.destMacAddress[0..6] = encoded[7..13];
   packet.srcMacAddress[0..6] = encoded[13..19];
   packet.protocolType = encoded.peek!(ushort)(19);
-  packet.fcs = encoded.peek!(uint)(21);
+  packet.fcs = encoded.peek!(uint)(encoded.length - 4);
+  if (encoded[21..$].length > 4) {
+    auto func = (packet.protocolType in etherType);
+    if (func !is null)
+      packet.data = etherType[packet.protocolType](encoded[21..($ - 4)]);
+    else
+      packet.data = toRaw(encoded[21..($ - 4)]);
+  }
   return packet;
 }
 
@@ -183,4 +200,12 @@ unittest {
   Ethernet packet = cast(Ethernet)encoded.toEthernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
+}
+
+unittest {
+  ubyte[] encoded = [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [0, 0, 0, 0];
+  Ethernet packet = cast(Ethernet)encoded.toEthernet();
+  assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
+  assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
+  assert((cast(IP)packet.data).destIpAddress == 1);
 }
