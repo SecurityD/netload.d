@@ -15,6 +15,15 @@ class Packet {
       _time = packetTime;
     }
 
+    override string toString() {
+      string str = "--- Packet ---\n";
+      str ~= "Time : " ~ _time.toString ~ "\n";
+      str ~= "Annotation : " ~ _annotation ~ "\n";
+      str ~= "[Data]" ~ "\n" ~ data.toString ~ "\n";
+      str ~= "--------------\n";
+      return str;
+    }
+
     @property Protocol data() { return _data; }
     @property SysTime time() { return _time; }
     @property string annotation() { return _annotation; }
