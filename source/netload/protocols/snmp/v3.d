@@ -180,8 +180,10 @@ class SNMPv3 : Protocol {
       void securityModel(uint data) { _securityModel = data; }
 
       ref ASN1 securityParameters() { return _securityParameters; }
+      void securityParameters(ASN1 data) { _securityParameters = data; }
 
       ref ASN1 pdu() { return _pdu; }
+      void pdu(ASN1 data) { _pdu = data; }
     }
 
   private:

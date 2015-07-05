@@ -148,6 +148,7 @@ class SNMPv1 : Protocol {
       void communityString(string data) { _communityString = data; }
 
       ref ASN1 pdu() { return _pdu; }
+      void pdu(ASN1 data) { _pdu = data; }
     }
 
   private:
