@@ -7,6 +7,8 @@ import std.bitmanip;
 
 class ICMPv4Communication : ICMP {
   public:
+    this() {}
+
     this(ubyte type) {
       super(type, 0);
     }
@@ -310,6 +312,8 @@ unittest {
 
 class ICMPv4Timestamp : ICMPv4Communication {
   public:
+    this() {}
+
     this(ubyte type, uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
       super(type);
       _originTime = originTime;

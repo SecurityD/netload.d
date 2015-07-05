@@ -44,7 +44,10 @@ union BitFields {
 class DNS : Protocol {
   public:
 
-    this() {}
+    this() {
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
+    }
 
     this(ushort id = 0, bool truncation = 0) {
       _id = id;
@@ -343,6 +346,10 @@ unittest {
 
 class DNSQuery : DNS {
   public:
+    this() {
+      super();
+    }
+
     this(ushort id, bool truncation, ubyte opcode, bool recDesired) {
       super(id, truncation);
       _bits.opcode = opcode;
@@ -467,6 +474,10 @@ unittest {
 
 class DNSResource : DNS {
   public:
+    this() {
+      super();
+    }
+
     this(ushort id, bool truncation, bool authAnswer, bool recAvail, ubyte rcode) {
       super(id, truncation);
       _bits.qr = 1;

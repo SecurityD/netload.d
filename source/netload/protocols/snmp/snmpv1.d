@@ -9,6 +9,8 @@ import netload.protocols.snmp.asn_1;
 
 class SNMPv1 : Protocol {
   public:
+    this() {}
+
     override Json toJson() const {
       auto json = Json.emptyObject;
       json.ver = ver;
