@@ -1,8 +1,26 @@
 module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
+import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
+
+private Protocol function(ubyte[])[ushort] tcpType;
+
+shared static this() {
+  tcpType[80] = &toHTTP;
+  tcpType[110] = &toPOP3;
+  tcpType[995] = &toPOP3;
+  tcpType[143] = &toIMAP;
+  tcpType[993] = &toIMAP;
+  tcpType[25] = &toSMTP;
+  tcpType[2525] = &toSMTP;
+  tcpType[465] = &toSMTP;
+  tcpType[67] = &toDHCP;
+  tcpType[68] = &toDHCP;
+  tcpType[53] = &toDNS;
+  tcpType[123] = &toNTPv4;
+};
 
 union FlagsAndOffset {
   mixin(bitfields!(
@@ -193,6 +211,9 @@ Protocol toTCP(ubyte[] encoded) {
   packet.window = encoded.read!ushort();
   packet.checksum = encoded.read!ushort();
   packet.urgPtr = encoded.read!ushort();
+  auto func = (packet.destPort in tcpType);
+  if (func !is null)
+    packet.data = tcpType[packet.destPort](encoded);
   return packet;
 }
 
@@ -202,6 +223,15 @@ unittest {
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.window == 8192);
+}
+
+unittest {
+  ubyte[] encoded = cast(ubyte[])[0, 80, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ cast(ubyte[])"HTTP 1.1";
+  TCP packet = cast(TCP)encoded.toTCP;
+  assert(packet.srcPort == 80);
+  assert(packet.destPort == 80);
+  assert(packet.window == 8192);
+  assert((cast(HTTP)packet.data).str == "HTTP 1.1");
 }
 
 Protocol toTCP(Json json) {

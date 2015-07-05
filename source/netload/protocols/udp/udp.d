@@ -1,8 +1,26 @@
 module netload.protocols.udp.udp;
 
 import netload.core.protocol;
+import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
+
+private Protocol function(ubyte[])[ushort] udpType;
+
+shared static this() {
+  udpType[80] = &toHTTP;
+  udpType[110] = &toPOP3;
+  udpType[995] = &toPOP3;
+  udpType[143] = &toIMAP;
+  udpType[993] = &toIMAP;
+  udpType[25] = &toSMTP;
+  udpType[2525] = &toSMTP;
+  udpType[465] = &toSMTP;
+  udpType[67] = &toDHCP;
+  udpType[68] = &toDHCP;
+  udpType[53] = &toDNS;
+  udpType[123] = &toNTPv4;
+};
 
 class UDP : Protocol {
   public:
@@ -166,6 +184,9 @@ Protocol toUDP(ubyte[] encodedPacket) {
   UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
   packet.length = encodedPacket.read!ushort;
   packet.checksum = encodedPacket.read!ushort;
+  auto func = (packet.destPort in udpType);
+  if (func !is null)
+    packet.data = udpType[packet.destPort](encodedPacket);
   return packet;
 }
 
@@ -176,4 +197,26 @@ unittest {
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
   assert(packet.checksum == 0);
+}
+
+unittest {
+  ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
+  ubyte[] encoded = cast(ubyte[])[0, 68, 0, 67, 0, 247, 0, 0] ~ encodedPacket;
+  UDP packet = cast(UDP)encoded.toUDP;
+  assert(packet.srcPort == 68);
+  assert(packet.destPort == 67);
+  assert(packet.length == 247);
+  assert(packet.checksum == 0);
+  assert((cast(DHCP)packet.data).op == 2);
+  assert((cast(DHCP)packet.data).htype == 1);
+  assert((cast(DHCP)packet.data).hlen == 6);
+  assert((cast(DHCP)packet.data).hops == 0);
+  assert((cast(DHCP)packet.data).xid == 42);
+  assert((cast(DHCP)packet.data).secs == 0);
+  assert((cast(DHCP)packet.data).broadcast == false);
+  assert((cast(DHCP)packet.data).ciaddr == [127, 0, 0, 1]);
+  assert((cast(DHCP)packet.data).yiaddr == [127, 0, 1, 1]);
+  assert((cast(DHCP)packet.data).siaddr == [10, 14, 19, 42]);
+  assert((cast(DHCP)packet.data).giaddr == [10, 14, 59, 255]);
+  assert((cast(DHCP)packet.data).options == [42, 56, 0]);
 }
