@@ -53,7 +53,6 @@ class ICMPv4Communication : ICMP {
       assert(json.seq == 0);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -368,7 +367,6 @@ class ICMPv4Timestamp : ICMPv4Communication {
       assert(json.transmitTime == 84);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {

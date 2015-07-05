@@ -287,7 +287,6 @@ class ICMPv4ParamProblem : ICMPv4Error {
       assert(json.ptr == 1);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -503,7 +502,6 @@ class ICMPv4Redirect : ICMPv4Error {
       assert(json.gateway == 42);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {

@@ -73,7 +73,6 @@ class Ethernet : Protocol {
       assert(json.dest_port == 7000);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -105,14 +104,7 @@ class Ethernet : Protocol {
       assert(packet.toBytes == [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
-      assert(packet.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"name":"Ethernet","data":null,"fcs":0}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property ref inout(ubyte[7]) prelude() inout { return _prelude; }
     @property ref inout(ubyte[6]) srcMacAddress() inout { return _srcMacAddress; }
@@ -180,6 +172,7 @@ unittest  {
 
 Protocol toEthernet(ubyte[] encoded) {
   Ethernet packet = new Ethernet();
+  encoded = cast(ubyte[])[1, 0, 1, 0, 1, 0, 1] ~ encoded;
   packet.prelude[0..7] = encoded[0..7];
   packet.destMacAddress[0..6] = encoded[7..13];
   packet.srcMacAddress[0..6] = encoded[13..19];
@@ -196,14 +189,14 @@ Protocol toEthernet(ubyte[] encoded) {
 }
 
 unittest {
-  ubyte[] encoded = [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
+  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
   Ethernet packet = cast(Ethernet)encoded.toEthernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
 }
 
 unittest {
-  ubyte[] encoded = [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [0, 0, 0, 0];
+  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [0, 0, 0, 0];
   Ethernet packet = cast(Ethernet)encoded.toEthernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);

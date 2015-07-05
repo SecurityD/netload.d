@@ -92,14 +92,7 @@ class ICMP : Protocol {
       assert(packet.toBytes == [3, 2, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      ICMP packet = new ICMP(3, 2);
-      assert(packet.toString == `{"checksum":0,"name":"ICMP","data":null,"code":2,"packetType":3}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property {
       inout ubyte type() { return _type; }

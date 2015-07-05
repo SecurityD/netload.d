@@ -107,7 +107,6 @@ class NTPv0 : NTPCommon, Protocol {
       assert(json.transmit_timestamp == 450u);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -192,7 +191,7 @@ class NTPv0 : NTPCommon, Protocol {
 
     @property inout string name() { return "NTPv0"; }
     override @property int osiLayer() const { return 7; };
-    override string toString() const { return toJson.toString; }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property {
       override Protocol data() { return _data; }
