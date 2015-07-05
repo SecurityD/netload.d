@@ -187,7 +187,7 @@ Protocol toARP(Json json) {
   packet.senderProtocolAddr = deserializeJson!(ubyte[])(json.senderProtocolAddr);
   packet.targetProtocolAddr = deserializeJson!(ubyte[])(json.targetProtocolAddr);
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

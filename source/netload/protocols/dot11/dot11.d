@@ -251,7 +251,7 @@ Protocol toDot11(Json json) {
   packet.seq = json.seq.to!ushort;
   packet.fcs = json.fcs.to!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

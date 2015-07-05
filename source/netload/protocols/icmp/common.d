@@ -123,7 +123,7 @@ Protocol toICMP(Json json) {
   packet.code = json.code.to!ubyte;
   packet.checksum = json.checksum.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

@@ -162,7 +162,7 @@ Protocol toSNMPv1(Json json) {
   snmp.communityString = json.community_string.to!string;
   snmp.pdu = deserializeJson!ASN1(json.pdu);
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     snmp.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return snmp;
 }

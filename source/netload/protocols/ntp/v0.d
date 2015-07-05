@@ -244,7 +244,7 @@ Protocol toNTPv0(Json json) {
   packet.receiveTimestamp = json.receive_timestamp.to!ulong;
   packet.transmitTimestamp = json.transmit_timestamp.to!ulong;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

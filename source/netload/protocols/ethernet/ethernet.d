@@ -139,7 +139,7 @@ Protocol toEthernet(Json json) {
   packet.protocolType = json.protocol_type.get!ushort;
   packet.fcs = json.fcs.get!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

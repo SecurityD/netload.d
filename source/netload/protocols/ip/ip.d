@@ -188,7 +188,7 @@ Protocol toIP(Json json) {
   packet.srcIpAddress = json.src_ip_address.get!uint;
   packet.destIpAddress = json.dest_ip_address.get!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

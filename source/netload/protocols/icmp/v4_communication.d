@@ -109,7 +109,7 @@ Protocol toICMPv4Communication(Json json) {
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -185,7 +185,7 @@ Protocol toICMPv4EchoRequest(Json json) {
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -256,7 +256,7 @@ Protocol toICMPv4EchoReply(Json json) {
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -432,7 +432,7 @@ Protocol toICMPv4Timestamp(Json json) {
   packet.receiveTime = json.receiveTime.to!uint;
   packet.transmitTime = json.transmitTime.to!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -523,7 +523,7 @@ Protocol toICMPv4TimestampRequest(Json json) {
   packet.receiveTime = json.receiveTime.to!uint;
   packet.transmitTime = json.transmitTime.to!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -610,7 +610,7 @@ Protocol toICMPv4TimestampReply(Json json) {
   packet.receiveTime = json.receiveTime.to!uint;
   packet.transmitTime = json.transmitTime.to!uint;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -695,7 +695,7 @@ Protocol toICMPv4InformationRequest(Json json) {
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
@@ -766,7 +766,7 @@ Protocol toICMPv4InformationReply(Json json) {
   packet.id = json.id.to!ushort;
   packet.seq = json.seq.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

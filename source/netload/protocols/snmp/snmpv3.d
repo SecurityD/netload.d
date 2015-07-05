@@ -204,7 +204,7 @@ Protocol toSNMPv3(Json json) {
   snmp.securityParameters = deserializeJson!ASN1(json.security_parameters);
   snmp.pdu = deserializeJson!ASN1(json.pdu);
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     snmp.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return snmp;
 }

@@ -347,7 +347,7 @@ Protocol toNTPv4(Json json) {
   if (json.digest.type != Json.Type.Undefined)
     packet.digest = deserializeJson!(ubyte[])(json.digest);
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
