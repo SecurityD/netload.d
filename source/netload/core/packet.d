@@ -30,3 +30,20 @@ unittest {
   p.annotation = "malicious packet";
   assert(p.annotation == "malicious packet");
 }
+
+Protocol create()() {
+  return null;
+}
+
+FirstProtocol create(FirstProtocol, OthersProtocol...)() {
+  FirstProtocol header = new FirstProtocol;
+  header.data = create!(OthersProtocol)();
+  return header;
+}
+
+unittest {
+  import netload.protocols;
+  Ethernet packet = create!(Ethernet, IP, TCP)();
+  packet.layer!TCP.srcPort = 80;
+  assert(packet.layer!TCP.srcPort == 80);
+}
