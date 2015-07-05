@@ -138,14 +138,7 @@ class TCP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson().toString;
-    }
-
-    unittest {
-      TCP packet = new TCP(8000, 7000);
-      assert(packet.toString == `{"ack_number":0,"ack":false,"checksum":0,"psh":false,"syn":false,"urg":false,"name":"TCP","data":null,"rst":false,"sequence_number":0,"reserved":0,"dest_port":7000,"urgent_ptr":0,"src_port":8000,"fin":false,"offset":0,"window":8192}`);
-    }
+    override string toString() const { return toJson().toPrettyString; }
 
     @property ushort srcPort() const { return _srcPort; }
     @property void srcPort(ushort port) { _srcPort = port; }

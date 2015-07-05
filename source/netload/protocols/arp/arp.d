@@ -93,7 +93,6 @@ class ARP : Protocol {
       assert(deserializeJson!(ubyte[])(json.targetProtocolAddr) == [10, 14, 255, 255]);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -135,18 +134,7 @@ class ARP : Protocol {
       assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      ARP packet = new ARP(1, 1, 6, 4);
-      packet.senderHwAddr = [128, 128, 128, 128, 128, 128];
-      packet.targetHwAddr = [0, 0, 0, 0, 0, 0];
-      packet.senderProtocolAddr = [127, 0, 0, 1];
-      packet.targetProtocolAddr = [10, 14, 255, 255];
-      assert(packet.toString == `{"protocolAddrLen":4,"senderHwAddr":[128,128,128,128,128,128],"hwAddrLen":6,"targetHwAddr":[0,0,0,0,0,0],"name":"ARP","data":null,"hwType":1,"protocolType":1,"opcode":0,"targetProtocolAddr":[10,14,255,255],"senderProtocolAddr":[127,0,0,1]}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property ushort hwType() const { return _hwType; }
     @property void hwType(ushort hwType) { _hwType = hwType; }

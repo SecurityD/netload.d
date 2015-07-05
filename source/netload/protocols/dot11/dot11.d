@@ -137,7 +137,6 @@ class Dot11 : Protocol {
       assert(json.dest_port == 7000);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
@@ -174,14 +173,7 @@ class Dot11 : Protocol {
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const {
-      return toJson().toString;
-    }
-
-    unittest {
-      Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
-      assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"name":"Dot11","data":null,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
-    }
+    override string toString() const { return toJson().toPrettyString; }
 
     @property ushort duration() const { return _duration; }
     @property void duration(ushort duration) { _duration = duration; }

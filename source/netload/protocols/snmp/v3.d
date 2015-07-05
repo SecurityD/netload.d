@@ -152,9 +152,7 @@ class SNMPv3 : Protocol {
       assert (snmp.toBytes == raw);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property {
       Protocol data() { return null; }

@@ -107,14 +107,7 @@ class UDP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson().toString;
-    }
-
-    unittest {
-      UDP packet = new UDP(8000, 7000);
-      assert(packet.toString == `{"checksum":0,"name":"UDP","data":null,"dest_port":7000,"src_port":8000,"len":0}`);
-    }
+    override string toString() const { return toJson().toPrettyString; }
 
     @property ushort srcPort() const { return _srcPort; }
     @property void srcPort(ushort port) { _srcPort = port; }

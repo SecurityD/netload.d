@@ -129,9 +129,7 @@ class SNMPv1 : Protocol {
       ]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property {
       Protocol data() { return null; }

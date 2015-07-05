@@ -28,7 +28,6 @@ class Raw : Protocol {
 
     unittest {
       Raw packet = new Raw([0, 1, 2]);
-      assert(packet.toJson.toString == `{"name":"Raw","bytes":[0,1,2]}`);
     }
 
     override ubyte[] toBytes() const { return _bytes.dup; }

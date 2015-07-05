@@ -163,15 +163,7 @@ class DNS : Protocol {
       assert(packet.toBytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson().toString;
-    }
-
-    unittest {
-      import std.stdio;
-      DNS packet = new DNS(10, true);
-      assert(packet.toString == `{"record_available":false,"zero":0,"name":"DNS","data":null,"id":10,"nscount":0,"opcode":0,"arcount":0,"auth_answer":false,"record_desired":false,"rcode":0,"qr":false,"truncation":true,"ancount":0,"qdcount":0}`);
-    }
+    override string toString() const { return toJson().toPrettyString; }
 
     @property ushort id() { return _id; }
     @property void id(ushort id) { _id = id; }
@@ -1198,13 +1190,10 @@ class DNSSOAResource  : Protocol {
       assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     unittest {
       DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
-      assert(packet.toString == `{"minTtl":86420,"name":"DNSSOAResource","data":null,"retry":600,"expirationLimit":3500,"refresh":600,"primary":"ch1mgt0101dc120.prdmgt01.prod.exchangelabs","admin":"msnhst.microsoft","serial":1500}`);
     }
 
     @property string primary() const { return _primary; }
@@ -1401,14 +1390,7 @@ class DNSMXResource : Protocol {
       assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      DNSMXResource packet = new DNSMXResource(2, "google.fr");
-      assert(packet.toString == `{"mxname":"google.fr","name":"DNSMXResource","data":null,"pref":2}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property ushort pref() const { return _pref; }
     @property void pref(ushort pref) { _pref = pref; }
@@ -1548,14 +1530,7 @@ class DNSAResource : Protocol {
       assert(packet.toBytes == [127, 0, 0, 1] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      DNSAResource packet = new DNSAResource();
-      assert(packet.toString == `{"name":"DNSAResource","data":null,"ip":[127,0,0,1]}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property ubyte[4] ip() const { return _ip; }
     @property void ip(ubyte[4] ip) { _ip = ip; }
@@ -1686,14 +1661,7 @@ class DNSPTRResource : Protocol {
       assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
-
-    unittest {
-      DNSPTRResource packet = new DNSPTRResource("google.fr");
-      assert(packet.toString == `{"ptrname":"google.fr","name":"DNSPTRResource","data":null}`);
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property string ptrname() { return _ptrname; }
     @property void ptrname(string ptrname) { _ptrname = ptrname; }

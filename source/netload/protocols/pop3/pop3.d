@@ -42,9 +42,7 @@ class POP3 : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const {
-      return toJson.toString;
-    }
+    override string toString() const { return toJson.toPrettyString; }
 
     @property string str() const { return _body; }
     @property void str(string b) { _body = b; }

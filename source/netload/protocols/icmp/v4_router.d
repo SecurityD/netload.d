@@ -70,7 +70,6 @@ class ICMPv4RouterAdvert : ICMP {
       assert(deserializeJson!(ubyte[4][])(json.prefAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
 
       json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
