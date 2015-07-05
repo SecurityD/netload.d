@@ -6,6 +6,8 @@ import std.bitmanip;
 
 class UDP : Protocol {
   public:
+    this() {}
+
     this(ushort srcPort, ushort destPort) {
       _srcPort = srcPort;
       _destPort = destPort;

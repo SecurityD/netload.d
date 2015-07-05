@@ -10,6 +10,8 @@ import netload.protocols.snmp.asn_1;
 
 class SNMPv3 : Protocol {
   public:
+    this() {}
+
     override Json toJson() const {
       auto json = Json.emptyObject;
       json.ver = this.ver;

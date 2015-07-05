@@ -6,6 +6,8 @@ import std.bitmanip;
 
 class ARP : Protocol {
   public:
+    this() {}
+
     this(ushort hwType, ushort protocolType, ubyte hwAddrLen, ubyte protocolAddrLen, ushort opcode = 0) {
       _hwType = hwType;
       _protocolType = protocolType;
