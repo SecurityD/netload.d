@@ -219,7 +219,7 @@ Protocol toDHCP(Json json) {
   packet.file = deserializeJson!(ubyte[128])(json.file);
   packet.options = deserializeJson!(ubyte[])(json.options);
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

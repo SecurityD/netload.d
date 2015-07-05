@@ -23,7 +23,7 @@ import netload.protocols.udp;
 
 Protocol function(Json)[string] protocolConversion;
 
-static this() {
+shared static this() {
   protocolConversion["ARP"] = &toARP;
   protocolConversion["UDP"] = &toUDP;
   protocolConversion["TCP"] = &toTCP;

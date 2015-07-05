@@ -121,7 +121,7 @@ Protocol toUDP(Json json) {
   packet.length = json.len.to!ushort;
   packet.checksum = json.checksum.to!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }

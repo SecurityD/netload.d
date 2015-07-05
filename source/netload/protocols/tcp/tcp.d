@@ -222,7 +222,7 @@ Protocol toTCP(Json json) {
   packet.checksum = json.checksum.get!ushort;
   packet.urgPtr = json.urgent_ptr.get!ushort;
   auto data = ("data" in json);
-  if (data != null)
+  if (json.data.type != Json.Type.Null && data != null)
     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
