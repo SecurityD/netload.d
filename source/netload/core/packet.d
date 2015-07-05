@@ -35,7 +35,7 @@ Protocol create()() {
   return null;
 }
 
-FirstProtocol create(FirstProtocol, OthersProtocol...)() {
+FirstProtocol create(FirstProtocol : Protocol, OthersProtocol...)() {
   FirstProtocol header = new FirstProtocol;
   header.data = create!(OthersProtocol)();
   return header;
