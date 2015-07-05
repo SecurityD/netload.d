@@ -56,6 +56,11 @@ class DHCP : Protocol {
       packet.sname = serializeToJson(_sname);
       packet.file = serializeToJson(_file);
       packet.options = serializeToJson(_options);
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -74,6 +79,39 @@ class DHCP : Protocol {
       assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      DHCP dhcp = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
+      packet.data = dhcp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "DHCP");
+      assert(json.op == 2);
+      assert(json.htype == 1);
+      assert(json.hlen == 6);
+      assert(json.hops == 0);
+      assert(json.xid == 42);
+      assert(json.secs == 0);
+      assert(json.broadcast == false);
+      assert(deserializeJson!(ubyte[4])(json.ciaddr) == [127, 0, 0, 1]);
+      assert(deserializeJson!(ubyte[4])(json.yiaddr) == [127, 0, 1, 1]);
+      assert(deserializeJson!(ubyte[4])(json.siaddr) == [10, 14, 19, 42]);
+      assert(deserializeJson!(ubyte[4])(json.giaddr) == [10, 14, 59, 255]);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[12];
       packet.write!ubyte(_op, 0);
@@ -84,6 +122,8 @@ class DHCP : Protocol {
       packet.write!ushort(_secs, 8);
       packet.write!ushort(_flags.raw, 10);
       packet ~= _ciaddr ~ _yiaddr ~ _siaddr ~ _giaddr ~ _chaddr ~ _sname ~ _file ~ _options;
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
@@ -92,13 +132,23 @@ class DHCP : Protocol {
       assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
+    unittest {
+      import netload.protocols.raw;
+
+      DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
+    }
+
     override string toString() const {
       return toJson().toString;
     }
 
     unittest {
       DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
-      assert(packet.toString == `{"op":2,"htype":1,"hops":0,"yiaddr":[127,0,1,1],"hlen":6,"chaddr":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"secs":0,"giaddr":[10,14,59,255],"broadcast":false,"sname":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"file":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"xid":42,"ciaddr":[127,0,0,1],"options":[],"siaddr":[10,14,19,42]}`);
+      assert(packet.toString == `{"op":2,"htype":1,"hops":0,"yiaddr":[127,0,1,1],"hlen":6,"name":"DHCP","data":null,"chaddr":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"secs":0,"giaddr":[10,14,59,255],"broadcast":false,"sname":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"file":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"xid":42,"ciaddr":[127,0,0,1],"options":[],"siaddr":[10,14,19,42]}`);
     }
 
     @property ubyte op() const { return _op; };
@@ -151,7 +201,7 @@ class DHCP : Protocol {
     ubyte[] _options;
 }
 
-DHCP toDHCP(Json json) {
+Protocol toDHCP(Json json) {
   DHCP packet = new DHCP();
   packet.op = json.op.to!ubyte;
   packet.htype = json.htype.to!ubyte;
@@ -168,6 +218,9 @@ DHCP toDHCP(Json json) {
   packet.sname = deserializeJson!(ubyte[64])(json.sname);
   packet.file = deserializeJson!(ubyte[128])(json.file);
   packet.options = deserializeJson!(ubyte[])(json.options);
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -189,7 +242,7 @@ unittest {
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);
   json.options = serializeToJson(options);
-  DHCP packet = toDHCP(json);
+  DHCP packet = cast(DHCP)toDHCP(json);
   assert(packet.toJson.op == 2);
   assert(packet.toJson.htype == 1);
   assert(packet.toJson.hlen == 6);
@@ -203,7 +256,49 @@ unittest {
   assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
 }
 
-DHCP toDHCP(ubyte[] encodedPacket) {
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+  ubyte[] options;
+
+  json.name = "DHCP";
+  json.op = 2;
+  json.htype = 1;
+  json.hlen = 6;
+  json.hops = 0;
+  json.xid = 42;
+  json.secs = 0;
+  json.broadcast = false;
+  json.ciaddr = serializeToJson([127, 0, 0, 1]);
+  json.yiaddr = serializeToJson([127, 0, 1, 1]);
+  json.siaddr = serializeToJson([10, 14, 19, 42]);
+  json.giaddr = serializeToJson([10, 14, 59, 255]);
+  json.chaddr = serializeToJson(new ubyte[16]);
+  json.sname = serializeToJson(new ubyte[64]);
+  json.file = serializeToJson(new ubyte[128]);
+  json.options = serializeToJson(options);
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  DHCP packet = cast(DHCP)toDHCP(json);
+  assert(packet.op == 2);
+  assert(packet.htype == 1);
+  assert(packet.hlen == 6);
+  assert(packet.hops == 0);
+  assert(packet.xid == 42);
+  assert(packet.secs == 0);
+  assert(packet.broadcast == false);
+  assert(packet.ciaddr == [127, 0, 0, 1]);
+  assert(packet.yiaddr == [127, 0, 1, 1]);
+  assert(packet.siaddr == [10, 14, 19, 42]);
+  assert(packet.giaddr == [10, 14, 59, 255]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
+Protocol toDHCP(ubyte[] encodedPacket) {
   DHCP packet = new DHCP();
   Bitfields flags;
   packet.op = encodedPacket.read!ubyte();
@@ -227,7 +322,7 @@ DHCP toDHCP(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
-  DHCP packet = encodedPacket.toDHCP;
+  DHCP packet = cast(DHCP)encodedPacket.toDHCP;
   assert(packet.op == 2);
   assert(packet.htype == 1);
   assert(packet.hlen == 6);

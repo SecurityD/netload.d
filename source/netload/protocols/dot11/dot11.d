@@ -70,6 +70,11 @@ class Dot11 : Protocol {
       packet.more_frag = _frameControl.moreFrag;
       packet.from_DS = _frameControl.fromDS;
       packet.to_DS = _frameControl.toDS;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -81,22 +86,62 @@ class Dot11 : Protocol {
       assert(deserializeJson!(ubyte[6])(packet.toJson.addr2) == [0,0,0,0,0,0]);
       assert(deserializeJson!(ubyte[6])(packet.toJson.addr3) == [1,2,3,4,5,6]);
       assert(deserializeJson!(ubyte[6])(packet.toJson.addr4) == [0,0,0,0,0,0]);
-      assert(packet.duration == 0);
-      assert(packet.seq == 0);
-      assert(packet.fcs == 0);
-      assert(packet.vers == 0);
-      assert(packet.rsvd == 0);
-      assert(packet.wep == 0);
-      assert(packet.moreData == 0);
-      assert(packet.power == 0);
-      assert(packet.retry == 0);
-      assert(packet.moreFrag == 0);
-      assert(packet.fromDS == 0);
-      assert(packet.toDS == 0);
+      assert(packet.toJson.duration == 0);
+      assert(packet.toJson.seq == 0);
+      assert(packet.toJson.fcs == 0);
+      assert(packet.toJson.vers == 0);
+      assert(packet.toJson.rsvd == false);
+      assert(packet.toJson.wep == false);
+      assert(packet.toJson.more_data == false);
+      assert(packet.toJson.power == false);
+      assert(packet.toJson.retry == false);
+      assert(packet.toJson.more_frag == false);
+      assert(packet.toJson.from_DS == false);
+      assert(packet.toJson.to_DS == false);
+    }
+
+    unittest {
+      import netload.protocols.udp;
+      import netload.protocols.raw;
+      Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
+
+      UDP udp = new UDP(8000, 7000);
+      packet.data = udp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Dot11");
+      assert(json.packet_type == 0);
+      assert(json.subtype == 8);
+      assert(deserializeJson!(ubyte[6])(json.addr1) == [255,255,255,255,255,255]);
+      assert(deserializeJson!(ubyte[6])(json.addr2) == [0,0,0,0,0,0]);
+      assert(deserializeJson!(ubyte[6])(json.addr3) == [1,2,3,4,5,6]);
+      assert(deserializeJson!(ubyte[6])(json.addr4) == [0,0,0,0,0,0]);
+      assert(json.duration == 0);
+      assert(json.seq == 0);
+      assert(json.fcs == 0);
+      assert(json.vers == 0);
+      assert(json.rsvd == false);
+      assert(json.wep == false);
+      assert(json.more_data == false);
+      assert(json.power == false);
+      assert(json.retry == false);
+      assert(json.more_frag == false);
+      assert(json.from_DS == false);
+      assert(json.to_DS == false);
+
+      json = json.data;
+      assert(json.name == "UDP");
+      assert(json.src_port == 8000);
+      assert(json.dest_port == 7000);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
     }
 
     override ubyte[] toBytes() const {
-      ubyte[] packet = new ubyte[34];
+      ubyte[] packet = new ubyte[30];
       packet.write!ubyte(_frameControl.raw[0], 0);
       packet.write!ubyte(_frameControl.raw[1], 1);
       packet.write!ushort(_duration, 2);
@@ -106,7 +151,11 @@ class Dot11 : Protocol {
         }
       }
       packet.write!ushort(_seq, 28);
-      packet.write!uint(_fcs, 30);
+      if (_data !is null)
+        packet ~= _data.toBytes;
+      ubyte[] packetFcs = new ubyte[4];
+      packetFcs.write!uint(_fcs, 0);
+      packet ~= packetFcs;
       return packet;
     }
 
@@ -115,13 +164,23 @@ class Dot11 : Protocol {
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
+    unittest {
+      import netload.protocols.raw;
+
+      Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
+    }
+
     override string toString() const {
       return toJson().toString;
     }
 
     unittest {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
-      assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
+      assert(packet.toString == `{"from_DS":false,"addr1":[255,255,255,255,255,255],"addr2":[0,0,0,0,0,0],"addr3":[1,2,3,4,5,6],"to_DS":false,"addr4":[0,0,0,0,0,0],"more_frag":false,"seq":0,"power":false,"packet_type":0,"name":"Dot11","data":null,"duration":0,"rsvd":false,"more_data":false,"retry":false,"subtype":8,"vers":0,"wep":false,"fcs":0}`);
     }
 
     @property ushort duration() const { return _duration; }
@@ -163,7 +222,7 @@ class Dot11 : Protocol {
     @property void toDS(bool toDS) { _frameControl.toDS = toDS; }
 
   private:
-      Protocol _data;
+      Protocol _data = null;
       Bitfields _frameControl;
       ushort _duration = 0;
       ubyte[6][4] _addr = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
@@ -171,7 +230,7 @@ class Dot11 : Protocol {
       uint _fcs = 0;
 }
 
-Dot11 toDot11(Json json) {
+Protocol toDot11(Json json) {
   Dot11 packet = new Dot11();
   packet.subtype = json.subtype.to!ubyte;
   packet.type = json.packet_type.to!ubyte;
@@ -191,6 +250,9 @@ Dot11 toDot11(Json json) {
   packet.addr4 = deserializeJson!(ubyte[6])(json.addr4);
   packet.seq = json.seq.to!ushort;
   packet.fcs = json.fcs.to!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -214,7 +276,7 @@ unittest {
   json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.seq = 0;
   json.fcs = 0;
-  Dot11 packet = toDot11(json);
+  Dot11 packet = cast(Dot11)toDot11(json);
   assert(packet.type == 0);
   assert(packet.subtype == 8);
   assert(packet.addr1 == [255,255,255,255,255,255]);
@@ -235,7 +297,58 @@ unittest {
   assert(packet.toDS == 0);
 }
 
-Dot11 toDot11(ubyte[] encodedPacket) {
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "Dot11";
+  json.subtype = 8;
+  json.packet_type = 0;
+  json.vers = 0;
+  json.rsvd = 0;
+  json.wep = 0;
+  json.more_data = 0;
+  json.power = 0;
+  json.retry = 0;
+  json.more_frag = 0;
+  json.from_DS = 0;
+  json.to_DS = 0;
+  json.duration = 0;
+  json.addr1 = serializeToJson([255, 255, 255, 255, 255, 255]);
+  json.addr2 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.addr3 = serializeToJson([1, 2, 3, 4, 5, 6]);
+  json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.seq = 0;
+  json.fcs = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  Dot11 packet = cast(Dot11)toDot11(json);
+  assert(packet.type == 0);
+  assert(packet.subtype == 8);
+  assert(packet.addr1 == [255,255,255,255,255,255]);
+  assert(packet.addr2 == [0,0,0,0,0,0]);
+  assert(packet.addr3 == [1,2,3,4,5,6]);
+  assert(packet.addr4 == [0,0,0,0,0,0]);
+  assert(packet.duration == 0);
+  assert(packet.seq == 0);
+  assert(packet.fcs == 0);
+  assert(packet.vers == 0);
+  assert(packet.rsvd == 0);
+  assert(packet.wep == 0);
+  assert(packet.moreData == 0);
+  assert(packet.power == 0);
+  assert(packet.retry == 0);
+  assert(packet.moreFrag == 0);
+  assert(packet.fromDS == 0);
+  assert(packet.toDS == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
+Protocol toDot11(ubyte[] encodedPacket) {
   Dot11 packet = new Dot11();
   Bitfields frameControl;
   frameControl.raw[0] = encodedPacket.read!ubyte();
@@ -269,7 +382,7 @@ Dot11 toDot11(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  Dot11 packet = encodedPacket.toDot11;
+  Dot11 packet = cast(Dot11)encodedPacket.toDot11;
   assert(packet.type == 0);
   assert(packet.subtype == 8);
   assert(packet.addr1 == [255,255,255,255,255,255]);

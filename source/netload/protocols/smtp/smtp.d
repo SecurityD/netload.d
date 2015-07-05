@@ -21,12 +21,14 @@ class SMTP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
     unittest {
       SMTP packet = new SMTP("test");
       auto json = Json.emptyObject;
+      json.name = "SMTP";
       json.body_ = "test";
       assert(packet.toJson == json);
     }
@@ -51,7 +53,7 @@ class SMTP : Protocol {
     string _body;
 }
 
-SMTP toSMTP(Json json) {
+Protocol toSMTP(Json json) {
   SMTP packet = new SMTP();
   packet.str = json.body_.to!string;
   return packet;
@@ -60,17 +62,17 @@ SMTP toSMTP(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  SMTP packet = toSMTP(json);
+  SMTP packet = cast(SMTP)toSMTP(json);
   assert(packet.str == "test");
 }
 
-SMTP toSMTP(ubyte[] encoded) {
+Protocol toSMTP(ubyte[] encoded) {
   SMTP packet = new SMTP(cast(string)(encoded));
   return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  SMTP packet = encoded.toSMTP();
+  SMTP packet = cast(SMTP)encoded.toSMTP();
   assert(packet.str == "test");
 }

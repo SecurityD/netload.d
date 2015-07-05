@@ -21,6 +21,7 @@ class HTTP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
@@ -28,6 +29,7 @@ class HTTP : Protocol {
       HTTP packet = new HTTP("test");
       auto json = Json.emptyObject;
       json.body_ = "test";
+      json.name = "HTTP";
       assert(packet.toJson == json);
     }
 
@@ -51,7 +53,7 @@ class HTTP : Protocol {
     string _body;
 }
 
-HTTP toHTTP(Json json) {
+Protocol toHTTP(Json json) {
   HTTP packet = new HTTP();
   packet.str = json.body_.to!string;
   return packet;
@@ -60,17 +62,17 @@ HTTP toHTTP(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  HTTP packet = toHTTP(json);
+  HTTP packet = cast(HTTP)toHTTP(json);
   assert(packet.str == "test");
 }
 
-HTTP toHTTP(ubyte[] encoded) {
+Protocol toHTTP(ubyte[] encoded) {
   HTTP packet = new HTTP(cast(string)(encoded));
   return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  HTTP packet = encoded.toHTTP();
+  HTTP packet = cast(HTTP)encoded.toHTTP();
   assert(packet.str == "test");
 }

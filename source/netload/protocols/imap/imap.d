@@ -21,6 +21,7 @@ class IMAP : Protocol {
     override Json toJson() const {
       Json json = Json.emptyObject;
       json.body_ = _body;
+      json.name = name;
       return json;
     }
 
@@ -28,6 +29,7 @@ class IMAP : Protocol {
       IMAP packet = new IMAP("test");
       auto json = Json.emptyObject;
       json.body_ = "test";
+      json.name = "IMAP";
       assert(packet.toJson == json);
     }
 
@@ -51,7 +53,7 @@ class IMAP : Protocol {
     string _body;
 }
 
-IMAP toIMAP(Json json) {
+Protocol toIMAP(Json json) {
   IMAP packet = new IMAP();
   packet.str = json.body_.to!string;
   return packet;
@@ -60,17 +62,17 @@ IMAP toIMAP(Json json) {
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  IMAP packet = toIMAP(json);
+  IMAP packet = cast(IMAP)toIMAP(json);
   assert(packet.str == "test");
 }
 
-IMAP toIMAP(ubyte[] encoded) {
+Protocol toIMAP(ubyte[] encoded) {
   IMAP packet = new IMAP(cast(string)(encoded));
   return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  IMAP packet = encoded.toIMAP();
+  IMAP packet = cast(IMAP)encoded.toIMAP();
   assert(packet.str == "test");
 }

@@ -19,6 +19,7 @@ class SNMPv3 : Protocol {
       json.security_model = this.securityModel;
       json.security_parameters = serializeToJson(_securityParameters);
       json.pdu = serializeToJson(_pdu);
+      json.name = name;
       return json;
     }
 
@@ -191,7 +192,7 @@ class SNMPv3 : Protocol {
     ASN1 _pdu;
 }
 
-SNMPv3 toSNMPv3(Json json) {
+Protocol toSNMPv3(Json json) {
   auto snmp = new SNMPv3;
   snmp.ver = json.ver.to!int;
   snmp.identifier = json.identifier.to!uint;
@@ -200,6 +201,9 @@ SNMPv3 toSNMPv3(Json json) {
   snmp.securityModel = json.security_model.to!uint;
   snmp.securityParameters = deserializeJson!ASN1(json.security_parameters);
   snmp.pdu = deserializeJson!ASN1(json.pdu);
+  auto data = ("data" in json);
+  if (data != null)
+    snmp.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return snmp;
 }
 
@@ -243,7 +247,7 @@ unittest {
   ];
   json.pdu = serializeToJson(pdu);
 
-  auto snmp = toSNMPv3(json);
+  auto snmp = cast(SNMPv3)toSNMPv3(json);
   assert(snmp.ver == 3);
   assert(snmp.identifier == 1169574667);
   assert(snmp.maxSize == 65507);
@@ -271,7 +275,7 @@ unittest {
   ]);
 }
 
-SNMPv3 toSNMPv3(ubyte[] bytes) {
+Protocol toSNMPv3(ubyte[] bytes) {
   auto snmp = new SNMPv3;
   auto tmp = bytes.toASN1;
   auto seq = tmp.data.toASN1Seq;
@@ -318,7 +322,7 @@ unittest {
   0x02, 0x01, 0x12, 0x02, 0x05, 0x00
   ];
 
-  auto snmp = raw.toSNMPv3;
+  auto snmp = cast(SNMPv3)raw.toSNMPv3;
   assert(snmp.ver == 3);
   assert(snmp.identifier == 1169574667);
   assert(snmp.maxSize == 65507);

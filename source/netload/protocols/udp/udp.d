@@ -22,6 +22,11 @@ class UDP : Protocol {
       packet.dest_port = _destPort;
       packet.len = _length;
       packet.checksum = _checksum;
+      packet.name = name;
+      if (_data is null)
+        packet.data = null;
+      else
+        packet.data = _data.toJson;
       return packet;
     }
 
@@ -31,20 +36,55 @@ class UDP : Protocol {
       assert(packet.toJson().dest_port == 7000);
     }
 
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      UDP udp = new UDP(8000, 7000);
+      packet.data = udp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "UDP");
+      assert(json.src_port == 8000);
+      assert(json.dest_port == 7000);
+
+      json = json.data;
+      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    }
+
     override ubyte[] toBytes() const {
       ubyte[] packet = new ubyte[8];
       packet.write!ushort(_srcPort, 0);
       packet.write!ushort(_destPort, 2);
       packet.write!ushort(_length, 4);
       packet.write!ushort(_checksum, 6);
+      if (_data !is null)
+        packet ~= _data.toBytes;
       return packet;
     }
 
     unittest {
-      import std.stdio;
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      auto packet = new UDP(8000, 7000);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     override string toString() const {
@@ -52,9 +92,8 @@ class UDP : Protocol {
     }
 
     unittest {
-      import std.stdio;
       UDP packet = new UDP(8000, 7000);
-      assert(packet.toString == `{"checksum":0,"dest_port":7000,"src_port":8000,"len":0}`);
+      assert(packet.toString == `{"checksum":0,"name":"UDP","data":null,"dest_port":7000,"src_port":8000,"len":0}`);
     }
 
     @property ushort srcPort() const { return _srcPort; }
@@ -75,10 +114,13 @@ class UDP : Protocol {
       ushort _checksum = 0;
 }
 
-UDP toUDP(Json json) {
+Protocol toUDP(Json json) {
   UDP packet = new UDP(json.src_port.to!ushort, json.dest_port.to!ushort);
   packet.length = json.len.to!ushort;
   packet.checksum = json.checksum.to!ushort;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -88,14 +130,37 @@ unittest {
   json.dest_port = 7000;
   json.len = 0;
   json.checksum = 0;
-  UDP packet = toUDP(json);
+  UDP packet = cast(UDP)toUDP(json);
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
   assert(packet.checksum == 0);
 }
 
-UDP toUDP(ubyte[] encodedPacket) {
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "UDP";
+  json.src_port = 8000;
+  json.dest_port = 7000;
+  json.len = 0;
+  json.checksum = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  UDP packet = cast(UDP)toUDP(json);
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.length == 0);
+  assert(packet.checksum == 0);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
+Protocol toUDP(ubyte[] encodedPacket) {
   UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
   packet.length = encodedPacket.read!ushort;
   packet.checksum = encodedPacket.read!ushort;
@@ -104,7 +169,7 @@ UDP toUDP(ubyte[] encodedPacket) {
 
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
-  UDP packet = encoded.toUDP;
+  UDP packet = cast(UDP)encoded.toUDP;
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);

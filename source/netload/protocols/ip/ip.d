@@ -54,12 +54,30 @@ class IP : Protocol {
         json.checksum = checksum;
         json.src_ip_address = srcIpAddress;
         json.dest_ip_address = destIpAddress;
+        json.name = name;
+        if (_data is null)
+          json.data = null;
+        else
+          json.data = _data.toJson;
         return json;
       }
 
       unittest {
         IP packet = new IP();
-        assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
+        assert(packet.toJson.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":null,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
+      }
+
+      unittest {
+        import netload.protocols.ethernet;
+        import netload.protocols.raw;
+        Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+        IP ip = new IP();
+        packet.data = ip;
+
+        packet.data.data = new Raw([42, 21, 84]);
+
+        assert(packet.toJson.toString == `{"dest_mac_address":[0,0,0,0,0,0],"src_mac_address":[255,255,255,255,255,255],"protocol_type":2048,"prelude":[1,0,1,0,1,0,1],"name":"Ethernet","data":{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":{"name":"Raw","bytes":[42,21,84]},"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0},"fcs":0}`);
       }
 
       override ubyte[] toBytes() const {
@@ -74,6 +92,8 @@ class IP : Protocol {
         encoded.write!ushort(checksum, 10);
         encoded.write!uint(srcIpAddress, 12);
         encoded.write!uint(destIpAddress, 16);
+        if (_data !is null)
+          encoded ~= _data.toBytes;
         return encoded;
       }
 
@@ -82,11 +102,21 @@ class IP : Protocol {
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
 
+      unittest {
+        import netload.protocols.raw;
+
+        IP packet = new IP();
+
+        packet.data = new Raw([42, 21, 84]);
+
+        assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
+      }
+
       override string toString() const { return toJson.toString; }
 
       unittest {
         IP packet = new IP();
-        assert(packet.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
+        assert(packet.toString == `{"ihl":0,"checksum":0,"header_length":0,"src_ip_address":0,"ttl":0,"name":"IP","data":null,"id":0,"ip_version":0,"reserved":false,"dest_ip_address":0,"df":false,"tos":0,"offset":0,"mf":false,"protocol":0}`);
       }
 
       @property ubyte ipVersion() const { return _versionAndLength.ipVersion; }
@@ -119,7 +149,7 @@ class IP : Protocol {
       @property void destIpAddress(uint address) { _destIpAddress = address; }
 
     private:
-      Protocol _data;
+      Protocol _data = null;
       VersionAndLength _versionAndLength;
       ubyte _tos = 0;
       ushort _length = 0;
@@ -132,7 +162,7 @@ class IP : Protocol {
       uint _destIpAddress = 0;
 }
 
-IP toIP(Json json) {
+Protocol toIP(Json json) {
   IP packet = new IP();
   packet.ipVersion = json.ip_version.get!ubyte;
   packet.ihl = json.ihl.get!ubyte;
@@ -148,6 +178,9 @@ IP toIP(Json json) {
   packet.checksum = json.checksum.get!ushort;
   packet.srcIpAddress = json.src_ip_address.get!uint;
   packet.destIpAddress = json.dest_ip_address.get!uint;
+  auto data = ("data" in json);
+  if (data != null)
+    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
   return packet;
 }
 
@@ -167,11 +200,41 @@ unittest {
   json.checksum = 0;
   json.src_ip_address = 20;
   json.dest_ip_address = 0;
-  IP packet = toIP(json);
+  IP packet = cast(IP)toIP(json);
   assert(packet.srcIpAddress == 20);
 }
 
-IP toIP(ubyte[] encoded) {
+unittest  {
+  import netload.protocols.raw;
+
+  Json json = Json.emptyObject;
+
+  json.name = "IP";
+  json.ip_version = 0;
+  json.ihl = 0;
+  json.tos = 0;
+  json.header_length = 0;
+  json.id = 0;
+  json.offset = 0;
+  json.reserved = false;
+  json.df = false;
+  json.mf = false;
+  json.ttl = 0;
+  json.protocol = 0;
+  json.checksum = 0;
+  json.src_ip_address = 20;
+  json.dest_ip_address = 0;
+
+  json.data = Json.emptyObject;
+  json.data.name = "Raw";
+  json.data.bytes = serializeToJson([42,21,84]);
+
+  IP packet = cast(IP)toIP(json);
+  assert(packet.srcIpAddress == 20);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
+
+Protocol toIP(ubyte[] encoded) {
   IP packet = new IP();
   VersionAndLength vl;
   vl.versionAndLength = encoded.read!ubyte();
@@ -196,6 +259,6 @@ IP toIP(ubyte[] encoded) {
 
 unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
- IP packet = encoded.toIP;
+ IP packet = cast(IP)encoded.toIP;
  assert(packet.destIpAddress == 1);
 }
