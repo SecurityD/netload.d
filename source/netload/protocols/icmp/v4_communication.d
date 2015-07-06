@@ -86,10 +86,6 @@ class ICMPv4Communication : ICMP {
       assert(packet.toBytes == [8, 0, 0, 0, 0, 1, 0, 2] ~ [42, 21, 84]);
     }
 
-    @disable @property {
-      override void code(ubyte code) { _code = code; }
-    }
-
     @property {
       inout ushort id() { return _id; }
       void id(ushort id) { _id = id; }
@@ -172,10 +168,6 @@ class ICMPv4EchoRequest : ICMPv4Communication {
     this() {
       super(8);
     }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-    }
 }
 
 Protocol toICMPv4EchoRequest(Json json) {
@@ -242,10 +234,6 @@ class ICMPv4EchoReply : ICMPv4Communication {
   public:
     this() {
       super(0);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 }
 
@@ -403,10 +391,6 @@ class ICMPv4Timestamp : ICMPv4Communication {
       assert(packet.toBytes == [14, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84] ~ [42, 21, 84]);
     }
 
-    @disable @property {
-      override void checksum(ushort checksum) { _checksum = checksum; }
-    }
-
     @property {
       inout uint originTime() { return _originTime; }
       void originTime(uint originTime) { _originTime = originTime; }
@@ -507,10 +491,6 @@ class ICMPv4TimestampRequest : ICMPv4Timestamp {
     this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
       super(13, originTime, receiveTime, transmitTime);
     }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-    }
 }
 
 Protocol toICMPv4TimestampRequest(Json json) {
@@ -593,10 +573,6 @@ class ICMPv4TimestampReply : ICMPv4Timestamp {
   public:
     this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
       super(14, originTime, receiveTime, transmitTime);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 }
 
@@ -681,10 +657,6 @@ class ICMPv4InformationRequest : ICMPv4Communication {
     this() {
       super(15);
     }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-    }
 }
 
 Protocol toICMPv4InformationRequest(Json json) {
@@ -751,10 +723,6 @@ class ICMPv4InformationReply : ICMPv4Communication {
   public:
     this() {
       super(16);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 }
 

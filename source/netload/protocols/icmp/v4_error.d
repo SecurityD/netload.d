@@ -110,10 +110,6 @@ class ICMPv4DestUnreach : ICMPv4Error {
     this(ubyte code, IP data) {
       super(3, code, data);
     }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-    }
 }
 
 Protocol toICMPv4DestUnreach(Json json) {
@@ -178,10 +174,6 @@ class ICMPv4TimeExceed : ICMPv4Error {
 
     this(ubyte code, IP data) {
       super(11, code, data);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 }
 
@@ -310,10 +302,6 @@ class ICMPv4ParamProblem : ICMPv4Error {
       assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-    }
-
     @property {
       inout ubyte ptr() { return _ptr; }
       void ptr(ubyte ptr) { _ptr = ptr; }
@@ -393,10 +381,6 @@ class ICMPv4SourceQuench : ICMPv4Error {
 
     this(ubyte code, IP data) {
       super(4, code, data);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 }
 
@@ -523,10 +507,6 @@ class ICMPv4Redirect : ICMPv4Error {
       packet.data = new Raw([42, 21, 84]);
 
       assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42] ~ [42, 21, 84]);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
     }
 
     @property {

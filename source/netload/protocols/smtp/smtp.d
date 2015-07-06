@@ -14,7 +14,7 @@ class SMTP : Protocol {
     }
 
     override @property inout string name() { return "SMTP"; };
-    @disable override @property Protocol data() { return null; }
+    override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 
