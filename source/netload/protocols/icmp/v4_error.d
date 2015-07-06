@@ -6,7 +6,21 @@ import netload.protocols.ip;
 import vibe.data.json;
 import std.bitmanip;
 
-class ICMPv4Error : ICMP {
+alias ICMPv4Error = TemplateICMPv4!Error;
+alias ICMPv4DestUnreach = TemplateError!DestUnreach;
+alias ICMPv4TimeExceed = TemplateError!TimeExceed;
+alias ICMPv4ParamProblem = TemplateError!ParamProblem;
+alias ICMPv4SourceQuench = TemplateError!SourceQuench;
+alias ICMPv4Redirect = TemplateError!Redirect;
+
+enum Error;
+enum DestUnreach;
+enum TimeExceed;
+enum ParamProblem;
+enum SourceQuench;
+enum Redirect;
+
+class ErrorBase : ICMPBase {
   public:
     this() {}
 
@@ -39,6 +53,24 @@ class ICMPv4Error : ICMP {
 
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
+}
+
+class TemplateICMPv4(T:Error) : ErrorBase {
+  public:
+    this() {
+      super();
+    }
+
+    this(ubyte type, ubyte code = 0, IP data = null) {
+      super(type, code, data);
+    }
+
+  @property {
+    inout ubyte type() { return _type; }
+    void type(ubyte type) { _type = type; }
+    inout ubyte code() { return _code; }
+    void code(ubyte code) { _code = code; }
+  }
 }
 
 Protocol toICMPv4Error(Json json) {
@@ -101,7 +133,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class ICMPv4DestUnreach : ICMPv4Error {
+class TemplateError(T:DestUnreach) : ErrorBase {
   public:
     this() {
       super(3);
@@ -110,6 +142,11 @@ class ICMPv4DestUnreach : ICMPv4Error {
     this(ubyte code, IP data) {
       super(3, code, data);
     }
+
+  @property {
+    inout ubyte code() { return _code; }
+    void code(ubyte code) { _code = code; }
+  }
 }
 
 Protocol toICMPv4DestUnreach(Json json) {
@@ -166,7 +203,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class ICMPv4TimeExceed : ICMPv4Error {
+class TemplateError(T:TimeExceed) : ErrorBase {
   public:
     this() {
       super(11);
@@ -175,6 +212,11 @@ class ICMPv4TimeExceed : ICMPv4Error {
     this(ubyte code, IP data) {
       super(11, code, data);
     }
+
+  @property {
+    inout ubyte code() { return _code; }
+    void code(ubyte code) { _code = code; }
+  }
 }
 
 Protocol toICMPv4TimeExceed(Json json) {
@@ -231,7 +273,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class ICMPv4ParamProblem : ICMPv4Error {
+class TemplateError(T:ParamProblem) : ErrorBase {
   public:
     this() {
       super(12);
@@ -303,6 +345,8 @@ class ICMPv4ParamProblem : ICMPv4Error {
     }
 
     @property {
+      inout ubyte code() { return _code; }
+      void code(ubyte code) { _code = code; }
       inout ubyte ptr() { return _ptr; }
       void ptr(ubyte ptr) { _ptr = ptr; }
     }
@@ -373,7 +417,7 @@ unittest {
   assert(packet.ptr == 1);
 }
 
-class ICMPv4SourceQuench : ICMPv4Error {
+class TemplateError(T:SourceQuench) : ErrorBase {
   public:
     this() {
       super(4);
@@ -382,6 +426,11 @@ class ICMPv4SourceQuench : ICMPv4Error {
     this(ubyte code, IP data) {
       super(4, code, data);
     }
+
+  @property {
+    inout ubyte code() { return _code; }
+    void code(ubyte code) { _code = code; }
+  }
 }
 
 Protocol toICMPv4SourceQuench(Json json) {
@@ -438,7 +487,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class ICMPv4Redirect : ICMPv4Error {
+class TemplateError(T:Redirect) : ErrorBase {
   public:
     this() {
       super(5);
@@ -510,6 +559,8 @@ class ICMPv4Redirect : ICMPv4Error {
     }
 
     @property {
+      inout ubyte code() { return _code; }
+      void code(ubyte code) { _code = code; }
       inout uint gateway() { return _gateway; }
       void gateway(uint gateway) { _gateway = gateway; }
     }

@@ -5,7 +5,23 @@ import netload.protocols.icmp.common;
 import vibe.data.json;
 import std.bitmanip;
 
-class ICMPv4Communication : ICMP {
+alias ICMPv4Communication = TemplateICMPv4!Communication;
+alias ICMPv4EchoRequest = TemplateCommunication!EchoRequest;
+alias ICMPv4EchoReply = TemplateCommunication!EchoReply;
+alias ICMPv4TimestampRequest = TemplateTimestamp!Request;
+alias ICMPv4TimestampReply = TemplateTimestamp!Reply;
+alias ICMPv4InformationRequest = TemplateCommunication!InformationRequest;
+alias ICMPv4InformationReply = TemplateCommunication!InformationReply;
+
+enum EchoRequest;
+enum EchoReply;
+enum Request;
+enum Reply;
+enum InformationRequest;
+enum InformationReply;
+enum Communication;
+
+class CommunicationBase : ICMPBase {
   public:
     this() {}
 
@@ -98,6 +114,22 @@ class ICMPv4Communication : ICMP {
     ushort _seq = 0;
 }
 
+class TemplateICMPv4(Communication) : CommunicationBase {
+  public:
+    this() {
+      super();
+    }
+
+    this(ubyte type) {
+      super(type);
+    }
+
+    @property {
+      inout ubyte type() { return _type; }
+      void type(ubyte type) { _type = type; }
+    }
+}
+
 Protocol toICMPv4Communication(Json json) {
   ICMPv4Communication packet = new ICMPv4Communication(json.packetType.to!ubyte);
   packet.checksum = json.checksum.to!ushort;
@@ -163,7 +195,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
-class ICMPv4EchoRequest : ICMPv4Communication {
+class TemplateCommunication(T:EchoRequest) : ICMPv4Communication {
   public:
     this() {
       super(8);
@@ -230,7 +262,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
-class ICMPv4EchoReply : ICMPv4Communication {
+class TemplateCommunication(T:EchoReply) : ICMPv4Communication {
   public:
     this() {
       super(0);
@@ -486,7 +518,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-class ICMPv4TimestampRequest : ICMPv4Timestamp {
+class TemplateTimestamp(T:Request) : ICMPv4Timestamp {
   public:
     this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
       super(13, originTime, receiveTime, transmitTime);
@@ -569,7 +601,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-class ICMPv4TimestampReply : ICMPv4Timestamp {
+class TemplateTimestamp(T:Reply) : ICMPv4Timestamp {
   public:
     this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
       super(14, originTime, receiveTime, transmitTime);
@@ -652,7 +684,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-class ICMPv4InformationRequest : ICMPv4Communication {
+class TemplateCommunication(T:InformationRequest) : ICMPv4Communication {
   public:
     this() {
       super(15);
@@ -719,7 +751,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
-class ICMPv4InformationReply : ICMPv4Communication {
+class TemplateCommunication(T:InformationReply) : ICMPv4Communication {
   public:
     this() {
       super(16);

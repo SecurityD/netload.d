@@ -5,7 +5,13 @@ import netload.protocols.icmp.common;
 import vibe.data.json;
 import std.bitmanip;
 
-class ICMPv4RouterAdvert : ICMP {
+alias ICMPv4RouterAdvert = TemplateRouter!Advert;
+alias ICMPv4RouterSollicitation = TemplateRouter!Sollicitation;
+
+enum Advert;
+enum Sollicitation;
+
+class TemplateRouter(T:Advert) : ICMPBase {
   public:
     this() {
       super(9, 0);
@@ -207,7 +213,7 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
-class ICMPv4RouterSollicitation : ICMP {
+class TemplateRouter(T:Sollicitation) : ICMPBase {
   public:
     this() {
       super(10, 0);
