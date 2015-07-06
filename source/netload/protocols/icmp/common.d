@@ -4,7 +4,11 @@ import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
 
-class ICMP : Protocol {
+alias ICMP = TemplateICMP!Any;
+
+enum Any;
+
+class ICMPBase : Protocol {
   public:
     this() {}
 
@@ -95,10 +99,6 @@ class ICMP : Protocol {
     override string toString() const { return toJson.toPrettyString; }
 
     @property {
-      inout ubyte type() { return _type; }
-      void type(ubyte type) { _type = type; }
-      inout ubyte code() { return _code; }
-      void code(ubyte code) { _code = code; }
       inout ushort checksum() { return _checksum; }
       void checksum(ushort checksum) { _checksum = checksum; }
     }
@@ -108,6 +108,22 @@ class ICMP : Protocol {
     ubyte _type = 0;
     ubyte _code = 0;
     ushort _checksum = 0;
+}
+
+class TemplateICMP(T:Any) : ICMPBase {
+  public:
+    this() {}
+
+    this(ubyte type, ubyte code) {
+      super(type, code);
+    }
+
+    @property {
+      inout ubyte type() { return _type; }
+      void type(ubyte type) { _type = type; }
+      inout ubyte code() { return _code; }
+      void code(ubyte code) { _code = code; }
+    }
 }
 
 Protocol toICMP(Json json) {
