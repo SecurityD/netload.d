@@ -5,11 +5,14 @@ import netload.protocols.ethernet;
 
 class Sniffer {
   public:
-    this(string iface = null, Protocol function(ubyte[] data) linkLayerConverter = &toEthernet) {
+    this(string iface = null,
+          Protocol function(ubyte[] data) linkLayerConverter = &toEthernet,
+          bool promisc = false) {
+      _promisc = promisc;
       if (iface is null)
-        _packetCapturer = new PacketCapturer();
+        _packetCapturer = new PacketCapturer(promisc);
       else
-        _packetCapturer = new PacketCapturer(iface);
+        _packetCapturer = new PacketCapturer(iface, promisc);
       _linkLayerConverter = linkLayerConverter;
       _packetCapturer.initialize;
     }
@@ -28,6 +31,7 @@ class Sniffer {
       }
     }
   private:
+    bool _promisc;
     Protocol function(ubyte[] data) _linkLayerConverter;
     PacketCapturer _packetCapturer;
 }

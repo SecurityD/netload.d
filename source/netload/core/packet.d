@@ -54,12 +54,5 @@ unittest {
   import netload.protocols;
   Ethernet packet = create!(Ethernet, IP, TCP)();
   packet.layer!TCP.srcPort = 80;
-  packet
-    .layer!Ethernet
-      .srcMacAddress([])
-      .destMacAddress()
-    .layer!IP
-      .srcIpAddress()
-      .src
   assert(packet.layer!TCP.srcPort == 80);
 }
