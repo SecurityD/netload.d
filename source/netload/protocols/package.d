@@ -1,5 +1,6 @@
 module netload.protocols;
 
+public import netload.protocols.checksum;
 public import netload.protocols.conversion;
 public import netload.protocols.arp;
 public import netload.protocols.dhcp;
