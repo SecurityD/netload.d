@@ -308,6 +308,15 @@ class NTPv4ExtensionField {
       return json;
     }
 
+    ubyte[] toBytes() const {
+      auto packet = appender!(ubyte[])();
+      packet.append!ushort(fieldType);
+      packet.append!ushort(length);
+      foreach (ubyte b ; value)
+        packet.append!ubyte(b);
+      return packet.data;
+    }
+
     static NTPv4ExtensionField fromJson(Json src) {
       auto extensionField = new NTPv4ExtensionField;
       extensionField.fieldType = src.field_type.to!ushort;
@@ -320,6 +329,14 @@ class NTPv4ExtensionField {
     ushort _fieldType;
     ushort _length;
     ubyte[] _value;
+}
+
+NTPv4ExtensionField toNTPv4ExtensionField(ubyte[] encodedPacket) {
+  NTPv4ExtensionField extensionField;
+  extensionField.fieldType = encodedPacket.read!ushort;
+  extensionField.length = encodedPacket.read!ushort;
+  extensionField.value = encodedPacket[0..extensionField.length];
+  return extensionField;
 }
 
 Protocol toNTPv4(Json json) {
@@ -471,10 +488,7 @@ Protocol toNTPv4(ubyte[] encodedPacket) {
   packet.receiveTimestamp = encodedPacket.read!ulong;
   packet.transmitTimestamp = encodedPacket.read!ulong;
   while (encodedPacket.length > 20) {
-    auto extensionField = new NTPv4ExtensionField;
-    extensionField.fieldType = encodedPacket.read!ushort;
-    extensionField.length = encodedPacket.read!ushort;
-    extensionField.value = encodedPacket[0..extensionField.length];
+    auto extensionField = encodedPacket.toNTPv4ExtensionField;
     encodedPacket = encodedPacket[extensionField.length..$];
   }
   if (encodedPacket.length >= 4)
