@@ -14,7 +14,7 @@ class POP3 : Protocol {
     }
 
     override @property inout string name() { return "POP3"; };
-    @disable override @property Protocol data() { return null; }
+    override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 

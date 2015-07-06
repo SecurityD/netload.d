@@ -347,17 +347,6 @@ class DNSQuery : DNS {
       _bits.opcode = opcode;
       _bits.rd = recDesired;
     }
-
-  @disable override @property bool qr() { return _bits.qr; }
-  @disable override @property void qr(bool qr) { _bits.qr = qr; }
-  @disable override @property bool aa() { return _bits.aa; }
-  @disable override @property void aa(bool aa) { _bits.aa = aa; }
-  @disable override @property bool ra() { return _bits.ra; }
-  @disable override @property void ra(bool ra) { _bits.ra = ra; }
-  @disable override @property ubyte z() { return _bits.z; }
-  @disable override @property void z(ubyte z) { _bits.z = z; }
-  @disable override @property ubyte rcode() { return _bits.rcode; }
-  @disable override @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 }
 
 Protocol toDNSQuery(Json json) {
@@ -477,15 +466,6 @@ class DNSResource : DNS {
       _bits.ra = recAvail;
       _bits.rcode = rcode;
     }
-
-    @disable override @property bool qr() { return _bits.qr; }
-    @disable override @property void qr(bool qr) { _bits.qr = qr; }
-    @disable override @property ubyte opcode() { return _bits.opcode; }
-    @disable override @property void opcode(ubyte opcode) { _bits.opcode = opcode; }
-    @disable override @property bool rd() { return _bits.rd; }
-    @disable override @property void rd(bool rd) { _bits.rd = rd; }
-    @disable override @property ubyte z() { return _bits.z; }
-    @disable override @property void z(ubyte z) { _bits.z = z; }
 }
 
 Protocol toDNSResource(Json json) {

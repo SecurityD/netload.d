@@ -116,11 +116,6 @@ class ICMPv4RouterAdvert : ICMP {
       void prefAddr(ubyte[4][] prefAddr) { _prefAddr = prefAddr; }
     }
 
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-      override void code(ubyte code) { _code = code; }
-    }
-
   private:
     ubyte _numAddr = 0;
     ubyte _addrEntrySize = 2;
@@ -241,11 +236,6 @@ class ICMPv4RouterSollicitation : ICMP {
       packet.data = new Raw([42, 21, 84]);
 
       assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
-    }
-
-    @disable @property {
-      override void type(ubyte type) { _type = type; }
-      override void code(ubyte code) { _code = code; }
     }
 }
 
