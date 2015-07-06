@@ -4,6 +4,7 @@ __dummy.html
 *.o
 *.obj
 tests/base/base
+tests/sniffer/sniffer
 *.a
 **/**/dub.selections.json
 __test__library__
