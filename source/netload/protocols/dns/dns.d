@@ -5,6 +5,10 @@ import vibe.data.json;
 import std.bitmanip;
 import std.string;
 
+alias DNS = TemplateDNS!(Any);
+alias DNSQuery = TemplateDNS!(Query);
+alias DNSResource = TemplateDNS!(Resource);
+
 enum OpCode {
   QUERY = 0,
   IQUERY = 1,
@@ -41,24 +45,16 @@ union BitFields {
     ));
   };
 
-class DNS : Protocol {
+enum Any;
+enum Query;
+enum Resource;
+
+class DNSBase : Protocol {
   public:
 
     this() {
       _bits.raw[0] = 0;
       _bits.raw[1] = 0;
-    }
-
-    this(ushort id = 0, bool truncation = 0) {
-      _id = id;
-      _bits.qr = 0;
-      _bits.opcode = 0;
-      _bits.aa = 0;
-      _bits.tc = truncation;
-      _bits.rd = 0;
-      _bits.ra = 0;
-      _bits.z = 0;
-      _bits.rcode = 0;
     }
 
     override @property Protocol data() { return _data; }
@@ -176,6 +172,25 @@ class DNS : Protocol {
     @property ushort arcount() { return _arcount; }
     @property void arcount(ushort arcount) { _arcount = arcount; }
 
+  private:
+    Protocol _data = null;
+    ushort _id = 0;
+    BitFields _bits;
+    ushort _qdcount = 0;
+    ushort _ancount = 0;
+    ushort _nscount = 0;
+    ushort _arcount = 0;
+}
+
+class TemplateDNS(T:Any) : DNSBase {
+  public:
+    this(ushort id = 0, bool truncation = 0) {
+      _id = id;
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
+      _bits.tc = truncation;
+    }
+
     @property bool qr() { return _bits.qr; }
     @property void qr(bool qr) { _bits.qr = qr; }
     @property ubyte opcode() { return _bits.opcode; }
@@ -192,15 +207,6 @@ class DNS : Protocol {
     @property void z(ubyte z) { _bits.z = z; }
     @property ubyte rcode() { return _bits.rcode; }
     @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
-
-  private:
-    Protocol _data = null;
-    ushort _id = 0;
-    BitFields _bits;
-    ushort _qdcount = 0;
-    ushort _ancount = 0;
-    ushort _nscount = 0;
-    ushort _arcount = 0;
 }
 
 Protocol toDNS(Json json) {
@@ -336,17 +342,30 @@ unittest {
   assert(packet.rcode == 2);
 }
 
-class DNSQuery : DNS {
+class TemplateDNS(T:Query) : DNSBase {
   public:
     this() {
-      super();
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
     }
 
     this(ushort id, bool truncation, ubyte opcode, bool recDesired) {
-      super(id, truncation);
+      _id = id;
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
+      _bits.tc = truncation;
       _bits.opcode = opcode;
       _bits.rd = recDesired;
     }
+
+  @property ubyte opcode() { return _bits.opcode; }
+  @property void opcode(ubyte opcode) { _bits.opcode = opcode; }
+  @property bool tc() { return _bits.tc; }
+  @property void tc(bool tc) { _bits.tc = tc; }
+  @property bool rd() { return _bits.rd; }
+  @property void rd(bool rd) { _bits.rd = rd; }
+  @property ubyte z() { return _bits.z; }
+  @property void z(ubyte z) { _bits.z = z; }
 }
 
 Protocol toDNSQuery(Json json) {
@@ -453,19 +472,38 @@ unittest {
   assert(packet.tc == true);
 }
 
-class DNSResource : DNS {
+class TemplateDNS(T:Resource) : DNSBase {
   public:
     this() {
-      super();
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
     }
 
     this(ushort id, bool truncation, bool authAnswer, bool recAvail, ubyte rcode) {
-      super(id, truncation);
+      _id = id;
+      _bits.raw[0] = 0;
+      _bits.raw[1] = 0;
+      _bits.tc = truncation;
       _bits.qr = 1;
       _bits.aa = authAnswer;
       _bits.ra = recAvail;
       _bits.rcode = rcode;
     }
+
+  @property bool qr() { return _bits.qr; }
+  @property void qr(bool qr) { _bits.qr = qr; }
+  @property bool aa() { return _bits.aa; }
+  @property void aa(bool aa) { _bits.aa = aa; }
+  @property bool tc() { return _bits.tc; }
+  @property void tc(bool tc) { _bits.tc = tc; }
+  @property bool ra() { return _bits.ra; }
+  @property void ra(bool ra) { _bits.ra = ra; }
+  @property bool rd() { return _bits.rd; }
+  @property void rd(bool rd) { _bits.rd = rd; }
+  @property ubyte z() { return _bits.z; }
+  @property void z(ubyte z) { _bits.z = z; }
+  @property ubyte rcode() { return _bits.rcode; }
+  @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 }
 
 Protocol toDNSResource(Json json) {
