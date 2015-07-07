@@ -18,7 +18,7 @@ shared static this() {
   udpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
   udpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
   udpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
-  // udpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)to!DNS(encoded); };
+  udpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)to!DNS(encoded); };
   udpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)to!NTPv4(encoded); };
 };
 

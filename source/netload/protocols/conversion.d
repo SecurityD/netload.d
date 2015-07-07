@@ -28,7 +28,7 @@ Protocol toProtocol(Json json) {
   throw new Exception("Invalid Json.");
 }
 
-Protocol function(Json)[string] protocolConversion;
+Protocol delegate(Json)[string] protocolConversion;
 
 shared static this() {
   protocolConversion["ARP"] = delegate(Json json){ return (cast(Protocol)to!ARP(json)); };
