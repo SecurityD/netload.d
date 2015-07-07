@@ -13,6 +13,14 @@ class HTTP : Protocol {
       _body = b;
     }
 
+    this(Json json) {
+      _body = json.body_.to!string;
+    }
+
+    this(ubyte[] encoded) {
+      this(cast(string)(encoded));
+    }
+
     override @property inout string name() { return "HTTP"; };
     override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
@@ -51,26 +59,15 @@ class HTTP : Protocol {
     string _body;
 }
 
-Protocol toHTTP(Json json) {
-  HTTP packet = new HTTP();
-  packet.str = json.body_.to!string;
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  HTTP packet = cast(HTTP)toHTTP(json);
+  HTTP packet = cast(HTTP)to!HTTP(json);
   assert(packet.str == "test");
-}
-
-Protocol toHTTP(ubyte[] encoded) {
-  HTTP packet = new HTTP(cast(string)(encoded));
-  return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  HTTP packet = cast(HTTP)encoded.toHTTP();
+  HTTP packet = cast(HTTP)encoded.to!HTTP();
   assert(packet.str == "test");
 }

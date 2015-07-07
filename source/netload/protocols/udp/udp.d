@@ -5,21 +5,21 @@ import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
 
-private Protocol function(ubyte[])[ushort] udpType;
+private Protocol delegate(ubyte[])[ushort] udpType;
 
 shared static this() {
-  udpType[80] = &toHTTP;
-  udpType[110] = &toPOP3;
-  udpType[995] = &toPOP3;
-  udpType[143] = &toIMAP;
-  udpType[993] = &toIMAP;
-  udpType[25] = &toSMTP;
-  udpType[2525] = &toSMTP;
-  udpType[465] = &toSMTP;
-  udpType[67] = &toDHCP;
-  udpType[68] = &toDHCP;
-  udpType[53] = &toDNS;
-  udpType[123] = &toNTPv4;
+  udpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)to!HTTP(encoded); };
+  udpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)to!POP3(encoded); };
+  udpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)to!POP3(encoded); };
+  udpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)to!IMAP(encoded); };
+  udpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)to!IMAP(encoded); };
+  udpType[25] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
+  udpType[2525] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
+  udpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
+  udpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
+  udpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
+  // udpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)to!DNS(encoded); };
+  udpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)to!NTPv4(encoded); };
 };
 
 class UDP : Protocol {
@@ -29,6 +29,24 @@ class UDP : Protocol {
     this(ushort srcPort, ushort destPort) {
       _srcPort = srcPort;
       _destPort = destPort;
+    }
+
+    this(Json json) {
+      this(json.src_port.to!ushort, json.dest_port.to!ushort);
+      _length = json.len.to!ushort;
+      _checksum = json.checksum.to!ushort;
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encodedPacket) {
+      this(encodedPacket.read!ushort, encodedPacket.read!ushort);
+      _length = encodedPacket.read!ushort;
+      _checksum = encodedPacket.read!ushort;
+      auto func = (_destPort in udpType);
+      if (func !is null)
+        _data = udpType[_destPort](encodedPacket);
     }
 
     override @property inout string name() { return "UDP"; };
@@ -127,23 +145,13 @@ class UDP : Protocol {
       ushort _checksum = 0;
 }
 
-Protocol toUDP(Json json) {
-  UDP packet = new UDP(json.src_port.to!ushort, json.dest_port.to!ushort);
-  packet.length = json.len.to!ushort;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.src_port = 8000;
   json.dest_port = 7000;
   json.len = 0;
   json.checksum = 0;
-  UDP packet = cast(UDP)toUDP(json);
+  UDP packet = cast(UDP)to!UDP(json);
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
@@ -165,7 +173,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  UDP packet = cast(UDP)toUDP(json);
+  UDP packet = cast(UDP)to!UDP(json);
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
@@ -173,19 +181,9 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toUDP(ubyte[] encodedPacket) {
-  UDP packet = new UDP(encodedPacket.read!ushort, encodedPacket.read!ushort);
-  packet.length = encodedPacket.read!ushort;
-  packet.checksum = encodedPacket.read!ushort;
-  auto func = (packet.destPort in udpType);
-  if (func !is null)
-    packet.data = udpType[packet.destPort](encodedPacket);
-  return packet;
-}
-
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
-  UDP packet = cast(UDP)encoded.toUDP;
+  UDP packet = cast(UDP)encoded.to!UDP;
   assert(packet.srcPort == 8000);
   assert(packet.destPort == 7000);
   assert(packet.length == 0);
@@ -195,7 +193,7 @@ unittest {
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
   ubyte[] encoded = cast(ubyte[])[0, 68, 0, 67, 0, 247, 0, 0] ~ encodedPacket;
-  UDP packet = cast(UDP)encoded.toUDP;
+  UDP packet = cast(UDP)encoded.to!UDP;
   assert(packet.srcPort == 68);
   assert(packet.destPort == 67);
   assert(packet.length == 247);

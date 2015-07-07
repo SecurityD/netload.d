@@ -1,6 +1,7 @@
 module netload.protocols.arp.arp;
 
 import netload.core.protocol;
+import std.conv;
 import vibe.data.json;
 import std.bitmanip;
 
@@ -18,6 +19,29 @@ class ARP : Protocol {
       _targetHwAddr = new ubyte[_hwAddrLen];
       _senderProtocolAddr = new ubyte[_protocolAddrLen];
       _targetProtocolAddr = new ubyte[_protocolAddrLen];
+    }
+
+    this(Json json) {
+        this(json.hwType.to!ushort, json.protocolType.to!ushort, json.hwAddrLen.to!ubyte, json.protocolAddrLen.to!ubyte, json.opcode.to!ushort);
+        senderHwAddr = deserializeJson!(ubyte[])(json.senderHwAddr);
+        targetHwAddr = deserializeJson!(ubyte[])(json.targetHwAddr);
+        senderProtocolAddr = deserializeJson!(ubyte[])(json.senderProtocolAddr);
+        targetProtocolAddr = deserializeJson!(ubyte[])(json.targetProtocolAddr);
+        auto packetData = ("data" in json);
+        if (json.data.type != Json.Type.Null && packetData != null)
+          data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encoded) {
+      this(encoded.read!ushort(), encoded.read!ushort(), encoded.read!ubyte(), encoded.read!ubyte(), encoded.read!ushort());
+      ubyte pos1 = _hwAddrLen;
+      ubyte pos2 = cast(ubyte)(pos1 + _protocolAddrLen);
+      ubyte pos3 = cast(ubyte)(pos2 + _hwAddrLen);
+      ubyte pos4 = cast(ubyte)(pos3 + _protocolAddrLen);
+      _senderHwAddr[0..(_hwAddrLen)] = encoded[0..(pos1)];
+      _senderProtocolAddr[0..(_protocolAddrLen)] = encoded[(pos1)..(pos2)];
+      _targetHwAddr[0..(_hwAddrLen)] = encoded[(pos2)..(pos3)];
+      _targetProtocolAddr[0..(_protocolAddrLen)] = encoded[(pos3)..(pos4)];
     }
 
     override @property Protocol data() { return _data; }
@@ -168,18 +192,6 @@ class ARP : Protocol {
     ubyte[] _targetProtocolAddr;
 }
 
-Protocol toARP(Json json) {
-  ARP packet = new ARP(json.hwType.to!ushort, json.protocolType.to!ushort, json.hwAddrLen.to!ubyte, json.protocolAddrLen.to!ubyte, json.opcode.to!ushort);
-  packet.senderHwAddr = deserializeJson!(ubyte[])(json.senderHwAddr);
-  packet.targetHwAddr = deserializeJson!(ubyte[])(json.targetHwAddr);
-  packet.senderProtocolAddr = deserializeJson!(ubyte[])(json.senderProtocolAddr);
-  packet.targetProtocolAddr = deserializeJson!(ubyte[])(json.targetProtocolAddr);
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest  {
   Json json = Json.emptyObject;
   json.hwType = 1;
@@ -191,7 +203,7 @@ unittest  {
   json.targetHwAddr = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.senderProtocolAddr = serializeToJson([127, 0, 0, 1]);
   json.targetProtocolAddr = serializeToJson([10, 14, 255, 255]);
-  ARP packet = cast(ARP)toARP(json);
+  ARP packet = cast(ARP)to!ARP(json);
   assert(packet.hwType == 1);
   assert(packet.protocolType == 1);
   assert(packet.hwAddrLen == 6);
@@ -223,7 +235,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ARP packet = cast(ARP)toARP(json);
+  ARP packet = cast(ARP)to!ARP(json);
   assert(packet.senderHwAddr == [128, 128, 128, 128, 128, 128]);
   assert(packet.targetHwAddr == [0, 0, 0, 0, 0, 0]);
   assert(packet.senderProtocolAddr == [127, 0, 0, 1]);
@@ -231,37 +243,9 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toARP(ubyte[] encoded) {
-  ushort hwType = encoded.read!ushort();
-  ushort protocolType = encoded.read!ushort();
-  ubyte hwAddrLen = encoded.read!ubyte();
-  ubyte protocolAddrLen = encoded.read!ubyte();
-  ushort opcode = encoded.read!ushort();
-
-  ubyte[] senderHwAddr = new ubyte[hwAddrLen];
-  ubyte[] targetHwAddr = new ubyte[hwAddrLen];
-  ubyte[] senderProtocolAddr = new ubyte[protocolAddrLen];
-  ubyte[] targetProtocolAddr = new ubyte[protocolAddrLen];
-  ubyte pos1 = hwAddrLen;
-  ubyte pos2 = cast(ubyte)(pos1 + protocolAddrLen);
-  ubyte pos3 = cast(ubyte)(pos2 + hwAddrLen);
-  ubyte pos4 = cast(ubyte)(pos3 + protocolAddrLen);
-  senderHwAddr[0..(hwAddrLen)] = encoded[0..(pos1)];
-  senderProtocolAddr[0..(protocolAddrLen)] = encoded[(pos1)..(pos2)];
-  targetHwAddr[0..(hwAddrLen)] = encoded[(pos2)..(pos3)];
-  targetProtocolAddr[0..(protocolAddrLen)] = encoded[(pos3)..(pos4)];
-
-  ARP packet = new ARP(hwType, protocolType, hwAddrLen, protocolAddrLen, opcode);
-  packet.senderHwAddr = senderHwAddr;
-  packet.targetHwAddr = targetHwAddr;
-  packet.senderProtocolAddr = senderProtocolAddr;
-  packet.targetProtocolAddr = targetProtocolAddr;
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255];
-  ARP packet = cast(ARP)encodedPacket.toARP;
+  ARP packet = cast(ARP)encodedPacket.to!ARP;
   assert(packet.hwType == 1);
   assert(packet.protocolType == 1);
   assert(packet.hwAddrLen == 6);

@@ -13,6 +13,38 @@ class NTPv0 : NTPCommon, Protocol {
 
     }
 
+    this(Json json) {
+      _leapIndicator = json.leap_indicator.to!ubyte;
+      _status = json.status.to!ubyte;
+      _type = json.type_.to!ubyte;
+      _precision = json.precision.to!ushort;
+      _estimatedError = json.estimated_error.to!uint;
+      _estimatedDriftRate = json.estimated_drift_rate.to!uint;
+      referenceClockIdentifier = json.reference_clock_identifier.to!uint;
+      referenceTimestamp = json.reference_timestamp.to!ulong;
+      originateTimestamp = json.originate_timestamp.to!ulong;
+      receiveTimestamp = json.receive_timestamp.to!ulong;
+      transmitTimestamp = json.transmit_timestamp.to!ulong;
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encodedPacket) {
+      ubyte tmp = encodedPacket.read!ubyte;
+      _leapIndicator = (tmp >> 6) & 0b0000_0011;
+      _status = tmp & 0b0011_1111;
+      _type = encodedPacket.read!ubyte;
+      _precision = encodedPacket.read!ushort;
+      _estimatedError = encodedPacket.read!uint;
+      _estimatedDriftRate = encodedPacket.read!uint;
+      referenceClockIdentifier = encodedPacket.read!uint;
+      referenceTimestamp = encodedPacket.read!ulong;
+      originateTimestamp = encodedPacket.read!ulong;
+      receiveTimestamp = encodedPacket.read!ulong;
+      transmitTimestamp = encodedPacket.read!ulong;
+    }
+
     override Json toJson() const {
       auto json = Json.emptyObject;
       json.leap_indicator = leapIndicator;
@@ -229,25 +261,6 @@ class NTPv0 : NTPCommon, Protocol {
     uint _estimatedDriftRate;
 }
 
-Protocol toNTPv0(Json json) {
-  auto packet = new NTPv0;
-  packet.leapIndicator = json.leap_indicator.to!ubyte;
-  packet.status = json.status.to!ubyte;
-  packet.type = json.type_.to!ubyte;
-  packet.precision = json.precision.to!ushort;
-  packet.estimatedError = json.estimated_error.to!uint;
-  packet.estimatedDriftRate = json.estimated_drift_rate.to!uint;
-  packet.referenceClockIdentifier = json.reference_clock_identifier.to!uint;
-  packet.referenceTimestamp = json.reference_timestamp.to!ulong;
-  packet.originateTimestamp = json.originate_timestamp.to!ulong;
-  packet.receiveTimestamp = json.receive_timestamp.to!ulong;
-  packet.transmitTimestamp = json.transmit_timestamp.to!ulong;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   auto json = Json.emptyObject;
   json.leap_indicator = 2u;
@@ -262,7 +275,7 @@ unittest {
   json.receive_timestamp = 400u;
   json.transmit_timestamp = 450u;
 
-  auto packet = cast(NTPv0)toNTPv0(json);
+  auto packet = cast(NTPv0)to!NTPv0(json);
 
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
@@ -299,7 +312,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  auto packet = cast(NTPv0)toNTPv0(json);
+  auto packet = cast(NTPv0)to!NTPv0(json);
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
   assert(packet.type == 50u);
@@ -314,25 +327,8 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toNTPv0(ubyte[] encodedPacket) {
-  auto packet = new NTPv0;
-  ubyte tmp = encodedPacket.read!ubyte;
-  packet.leapIndicator = (tmp >> 6) & 0b0000_0011;
-  packet.status = tmp & 0b0011_1111;
-  packet.type = encodedPacket.read!ubyte;
-  packet.precision = encodedPacket.read!ushort;
-  packet.estimatedError = encodedPacket.read!uint;
-  packet.estimatedDriftRate = encodedPacket.read!uint;
-  packet.referenceClockIdentifier = encodedPacket.read!uint;
-  packet.referenceTimestamp = encodedPacket.read!ulong;
-  packet.originateTimestamp = encodedPacket.read!ulong;
-  packet.receiveTimestamp = encodedPacket.read!ulong;
-  packet.transmitTimestamp = encodedPacket.read!ulong;
-  return packet;
-}
-
 unittest {
-  auto packet = cast(NTPv0)[
+  auto packet = cast(NTPv0)(cast(ubyte[])[
     132,  50,   0, 100,
       0,   0,   0, 150,
       0,   0,   0, 200,
@@ -345,7 +341,7 @@ unittest {
       0,   0,   1, 144,
       0,   0,   0,   0,
       0,   0,   1, 194
-  ].toNTPv0;
+  ]).to!NTPv0;
   assert(packet.leapIndicator == 2u);
   assert(packet.status == 4u);
   assert(packet.type == 50u);

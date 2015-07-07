@@ -13,6 +13,14 @@ class SMTP : Protocol {
       _body = b;
     }
 
+    this(Json json) {
+      _body = json.body_.to!string;
+    }
+
+    this(ubyte[] encoded) {
+      this(cast(string)(encoded));
+    }
+
     override @property inout string name() { return "SMTP"; };
     override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
@@ -51,26 +59,15 @@ class SMTP : Protocol {
     string _body;
 }
 
-Protocol toSMTP(Json json) {
-  SMTP packet = new SMTP();
-  packet.str = json.body_.to!string;
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  SMTP packet = cast(SMTP)toSMTP(json);
+  SMTP packet = cast(SMTP)to!SMTP(json);
   assert(packet.str == "test");
-}
-
-Protocol toSMTP(ubyte[] encoded) {
-  SMTP packet = new SMTP(cast(string)(encoded));
-  return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  SMTP packet = cast(SMTP)encoded.toSMTP();
+  SMTP packet = cast(SMTP)encoded.to!SMTP();
   assert(packet.str == "test");
 }

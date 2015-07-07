@@ -11,6 +11,22 @@ class SNMPv1 : Protocol {
   public:
     this() {}
 
+    this(Json json) {
+      ver = json.ver.to!int;
+      communityString = json.community_string.to!string;
+      pdu = deserializeJson!ASN1(json.pdu);
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] bytes) {
+      auto seq = bytes.toASN1.data.toASN1Seq;
+      ver = seq[0].data[0] + 1;
+      communityString = seq[1].data.assumeUTF;
+      pdu = seq[2];
+    }
+
     override Json toJson() const {
       auto json = Json.emptyObject;
       json.ver = ver;
@@ -155,17 +171,6 @@ class SNMPv1 : Protocol {
     ASN1 _pdu;
 }
 
-Protocol toSNMPv1(Json json) {
-  auto snmp = new SNMPv1;
-  snmp.ver = json.ver.to!int;
-  snmp.communityString = json.community_string.to!string;
-  snmp.pdu = deserializeJson!ASN1(json.pdu);
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    snmp.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return snmp;
-}
-
 unittest {
   ASN1 pdu;
   pdu.type = ASN1.Type.SET_REQUEST_PDU;
@@ -192,7 +197,7 @@ unittest {
   json.community_string = "public";
   json.pdu = serializeToJson(pdu);
 
-  auto snmp = cast(SNMPv1)toSNMPv1(json);
+  auto snmp = cast(SNMPv1)to!SNMPv1(json);
   assert(snmp.ver == 1);
   assert(snmp.communityString == "public");
   assert(snmp.pdu.type == ASN1.Type.SET_REQUEST_PDU);
@@ -216,15 +221,6 @@ unittest {
   ]);
 }
 
-Protocol toSNMPv1(ubyte[] bytes) {
-  auto snmp = new SNMPv1;
-  auto seq = bytes.toASN1.data.toASN1Seq;
-  snmp.ver = seq[0].data[0] + 1;
-  snmp.communityString = seq[1].data.assumeUTF;
-  snmp.pdu = seq[2];
-  return snmp;
-}
-
 unittest {
   ubyte[] raw = [
     0x30, 0x81, 0x85, 0x02, 0x01, 0x00, 0x04, 0x06,
@@ -245,7 +241,7 @@ unittest {
     0x01, 0x04, 0x01, 0x81, 0x7d, 0x08, 0x33, 0x08,
     0x02, 0x01, 0x05, 0x01, 0x02, 0x02, 0x01, 0x2c
   ];
-  auto snmp = cast(SNMPv1)raw.toSNMPv1;
+  auto snmp = cast(SNMPv1)raw.to!SNMPv1;
   assert(snmp.ver == 1);
   assert(snmp.communityString == "public");
   assert(snmp.pdu.type == ASN1.Type.SET_REQUEST_PDU);

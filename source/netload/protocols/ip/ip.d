@@ -5,12 +5,12 @@ import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
 
-private Protocol function(ubyte[])[ubyte] ipType;
+private Protocol delegate(ubyte[])[ubyte] ipType;
 
 static this() {
-  ipType[0x01] = &toICMP;
-  ipType[0x06] = &toTCP;
-  ipType[0x11] = &toUDP;
+  // ipType[0x01] = &toICMP;
+  ipType[0x06] = delegate(ubyte[]encoded){ return cast(Protocol)to!TCP(encoded); };
+  ipType[0x11] = delegate(ubyte[]encoded){ return cast(Protocol)to!UDP(encoded); };
 }
 
 union VersionAndLength {
@@ -40,6 +40,44 @@ class IP : Protocol {
       this(uint src, uint dest) {
         _srcIpAddress = src;
         _destIpAddress = dest;
+      }
+
+      this(Json json) {
+        _versionAndLength.ipVersion = json.ip_version.get!ubyte;
+        _versionAndLength.ihl = json.ihl.get!ubyte;
+        _tos = json.tos.get!ubyte;
+        _length = json.header_length.get!ushort;
+        _id = json.id.get!ushort;
+        _flagsAndOffset.offset = json.offset.get!ushort;
+        _flagsAndOffset.reserved = json.reserved.get!bool;
+        _flagsAndOffset.df = json.df.get!bool;
+        _flagsAndOffset.mf = json.mf.get!bool;
+        _ttl = json.ttl.get!ubyte;
+        _protocol = json.protocol.get!ubyte;
+        _checksum = json.checksum.get!ushort;
+        _srcIpAddress = json.src_ip_address.get!uint;
+        _destIpAddress = json.dest_ip_address.get!uint;
+        auto packetData = ("data" in json);
+        if (json.data.type != Json.Type.Null && packetData != null)
+          _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+      }
+
+      this(ubyte[] encoded) {
+        _versionAndLength.versionAndLength = encoded.read!ubyte();
+        _tos = encoded.read!ubyte();
+        _length = encoded.read!ushort();
+        _id = encoded.read!ushort();
+        _flagsAndOffset.flagsAndOffset = encoded.read!ushort();
+        _ttl = encoded.read!ubyte();
+        _protocol = encoded.read!ubyte();
+        _checksum = encoded.read!ushort();
+        _srcIpAddress = encoded.read!uint();
+        _destIpAddress = encoded.read!uint();
+        auto func = (_protocol in ipType);
+        if (func !is null)
+          _data = ipType[_protocol](encoded);
+        else
+          _data = to!Raw(encoded);
       }
 
       override @property inout string name() { return "IP"; };
@@ -164,28 +202,6 @@ class IP : Protocol {
       uint _destIpAddress = 0;
 }
 
-Protocol toIP(Json json) {
-  IP packet = new IP();
-  packet.ipVersion = json.ip_version.get!ubyte;
-  packet.ihl = json.ihl.get!ubyte;
-  packet.tos = json.tos.get!ubyte;
-  packet.length = json.header_length.get!ushort;
-  packet.id = json.id.get!ushort;
-  packet.offset = json.offset.get!ushort;
-  packet.reserved = json.reserved.get!bool;
-  packet.df = json.df.get!bool;
-  packet.mf = json.mf.get!bool;
-  packet.ttl = json.ttl.get!ubyte;
-  packet.protocol = json.protocol.get!ubyte;
-  packet.checksum = json.checksum.get!ushort;
-  packet.srcIpAddress = json.src_ip_address.get!uint;
-  packet.destIpAddress = json.dest_ip_address.get!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.ip_version = 0;
@@ -202,7 +218,7 @@ unittest {
   json.checksum = 0;
   json.src_ip_address = 20;
   json.dest_ip_address = 0;
-  IP packet = cast(IP)toIP(json);
+  IP packet = cast(IP)to!IP(json);
   assert(packet.srcIpAddress == 20);
 }
 
@@ -231,48 +247,20 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  IP packet = cast(IP)toIP(json);
+  IP packet = cast(IP)to!IP(json);
   assert(packet.srcIpAddress == 20);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toIP(ubyte[] encoded) {
-  IP packet = new IP();
-  VersionAndLength vl;
-  vl.versionAndLength = encoded.read!ubyte();
-  packet.ipVersion = vl.ipVersion;
-  packet.ihl = vl.ihl;
-  packet.tos = encoded.read!ubyte();
-  packet.length = encoded.read!ushort();
-  packet.id = encoded.read!ushort();
-  FlagsAndOffset fo;
-  fo.flagsAndOffset = encoded.read!ushort();
-  packet.offset = fo.offset;
-  packet.reserved = fo.reserved;
-  packet.df = fo.df;
-  packet.mf = fo.mf;
-  packet.ttl = encoded.read!ubyte();
-  packet.protocol = encoded.read!ubyte();
-  packet.checksum = encoded.read!ushort();
-  packet.srcIpAddress = encoded.read!uint();
-  packet.destIpAddress = encoded.read!uint();
-  auto func = (packet.protocol in ipType);
-  if (func !is null)
-    packet.data = ipType[packet.protocol](encoded);
-  else
-    packet.data = toRaw(encoded);
-  return packet;
-}
-
 unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
- IP packet = cast(IP)encoded.toIP;
+ IP packet = cast(IP)encoded.to!IP;
  assert(packet.destIpAddress == 1);
 }
 
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
-  IP packet = cast(IP)encoded.toIP;
+  IP packet = cast(IP)encoded.to!IP;
   assert(packet.destIpAddress == 1);
   assert((cast(TCP)packet.data).srcPort == 8000);
   assert((cast(TCP)packet.data).destPort == 7000);

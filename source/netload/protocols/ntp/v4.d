@@ -15,6 +15,59 @@ class NTPv4 : NTPCommon, Protocol {
 
     }
 
+    this(Json json) {
+      _leapIndicator = json.leap_indicator.to!ubyte;
+      _versionNumber = json.version_number.to!ubyte;
+      _mode = json.mode.to!ubyte;
+      _stratum = json.stratum.to!ubyte;
+      _poll = json.poll.to!ubyte;
+      _precision = json.precision.to!ubyte;
+      _rootDelay = json.root_delay.to!uint;
+      _rootDispersion = json.root_dispersion.to!uint;
+      referenceClockIdentifier = json.reference_clock_identifier.to!uint;
+      referenceTimestamp = json.reference_timestamp.to!ulong;
+      originateTimestamp = json.originate_timestamp.to!ulong;
+      receiveTimestamp = json.receive_timestamp.to!ulong;
+      transmitTimestamp = json.transmit_timestamp.to!ulong;
+      if (json.extension_fields.type != Json.Type.Undefined)
+        _extensionFields = deserializeJson!(NTPv4ExtensionField[])(json.extension_fields);
+      if (json.key_identifier.type != Json.Type.Undefined)
+        _keyIdentifier = json.key_identifier.to!uint;
+      if (json.digest.type != Json.Type.Undefined)
+        _digest = deserializeJson!(ubyte[])(json.digest);
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encodedPacket) {
+      {
+        ubyte tmp = encodedPacket.read!ubyte;
+        _leapIndicator = (tmp >> 6) & 0b0000_0011;
+        _versionNumber = (tmp >> 3) & 0b0000_0111;
+        _mode = tmp & 0b0000_0111;
+      }
+      _stratum = encodedPacket.read!ubyte;
+      _poll = encodedPacket.read!ubyte;
+      _precision = encodedPacket.read!ubyte;
+      _rootDelay = encodedPacket.read!uint;
+      _rootDispersion = encodedPacket.read!uint;
+      referenceClockIdentifier = encodedPacket.read!uint;
+      referenceTimestamp = encodedPacket.read!ulong;
+      originateTimestamp = encodedPacket.read!ulong;
+      receiveTimestamp = encodedPacket.read!ulong;
+      transmitTimestamp = encodedPacket.read!ulong;
+      while (encodedPacket.length > 20) {
+        auto extensionField = encodedPacket.toNTPv4ExtensionField;
+        encodedPacket = encodedPacket[extensionField.length..$];
+      }
+      if (encodedPacket.length >= 4)
+        _keyIdentifier = encodedPacket.read!uint;
+      if (encodedPacket.length == 128) {
+        _digest = encodedPacket;
+      }
+    }
+
     override Json toJson() const {
       auto json = Json.emptyObject;
       json.leap_indicator = leapIndicator;
@@ -339,33 +392,6 @@ NTPv4ExtensionField toNTPv4ExtensionField(ubyte[] encodedPacket) {
   return extensionField;
 }
 
-Protocol toNTPv4(Json json) {
-  auto packet = new NTPv4;
-  packet.leapIndicator = json.leap_indicator.to!ubyte;
-  packet.versionNumber = json.version_number.to!ubyte;
-  packet.mode = json.mode.to!ubyte;
-  packet.stratum = json.stratum.to!ubyte;
-  packet.poll = json.poll.to!ubyte;
-  packet.precision = json.precision.to!ubyte;
-  packet.rootDelay = json.root_delay.to!uint;
-  packet.rootDispersion = json.root_dispersion.to!uint;
-  packet.referenceClockIdentifier = json.reference_clock_identifier.to!uint;
-  packet.referenceTimestamp = json.reference_timestamp.to!ulong;
-  packet.originateTimestamp = json.originate_timestamp.to!ulong;
-  packet.receiveTimestamp = json.receive_timestamp.to!ulong;
-  packet.transmitTimestamp = json.transmit_timestamp.to!ulong;
-  if (json.extension_fields.type != Json.Type.Undefined)
-    packet.extensionFields = deserializeJson!(NTPv4ExtensionField[])(json.extension_fields);
-  if (json.key_identifier.type != Json.Type.Undefined)
-    packet.keyIdentifier = json.key_identifier.to!uint;
-  if (json.digest.type != Json.Type.Undefined)
-    packet.digest = deserializeJson!(ubyte[])(json.digest);
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   auto json = Json.emptyObject;
   json.leap_indicator = 0x00;
@@ -381,7 +407,7 @@ unittest {
   json.originate_timestamp = 0xd9_39_0d_73_37_64_28_6d;
   json.receive_timestamp = 0xd9_39_0d_73_39_4d_93_98;
   json.transmit_timestamp = 0xd9_39_0d_b3_58_3e_91_e8;
-  auto packet = cast(NTPv4)toNTPv4(json);
+  auto packet = cast(NTPv4)to!NTPv4(json);
 }
 
 unittest {
@@ -406,7 +432,7 @@ unittest {
     json.digest ~= 0x00;
   }
 
-  auto packet = cast(NTPv4)toNTPv4(json);
+  auto packet = cast(NTPv4)to!NTPv4(json);
   assert(packet.leapIndicator == 0x00);
   assert(packet.versionNumber == 0x03);
   assert(packet.mode == 0x03);
@@ -452,7 +478,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  auto packet = cast(NTPv4)toNTPv4(json);
+  auto packet = cast(NTPv4)to!NTPv4(json);
   assert(packet.leapIndicator == 0x00);
   assert(packet.versionNumber == 0x03);
   assert(packet.mode == 0x03);
@@ -469,38 +495,8 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toNTPv4(ubyte[] encodedPacket) {
-  auto packet = new NTPv4;
-  {
-    ubyte tmp = encodedPacket.read!ubyte;
-    packet.leapIndicator = (tmp >> 6) & 0b0000_0011;
-    packet.versionNumber = (tmp >> 3) & 0b0000_0111;
-    packet.mode = tmp & 0b0000_0111;
-  }
-  packet.stratum = encodedPacket.read!ubyte;
-  packet.poll = encodedPacket.read!ubyte;
-  packet.precision = encodedPacket.read!ubyte;
-  packet.rootDelay = encodedPacket.read!uint;
-  packet.rootDispersion = encodedPacket.read!uint;
-  packet.referenceClockIdentifier = encodedPacket.read!uint;
-  packet.referenceTimestamp = encodedPacket.read!ulong;
-  packet.originateTimestamp = encodedPacket.read!ulong;
-  packet.receiveTimestamp = encodedPacket.read!ulong;
-  packet.transmitTimestamp = encodedPacket.read!ulong;
-  while (encodedPacket.length > 20) {
-    auto extensionField = encodedPacket.toNTPv4ExtensionField;
-    encodedPacket = encodedPacket[extensionField.length..$];
-  }
-  if (encodedPacket.length >= 4)
-    packet.keyIdentifier = encodedPacket.read!uint;
-  if (encodedPacket.length == 128) {
-    packet.digest = encodedPacket;
-  }
-  return packet;
-}
-
 unittest {
-  auto packet = cast(NTPv4)[
+  auto packet = cast(NTPv4)(cast(ubyte[])[
     0x1b, 0x03, 0x06, 0xec,
     0x00, 0x00, 0x03, 0x53,
     0x00, 0x00, 0x03, 0x6c,
@@ -513,7 +509,7 @@ unittest {
     0x39, 0x4d, 0x93, 0x98,
     0xd9, 0x39, 0x0d, 0xb3,
     0x58, 0x3e, 0x91, 0xe8
-  ].toNTPv4;
+  ]).to!NTPv4;
 
   assert(packet.leapIndicator == 0x00);
   assert(packet.versionNumber == 0x03);
