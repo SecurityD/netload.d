@@ -36,36 +36,36 @@ shared static this() {
   protocolConversion["NTPv4"] = &toNTPv4;
   protocolConversion["IP"] = &toIP;
   protocolConversion["IMAP"] = &toIMAP;
-  protocolConversion["ICMP"] = &toICMP;
-  protocolConversion["ICMPv4Communication"] = &toICMPv4Communication;
-  protocolConversion["ICMPv4EchoRequest"] = &toICMPv4EchoRequest;
-  protocolConversion["ICMPv4EchoReply"] = &toICMPv4EchoReply;
-  protocolConversion["ICMPv4Timestamp"] = &toICMPv4Timestamp;
-  protocolConversion["ICMPv4TimestampRequest"] = &toICMPv4TimestampRequest;
-  protocolConversion["ICMPv4TimestampReply"] = &toICMPv4TimestampReply;
-  protocolConversion["ICMPv4InformationRequest"] = &toICMPv4InformationRequest;
-  protocolConversion["ICMPv4InformationReply"] = &toICMPv4InformationReply;
-  protocolConversion["ICMPv4Error"] = &toICMPv4Error;
-  protocolConversion["ICMPv4DestUnreach"] = &toICMPv4DestUnreach;
-  protocolConversion["ICMPv4TimeExceed"] = &toICMPv4TimeExceed;
-  protocolConversion["ICMPv4ParamProblem"] = &toICMPv4ParamProblem;
-  protocolConversion["ICMPv4SourceQuench"] = &toICMPv4SourceQuench;
-  protocolConversion["ICMPv4Redirect"] = &toICMPv4Redirect;
-  protocolConversion["ICMPv4RouterAdvert"] = &toICMPv4RouterAdvert;
-  protocolConversion["ICMPv4RouterSollicitation"] = &toICMPv4RouterSollicitation;
+  // protocolConversion["ICMP"] = &toICMP;
+  // protocolConversion["ICMPv4Communication"] = &toICMPv4Communication;
+  // protocolConversion["ICMPv4EchoRequest"] = &toICMPv4EchoRequest;
+  // protocolConversion["ICMPv4EchoReply"] = &toICMPv4EchoReply;
+  // protocolConversion["ICMPv4Timestamp"] = &toICMPv4Timestamp;
+  // protocolConversion["ICMPv4TimestampRequest"] = &toICMPv4TimestampRequest;
+  // protocolConversion["ICMPv4TimestampReply"] = &toICMPv4TimestampReply;
+  // protocolConversion["ICMPv4InformationRequest"] = &toICMPv4InformationRequest;
+  // protocolConversion["ICMPv4InformationReply"] = &toICMPv4InformationReply;
+  // protocolConversion["ICMPv4Error"] = &toICMPv4Error;
+  // protocolConversion["ICMPv4DestUnreach"] = &toICMPv4DestUnreach;
+  // protocolConversion["ICMPv4TimeExceed"] = &toICMPv4TimeExceed;
+  // protocolConversion["ICMPv4ParamProblem"] = &toICMPv4ParamProblem;
+  // protocolConversion["ICMPv4SourceQuench"] = &toICMPv4SourceQuench;
+  // protocolConversion["ICMPv4Redirect"] = &toICMPv4Redirect;
+  // protocolConversion["ICMPv4RouterAdvert"] = &toICMPv4RouterAdvert;
+  // protocolConversion["ICMPv4RouterSollicitation"] = &toICMPv4RouterSollicitation;
   protocolConversion["HTTP"] = &toHTTP;
   protocolConversion["Ethernet"] = &toEthernet;
   protocolConversion["Dot11"] = &toDot11;
   protocolConversion["DHCP"] = &toDHCP;
-  protocolConversion["DNS"] = &toDNS;
-  protocolConversion["DNSQuery"] = &toDNSQuery;
-  protocolConversion["DNSResource"] = &toDNSResource;
-  protocolConversion["DNSQR"] = &toDNSQR;
-  protocolConversion["DNSRR"] = &toDNSRR;
-  protocolConversion["DNSSOAResource"] = &toDNSSOAResource;
-  protocolConversion["DNSMXResource"] = &toDNSMXResource;
-  protocolConversion["DNSAResource"] = &toDNSAResource;
-  protocolConversion["DNSPTRResource"] = &toDNSPTRResource;
+  // protocolConversion["DNS"] = &toDNS;
+  // protocolConversion["DNSQuery"] = &toDNSQuery;
+  // protocolConversion["DNSResource"] = &toDNSResource;
+  // protocolConversion["DNSQR"] = &toDNSQR;
+  // protocolConversion["DNSRR"] = &toDNSRR;
+  // protocolConversion["DNSSOAResource"] = &toDNSSOAResource;
+  // protocolConversion["DNSMXResource"] = &toDNSMXResource;
+  // protocolConversion["DNSAResource"] = &toDNSAResource;
+  // protocolConversion["DNSPTRResource"] = &toDNSPTRResource;
 }
 
 unittest {
@@ -377,207 +377,207 @@ unittest {
   assert(packet.str == "test");
 }
 
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
-  ICMP packet = cast(ICMP)(protocolConversion["ICMP"](json));
-  assert(packet.type == 3);
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 8;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-  ICMPv4Communication packet = cast(ICMPv4Communication)(protocolConversion["ICMPv4Communication"](json));
-  assert(packet.type == 8);
-  assert(packet.checksum == 0);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)(protocolConversion["ICMPv4EchoRequest"](json));
-  assert(packet.checksum == 0);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)(protocolConversion["ICMPv4EchoReply"](json));
-  assert(packet.checksum == 0);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)(protocolConversion["ICMPv4Timestamp"](json));
-  assert(packet.type == 14);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-  assert(packet.originTime == 21);
-  assert(packet.receiveTime == 42);
-  assert(packet.transmitTime == 84);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)(protocolConversion["ICMPv4TimestampRequest"](json));
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-  assert(packet.originTime == 21);
-  assert(packet.receiveTime == 42);
-  assert(packet.transmitTime == 84);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)(protocolConversion["ICMPv4TimestampReply"](json));
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-  assert(packet.originTime == 21);
-  assert(packet.receiveTime == 42);
-  assert(packet.transmitTime == 84);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)(protocolConversion["ICMPv4InformationRequest"](json));
-  assert(packet.checksum == 0);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)(protocolConversion["ICMPv4InformationReply"](json));
-  assert(packet.checksum == 0);
-  assert(packet.id == 1);
-  assert(packet.seq == 2);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
-  ICMPv4Error packet = cast(ICMPv4Error)(protocolConversion["ICMPv4Error"](json));
-  assert(packet.type == 3);
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)(protocolConversion["ICMPv4DestUnreach"](json));
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)(protocolConversion["ICMPv4TimeExceed"](json));
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  json.ptr = 1;
-  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)(protocolConversion["ICMPv4ParamProblem"](json));
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-  assert(packet.ptr == 1);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)(protocolConversion["ICMPv4SourceQuench"](json));
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  json.gateway = 42;
-  ICMPv4Redirect packet = cast(ICMPv4Redirect)(protocolConversion["ICMPv4Redirect"](json));
-  assert(packet.code == 2);
-  assert(packet.checksum == 0);
-  assert(packet.gateway == 42);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.numAddr = 3;
-  json.addrEntrySize = 2;
-  json.life = 1;
-  json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)(protocolConversion["ICMPv4RouterAdvert"](json));
-  assert(packet.checksum == 0);
-  assert(packet.life == 1);
-  assert(packet.numAddr == 3);
-  assert(packet.addrEntrySize == 2);
-  assert(packet.routerAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)(protocolConversion["ICMPv4RouterSollicitation"](json));
-  assert(packet.checksum == 0);
-}
-
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 3;
+//   json.code = 2;
+//   json.checksum = 0;
+//   ICMP packet = cast(ICMP)(protocolConversion["ICMP"](json));
+//   assert(packet.type == 3);
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 8;
+//   json.checksum = 0;
+//   json.id = 1;
+//   json.seq = 2;
+//   ICMPv4Communication packet = cast(ICMPv4Communication)(protocolConversion["ICMPv4Communication"](json));
+//   assert(packet.type == 8);
+//   assert(packet.checksum == 0);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   json.id = 1;
+//   json.seq = 2;
+//   ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)(protocolConversion["ICMPv4EchoRequest"](json));
+//   assert(packet.checksum == 0);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   json.id = 1;
+//   json.seq = 2;
+//   ICMPv4EchoReply packet = cast(ICMPv4EchoReply)(protocolConversion["ICMPv4EchoReply"](json));
+//   assert(packet.checksum == 0);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 14;
+//   json.id = 1;
+//   json.seq = 2;
+//   json.originTime = 21;
+//   json.receiveTime = 42;
+//   json.transmitTime = 84;
+//   ICMPv4Timestamp packet = cast(ICMPv4Timestamp)(protocolConversion["ICMPv4Timestamp"](json));
+//   assert(packet.type == 14);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+//   assert(packet.originTime == 21);
+//   assert(packet.receiveTime == 42);
+//   assert(packet.transmitTime == 84);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 14;
+//   json.id = 1;
+//   json.seq = 2;
+//   json.originTime = 21;
+//   json.receiveTime = 42;
+//   json.transmitTime = 84;
+//   ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)(protocolConversion["ICMPv4TimestampRequest"](json));
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+//   assert(packet.originTime == 21);
+//   assert(packet.receiveTime == 42);
+//   assert(packet.transmitTime == 84);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 14;
+//   json.id = 1;
+//   json.seq = 2;
+//   json.originTime = 21;
+//   json.receiveTime = 42;
+//   json.transmitTime = 84;
+//   ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)(protocolConversion["ICMPv4TimestampReply"](json));
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+//   assert(packet.originTime == 21);
+//   assert(packet.receiveTime == 42);
+//   assert(packet.transmitTime == 84);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   json.id = 1;
+//   json.seq = 2;
+//   ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)(protocolConversion["ICMPv4InformationRequest"](json));
+//   assert(packet.checksum == 0);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   json.id = 1;
+//   json.seq = 2;
+//   ICMPv4InformationReply packet = cast(ICMPv4InformationReply)(protocolConversion["ICMPv4InformationReply"](json));
+//   assert(packet.checksum == 0);
+//   assert(packet.id == 1);
+//   assert(packet.seq == 2);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.packetType = 3;
+//   json.code = 2;
+//   json.checksum = 0;
+//   ICMPv4Error packet = cast(ICMPv4Error)(protocolConversion["ICMPv4Error"](json));
+//   assert(packet.type == 3);
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.code = 2;
+//   json.checksum = 0;
+//   ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)(protocolConversion["ICMPv4DestUnreach"](json));
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.code = 2;
+//   json.checksum = 0;
+//   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)(protocolConversion["ICMPv4TimeExceed"](json));
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.code = 2;
+//   json.checksum = 0;
+//   json.ptr = 1;
+//   ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)(protocolConversion["ICMPv4ParamProblem"](json));
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+//   assert(packet.ptr == 1);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.code = 2;
+//   json.checksum = 0;
+//   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)(protocolConversion["ICMPv4SourceQuench"](json));
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.code = 2;
+//   json.checksum = 0;
+//   json.gateway = 42;
+//   ICMPv4Redirect packet = cast(ICMPv4Redirect)(protocolConversion["ICMPv4Redirect"](json));
+//   assert(packet.code == 2);
+//   assert(packet.checksum == 0);
+//   assert(packet.gateway == 42);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   json.numAddr = 3;
+//   json.addrEntrySize = 2;
+//   json.life = 1;
+//   json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+//   json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+//   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)(protocolConversion["ICMPv4RouterAdvert"](json));
+//   assert(packet.checksum == 0);
+//   assert(packet.life == 1);
+//   assert(packet.numAddr == 3);
+//   assert(packet.addrEntrySize == 2);
+//   assert(packet.routerAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+//   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)(protocolConversion["ICMPv4RouterSollicitation"](json));
+//   assert(packet.checksum == 0);
+// }
+//
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
@@ -670,154 +670,154 @@ unittest {
   assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
 }
 
-unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNS packet = cast(DNS)(protocolConversion["DNS"](json));
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.qr == false);
-  assert(packet.opcode == 0);
-  assert(packet.aa == false);
-  assert(packet.rd == true);
-  assert(packet.tc == false);
-  assert(packet.ra == false);
-  assert(packet.z == 0);
-  assert(packet.rcode == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 1;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = true;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSQuery packet = cast(DNSQuery)(protocolConversion["DNSQuery"](json));
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.opcode == 1);
-  assert(packet.rd == true);
-  assert(packet.tc == false);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSResource packet = cast(DNSResource)(protocolConversion["DNSResource"](json));
-  assert(packet.id == 0);
-  assert(packet.qdcount == 0);
-  assert(packet.ancount == 0);
-  assert(packet.nscount == 0);
-  assert(packet.arcount == 0);
-  assert(packet.aa == false);
-  assert(packet.tc == false);
-  assert(packet.ra == false);
-  assert(packet.rcode == 0);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.qname = "google.fr";
-  json.qtype = QType.A;
-  json.qclass = QClass.IN;
-  DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
-  assert(packet.qname == "google.fr");
-  assert(packet.qtype == 1);
-  assert(packet.qclass == 1);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.rname = "google.fr";
-  json.rtype = QType.A;
-  json.rclass = QClass.IN;
-  json.ttl = 600;
-  json.rdlength = 10;
-  DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
-  assert(packet.rname == "google.fr");
-  assert(packet.rtype == 1);
-  assert(packet.rclass == 1);
-  assert(packet.ttl == 600);
-  assert(packet.rdlength == 10);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.primary = "google.fr";
-  json.admin = "admin.google.fr";
-  json.serial = 8000;
-  json.refresh = 2500;
-  json.retry = 2500;
-  json.expirationLimit = 400;
-  json.minTtl = 10;
-  DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
-  assert(packet.primary == "google.fr");
-  assert(packet.admin == "admin.google.fr");
-  assert(packet.serial == 8000);
-  assert(packet.refresh == 2500);
-  assert(packet.retry == 2500);
-  assert(packet.expirationLimit == 400);
-  assert(packet.minTtl == 10);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.pref = 1;
-  json.mxname = "google.fr";
-  DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
-  assert(packet.pref == 1);
-  assert(packet.mxname == "google.fr");
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.ip = serializeToJson([127, 0, 0, 1]);
-  DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
-  assert(packet.ip == [127, 0, 0, 1]);
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.ptrname = "google.fr";
-  DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
-  assert(packet.ptrname == "google.fr");
-}
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.qdcount = 0;
+//   json.ancount = 0;
+//   json.nscount = 0;
+//   json.arcount = 0;
+//   json.qr = false;
+//   json.opcode = 0;
+//   json.auth_answer = false;
+//   json.truncation = false;
+//   json.record_desired = true;
+//   json.record_available = false;
+//   json.zero = 0;
+//   json.rcode = 0;
+//   json.id = 0;
+//   DNS packet = cast(DNS)(protocolConversion["DNS"](json));
+//   assert(packet.id == 0);
+//   assert(packet.qdcount == 0);
+//   assert(packet.ancount == 0);
+//   assert(packet.nscount == 0);
+//   assert(packet.arcount == 0);
+//   assert(packet.qr == false);
+//   assert(packet.opcode == 0);
+//   assert(packet.aa == false);
+//   assert(packet.rd == true);
+//   assert(packet.tc == false);
+//   assert(packet.ra == false);
+//   assert(packet.z == 0);
+//   assert(packet.rcode == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.qdcount = 0;
+//   json.ancount = 0;
+//   json.nscount = 0;
+//   json.arcount = 0;
+//   json.qr = false;
+//   json.opcode = 1;
+//   json.auth_answer = false;
+//   json.truncation = false;
+//   json.record_desired = true;
+//   json.record_available = true;
+//   json.zero = 0;
+//   json.rcode = 0;
+//   json.id = 0;
+//   DNSQuery packet = cast(DNSQuery)(protocolConversion["DNSQuery"](json));
+//   assert(packet.id == 0);
+//   assert(packet.qdcount == 0);
+//   assert(packet.ancount == 0);
+//   assert(packet.nscount == 0);
+//   assert(packet.arcount == 0);
+//   assert(packet.opcode == 1);
+//   assert(packet.rd == true);
+//   assert(packet.tc == false);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.qdcount = 0;
+//   json.ancount = 0;
+//   json.nscount = 0;
+//   json.arcount = 0;
+//   json.qr = false;
+//   json.opcode = 0;
+//   json.auth_answer = false;
+//   json.truncation = false;
+//   json.record_desired = true;
+//   json.record_available = false;
+//   json.zero = 0;
+//   json.rcode = 0;
+//   json.id = 0;
+//   DNSResource packet = cast(DNSResource)(protocolConversion["DNSResource"](json));
+//   assert(packet.id == 0);
+//   assert(packet.qdcount == 0);
+//   assert(packet.ancount == 0);
+//   assert(packet.nscount == 0);
+//   assert(packet.arcount == 0);
+//   assert(packet.aa == false);
+//   assert(packet.tc == false);
+//   assert(packet.ra == false);
+//   assert(packet.rcode == 0);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.qname = "google.fr";
+//   json.qtype = QType.A;
+//   json.qclass = QClass.IN;
+//   DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
+//   assert(packet.qname == "google.fr");
+//   assert(packet.qtype == 1);
+//   assert(packet.qclass == 1);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.rname = "google.fr";
+//   json.rtype = QType.A;
+//   json.rclass = QClass.IN;
+//   json.ttl = 600;
+//   json.rdlength = 10;
+//   DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
+//   assert(packet.rname == "google.fr");
+//   assert(packet.rtype == 1);
+//   assert(packet.rclass == 1);
+//   assert(packet.ttl == 600);
+//   assert(packet.rdlength == 10);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.primary = "google.fr";
+//   json.admin = "admin.google.fr";
+//   json.serial = 8000;
+//   json.refresh = 2500;
+//   json.retry = 2500;
+//   json.expirationLimit = 400;
+//   json.minTtl = 10;
+//   DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
+//   assert(packet.primary == "google.fr");
+//   assert(packet.admin == "admin.google.fr");
+//   assert(packet.serial == 8000);
+//   assert(packet.refresh == 2500);
+//   assert(packet.retry == 2500);
+//   assert(packet.expirationLimit == 400);
+//   assert(packet.minTtl == 10);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.pref = 1;
+//   json.mxname = "google.fr";
+//   DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
+//   assert(packet.pref == 1);
+//   assert(packet.mxname == "google.fr");
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.ip = serializeToJson([127, 0, 0, 1]);
+//   DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
+//   assert(packet.ip == [127, 0, 0, 1]);
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.ptrname = "google.fr";
+//   DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
+//   assert(packet.ptrname == "google.fr");
+// }
