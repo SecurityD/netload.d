@@ -2,11 +2,12 @@ module netload.core.sniffer;
 
 import netload.core;
 import netload.protocols.ethernet;
+import std.conv;
 
 class Sniffer {
   public:
     this(string iface = null,
-          Protocol function(ubyte[] data) linkLayerConverter = &toEthernet,
+          Protocol function(ubyte[] data) linkLayerConverter = function(ubyte[] data) { return cast(Protocol)to!Ethernet(data); },
           bool promisc = false) {
       _promisc = promisc;
       if (iface is null)

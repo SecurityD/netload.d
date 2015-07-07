@@ -8,7 +8,7 @@ import std.bitmanip;
 private Protocol delegate(ubyte[])[ubyte] ipType;
 
 static this() {
-  // ipType[0x01] = &toICMP;
+  ipType[0x01] = delegate(ubyte[]encoded){ return cast(Protocol)to!ICMP(encoded); };
   ipType[0x06] = delegate(ubyte[]encoded){ return cast(Protocol)to!TCP(encoded); };
   ipType[0x11] = delegate(ubyte[]encoded){ return cast(Protocol)to!UDP(encoded); };
 }

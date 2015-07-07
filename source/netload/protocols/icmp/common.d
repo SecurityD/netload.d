@@ -33,6 +33,21 @@ class ICMPBase(ICMPType __type__) : Protocol {
       _code = code;
     }
 
+    this(Json json) {
+      _type = json.packetType.to!ubyte;
+      _code = json.code.to!ubyte;
+      _checksum = json.checksum.to!ushort;
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ref ubyte[] encodedPacket) {
+      _type = encodedPacket.read!ubyte();
+      _code = encodedPacket.read!ubyte();
+      _checksum = encodedPacket.read!ushort();
+    }
+
     override @property inout string name() { return "ICMP"; };
     override @property Protocol data() { return _data; }
     override @property void data(Protocol p) { _data = p; }
@@ -132,23 +147,12 @@ class ICMPBase(ICMPType __type__) : Protocol {
     ushort _checksum = 0;
 }
 
-Protocol toICMP(Json json) {
-  ICMP packet = new ICMP();
-  packet.type = json.packetType.to!ubyte;
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 3;
   json.code = 2;
   json.checksum = 0;
-  ICMP packet = cast(ICMP)toICMP(json);
+  ICMP packet = cast(ICMP)to!ICMP(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -168,24 +172,16 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMP packet = cast(ICMP)toICMP(json);
+  ICMP packet = cast(ICMP)to!ICMP(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMP(ubyte[] encodedPacket) {
-  ICMP packet = new ICMP();
-  packet.type = encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0];
-  ICMP packet = cast(ICMP)encodedPacket.toICMP;
+  ICMP packet = cast(ICMP)encodedPacket.to!ICMP;
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);

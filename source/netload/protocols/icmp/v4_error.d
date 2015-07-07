@@ -15,6 +15,44 @@ alias ICMPv4ParamProblem = ICMPv4ErrorBase!(ICMPType.PARAM_PROBLEM);
 
 class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
+    this(Json json) {
+        static if (__type__ == ICMPType.ANY)
+          _type = json.packetType.to!ubyte;
+        else
+          this();
+        _code = json.code.to!ubyte;
+        _checksum = json.checksum.to!ushort;
+        static if (__type__ == ICMPType.PARAM_PROBLEM)
+          _ptr = json.ptr.to!ubyte;
+        else static if (__type__ == ICMPType.REDIRECT)
+          _gateway = json.gateway.to!uint;
+        auto packetData = ("data" in json);
+        if (json.data.type != Json.Type.Null && packetData != null)
+          _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encodedPacket) {
+      static if (__type__ == ICMPType.ANY) {
+        super(encodedPacket);
+        encodedPacket.read!uint();
+      }
+      else {
+        this();
+        encodedPacket.read!ubyte();
+        _code = encodedPacket.read!ubyte();
+        _checksum = encodedPacket.read!ushort();
+        static if (__type__ == ICMPType.PARAM_PROBLEM) {
+          _ptr = encodedPacket.read!ubyte();
+          encodedPacket.read!ubyte();
+          encodedPacket.read!ushort();
+        }
+        else static if (__type__ == ICMPType.REDIRECT)
+          _gateway = encodedPacket.read!uint();
+        else
+          encodedPacket.read!uint();
+      }
+    }
+
     static if (__type__ == ICMPType.ANY) {
       this() {
         super();
@@ -22,36 +60,6 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       this(ubyte type, ubyte code = 0, IP data = null) {
         super(type, code);
-        _data = data;
-      }
-    }
-    else static if (__type__ == ICMPType.DEST_UNREACH) {
-      this() {
-        super(3, 0);
-      }
-
-      this(ubyte code, IP data) {
-        super(3, code);
-        _data = data;
-      }
-    }
-    else static if (__type__ == ICMPType.TIME_EXCEED) {
-      this() {
-        super(11, 0);
-      }
-
-      this(ubyte code, IP data) {
-        super(11, code);
-        _data = data;
-      }
-    }
-    else static if (__type__ == ICMPType.SOURCE_QUENCH) {
-      this() {
-        super(4, 0);
-      }
-
-      this(ubyte code, IP data) {
-        super(4, code);
         _data = data;
       }
     }
@@ -77,20 +85,34 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
         _ptr = ptr;
       }
     }
+    else {
+      this() {
+        static if (__type__ == ICMPType.DEST_UNREACH)
+          super(3, 0);
+        else static if (__type__ == ICMPType.TIME_EXCEED)
+          super(11, 0);
+        else static if (__type__ == ICMPType.SOURCE_QUENCH)
+          super(4, 0);
+      }
 
-    static if (__type__ == ICMPType.REDIRECT) {
-      override Json toJson() const {
-        Json packet = super.toJson();
-        packet.gateway = _gateway;
-        return packet;
+      this(ubyte code, IP data) {
+        static if (__type__ == ICMPType.DEST_UNREACH)
+          super(3, code);
+        else static if (__type__ == ICMPType.TIME_EXCEED)
+          super(11, code);
+        else static if (__type__ == ICMPType.SOURCE_QUENCH)
+          super(4, code);
+        _data = data;
       }
     }
-    else static if (__type__ == ICMPType.PARAM_PROBLEM) {
-      override Json toJson() const {
-        Json packet = super.toJson();
+
+    override Json toJson() const {
+      Json packet = super.toJson();
+      static if (__type__ == ICMPType.REDIRECT)
+        packet.gateway = _gateway;
+      else static if (__type__ == ICMPType.PARAM_PROBLEM)
         packet.ptr = _ptr;
-        return packet;
-      }
+      return packet;
     }
 
     unittest {
@@ -247,23 +269,12 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 }
 
-Protocol toICMPv4Error(Json json) {
-  ICMPv4Error packet = new ICMPv4Error();
-  packet.type = json.packetType.to!ubyte;
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 3;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4Error packet = cast(ICMPv4Error)toICMPv4Error(json);
+  ICMPv4Error packet = cast(ICMPv4Error)to!ICMPv4Error(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -283,45 +294,26 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4Error packet = cast(ICMPv4Error)toICMPv4Error(json);
+  ICMPv4Error packet = cast(ICMPv4Error)to!ICMPv4Error(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4Error(ubyte[] encodedPacket) {
-  ICMPv4Error packet = new ICMPv4Error();
-  packet.type = encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  encodedPacket.read!uint();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4Error packet = cast(ICMPv4Error)encodedPacket.toICMPv4Error;
+  ICMPv4Error packet = cast(ICMPv4Error)encodedPacket.to!ICMPv4Error;
   assert(packet.type == 3);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-Protocol toICMPv4DestUnreach(Json json) {
-  ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)toICMPv4DestUnreach(json);
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)to!ICMPv4DestUnreach(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -339,43 +331,24 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)toICMPv4DestUnreach(json);
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)to!ICMPv4DestUnreach(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4DestUnreach(ubyte[] encodedPacket) {
-  ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
-  encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  encodedPacket.read!uint();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)encodedPacket.toICMPv4DestUnreach;
+  ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)encodedPacket.to!ICMPv4DestUnreach;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-Protocol toICMPv4TimeExceed(Json json) {
-  ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)toICMPv4TimeExceed(json);
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)to!ICMPv4TimeExceed(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -393,37 +366,17 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)toICMPv4TimeExceed(json);
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)to!ICMPv4TimeExceed(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4TimeExceed(ubyte[] encodedPacket) {
-  ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
-  encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  encodedPacket.read!uint();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)encodedPacket.toICMPv4TimeExceed;
+  ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)encodedPacket.to!ICMPv4TimeExceed;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-Protocol toICMPv4ParamProblem(Json json) {
-  ICMPv4ParamProblem packet = new ICMPv4ParamProblem();
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  packet.ptr = json.ptr.to!ubyte;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -431,7 +384,7 @@ unittest {
   json.code = 2;
   json.checksum = 0;
   json.ptr = 1;
-  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)toICMPv4ParamProblem(json);
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)to!ICMPv4ParamProblem(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.ptr == 1);
@@ -451,47 +404,26 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)toICMPv4ParamProblem(json);
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)to!ICMPv4ParamProblem(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.ptr == 1);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
-}
-
-Protocol toICMPv4ParamProblem(ubyte[] encodedPacket) {
-  ICMPv4ParamProblem packet = new ICMPv4ParamProblem();
-  encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.ptr = encodedPacket.read!ubyte();
-  encodedPacket.read!ubyte();
-  encodedPacket.read!ushort();
-  return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 1, 0, 0, 0];
-  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)encodedPacket.toICMPv4ParamProblem;
+  ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)encodedPacket.to!ICMPv4ParamProblem;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.ptr == 1);
 }
 
-Protocol toICMPv4SourceQuench(Json json) {
-  ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.code = 2;
   json.checksum = 0;
-  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)toICMPv4SourceQuench(json);
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)to!ICMPv4SourceQuench(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
 }
@@ -509,37 +441,17 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)toICMPv4SourceQuench(json);
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)to!ICMPv4SourceQuench(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
-}
-
-Protocol toICMPv4SourceQuench(ubyte[] encodedPacket) {
-  ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
-  encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  encodedPacket.read!uint();
-  return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
-  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)encodedPacket.toICMPv4SourceQuench;
+  ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)encodedPacket.to!ICMPv4SourceQuench;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-Protocol toICMPv4Redirect(Json json) {
-  ICMPv4Redirect packet = new ICMPv4Redirect();
-  packet.code = json.code.to!ubyte;
-  packet.checksum = json.checksum.to!ushort;
-  packet.gateway = json.gateway.to!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -547,7 +459,7 @@ unittest {
   json.code = 2;
   json.checksum = 0;
   json.gateway = 42;
-  ICMPv4Redirect packet = cast(ICMPv4Redirect)toICMPv4Redirect(json);
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)to!ICMPv4Redirect(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);
@@ -567,25 +479,16 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4Redirect packet = cast(ICMPv4Redirect)toICMPv4Redirect(json);
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)to!ICMPv4Redirect(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4Redirect(ubyte[] encodedPacket) {
-  ICMPv4Redirect packet = new ICMPv4Redirect();
-  encodedPacket.read!ubyte();
-  packet.code = encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.gateway = encodedPacket.read!uint();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 42];
-  ICMPv4Redirect packet = cast(ICMPv4Redirect)encodedPacket.toICMPv4Redirect;
+  ICMPv4Redirect packet = cast(ICMPv4Redirect)encodedPacket.to!ICMPv4Redirect;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
   assert(packet.gateway == 42);
