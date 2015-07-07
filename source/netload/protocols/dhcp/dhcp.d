@@ -34,6 +34,45 @@ class DHCP : Protocol {
       _giaddr = giaddr;
     }
 
+    this(Json json) {
+      _op = json.op.to!ubyte;
+      _htype = json.htype.to!ubyte;
+      _hlen = json.hlen.to!ubyte;
+      _hops = json.hops.to!ubyte;
+      _xid = json.xid.to!uint;
+      _secs = json.secs.to!ushort;
+      _flags.broadcast = json.broadcast.to!bool;
+      _ciaddr = deserializeJson!(ubyte[4])(json.ciaddr);
+      _yiaddr = deserializeJson!(ubyte[4])(json.yiaddr);
+      _siaddr = deserializeJson!(ubyte[4])(json.siaddr);
+      _giaddr = deserializeJson!(ubyte[4])(json.giaddr);
+      _chaddr = deserializeJson!(ubyte[16])(json.chaddr);
+      _sname = deserializeJson!(ubyte[64])(json.sname);
+      _file = deserializeJson!(ubyte[128])(json.file);
+      _options = deserializeJson!(ubyte[])(json.options);
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encodedPacket) {
+      _op = encodedPacket.read!ubyte();
+      _htype = encodedPacket.read!ubyte;
+      _hlen = encodedPacket.read!ubyte;
+      _hops = encodedPacket.read!ubyte;
+      _xid = encodedPacket.read!uint;
+      _secs = encodedPacket.read!ushort;
+      _flags.raw = encodedPacket.read!ushort;
+      _ciaddr = encodedPacket[0..4];
+      _yiaddr = encodedPacket[4..8];
+      _siaddr = encodedPacket[8..12];
+      _giaddr = encodedPacket[12..16];
+      _chaddr = encodedPacket[16..32];
+      _sname = encodedPacket[32..96];
+      _file = encodedPacket[96..224];
+      _options = encodedPacket[224..(encodedPacket.length)];
+    }
+
     override @property Protocol data() { return _data; }
     override @property void data(Protocol p) { _data = p; }
     override @property inout string name() const { return "DHCP"; }
@@ -160,8 +199,10 @@ class DHCP : Protocol {
     @property void xid(uint xid) { _xid = xid; };
     @property ushort secs() const { return _secs; };
     @property void secs(ushort secs) { _secs = secs; };
+
     @property bool broadcast() const { return _flags.broadcast; };
     @property void broadcast(bool broadcast) { _flags.broadcast = broadcast; };
+
     @property const(ubyte[4]) ciaddr() const { return _ciaddr; };
     @property void ciaddr(ubyte[4] ciaddr) { _ciaddr = ciaddr; };
     @property const(ubyte[4]) yiaddr() const { return _yiaddr; };
@@ -198,29 +239,6 @@ class DHCP : Protocol {
     ubyte[] _options;
 }
 
-Protocol toDHCP(Json json) {
-  DHCP packet = new DHCP();
-  packet.op = json.op.to!ubyte;
-  packet.htype = json.htype.to!ubyte;
-  packet.hlen = json.hlen.to!ubyte;
-  packet.hops = json.hops.to!ubyte;
-  packet.xid = json.xid.to!uint;
-  packet.secs = json.secs.to!ushort;
-  packet.broadcast = json.broadcast.to!bool;
-  packet.ciaddr = deserializeJson!(ubyte[4])(json.ciaddr);
-  packet.yiaddr = deserializeJson!(ubyte[4])(json.yiaddr);
-  packet.siaddr = deserializeJson!(ubyte[4])(json.siaddr);
-  packet.giaddr = deserializeJson!(ubyte[4])(json.giaddr);
-  packet.chaddr = deserializeJson!(ubyte[16])(json.chaddr);
-  packet.sname = deserializeJson!(ubyte[64])(json.sname);
-  packet.file = deserializeJson!(ubyte[128])(json.file);
-  packet.options = deserializeJson!(ubyte[])(json.options);
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   ubyte[] options;
@@ -239,7 +257,7 @@ unittest {
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);
   json.options = serializeToJson(options);
-  DHCP packet = cast(DHCP)toDHCP(json);
+  DHCP packet = cast(DHCP)to!DHCP(json);
   assert(packet.toJson.op == 2);
   assert(packet.toJson.htype == 1);
   assert(packet.toJson.hlen == 6);
@@ -280,7 +298,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  DHCP packet = cast(DHCP)toDHCP(json);
+  DHCP packet = cast(DHCP)to!DHCP(json);
   assert(packet.op == 2);
   assert(packet.htype == 1);
   assert(packet.hlen == 6);
@@ -295,31 +313,9 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toDHCP(ubyte[] encodedPacket) {
-  DHCP packet = new DHCP();
-  Bitfields flags;
-  packet.op = encodedPacket.read!ubyte();
-  packet.htype = encodedPacket.read!ubyte;
-  packet.hlen = encodedPacket.read!ubyte;
-  packet.hops = encodedPacket.read!ubyte;
-  packet.xid = encodedPacket.read!uint;
-  packet.secs = encodedPacket.read!ushort;
-  flags.raw = encodedPacket.read!ushort;
-  packet.broadcast = flags.broadcast;
-  packet.ciaddr = encodedPacket[0..4];
-  packet.yiaddr = encodedPacket[4..8];
-  packet.siaddr = encodedPacket[8..12];
-  packet.giaddr = encodedPacket[12..16];
-  packet.chaddr = encodedPacket[16..32];
-  packet.sname = encodedPacket[32..96];
-  packet.file = encodedPacket[96..224];
-  packet.options = encodedPacket[224..(encodedPacket.length)];
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
-  DHCP packet = cast(DHCP)encodedPacket.toDHCP;
+  DHCP packet = cast(DHCP)encodedPacket.to!DHCP;
   assert(packet.op == 2);
   assert(packet.htype == 1);
   assert(packet.hlen == 6);

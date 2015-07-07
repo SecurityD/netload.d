@@ -33,6 +33,18 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
         this(16);
     }
 
+    this(Json json) {
+      super(json);
+      _id = json.id.to!ushort;
+      _seq = json.seq.to!ushort;
+    }
+
+    this(ref ubyte[] encodedPacket) {
+      super(encodedPacket);
+      _id = encodedPacket.read!ushort();
+      _seq = encodedPacket.read!ushort();
+    }
+
     override Json toJson() const {
       Json packet = super.toJson();
       packet.id = _id;
@@ -122,24 +134,13 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     ushort _seq = 0;
 }
 
-Protocol toICMPv4Communication(Json json) {
-  ICMPv4Communication packet = new ICMPv4Communication(json.packetType.to!ubyte);
-  packet.checksum = json.checksum.to!ushort;
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 8;
   json.checksum = 0;
   json.id = 1;
   json.seq = 2;
-  ICMPv4Communication packet = cast(ICMPv4Communication)toICMPv4Communication(json);
+  ICMPv4Communication packet = cast(ICMPv4Communication)to!ICMPv4Communication(json);
   assert(packet.type == 8);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -161,7 +162,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4Communication packet = cast(ICMPv4Communication)toICMPv4Communication(json);
+  ICMPv4Communication packet = cast(ICMPv4Communication)to!ICMPv4Communication(json);
   assert(packet.type == 8);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -169,33 +170,13 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4Communication(ubyte[] encodedPacket) {
-  ICMPv4Communication packet = new ICMPv4Communication(encodedPacket.read!ubyte());
-  encodedPacket.read!ubyte();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
-  ICMPv4Communication packet = cast(ICMPv4Communication)encodedPacket.toICMPv4Communication;
+  ICMPv4Communication packet = cast(ICMPv4Communication)encodedPacket.to!ICMPv4Communication;
   assert(packet.type == 8);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
-}
-
-Protocol toICMPv4EchoRequest(Json json) {
-  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
-  packet.checksum = json.checksum.to!ushort;
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -203,7 +184,7 @@ unittest {
   json.checksum = 0;
   json.id = 1;
   json.seq = 2;
-  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)toICMPv4EchoRequest(json);
+  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)to!ICMPv4EchoRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -223,39 +204,19 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)toICMPv4EchoRequest(json);
+  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)to!ICMPv4EchoRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4EchoRequest(ubyte[] encodedPacket) {
-  ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
-  encodedPacket.read!ushort();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
-  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)encodedPacket.toICMPv4EchoRequest;
+  ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)encodedPacket.to!ICMPv4EchoRequest;
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
-}
-
-Protocol toICMPv4EchoReply(Json json) {
-  ICMPv4EchoReply packet = new ICMPv4EchoReply();
-  packet.checksum = json.checksum.to!ushort;
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -263,7 +224,7 @@ unittest {
   json.checksum = 0;
   json.id = 1;
   json.seq = 2;
-  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)toICMPv4EchoReply(json);
+  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)to!ICMPv4EchoReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -283,25 +244,16 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)toICMPv4EchoReply(json);
+  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)to!ICMPv4EchoReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4EchoReply(ubyte[] encodedPacket) {
-  ICMPv4EchoReply packet = new ICMPv4EchoReply();
-  encodedPacket.read!ushort();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
-  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)encodedPacket.toICMPv4EchoReply;
+  ICMPv4EchoReply packet = cast(ICMPv4EchoReply)encodedPacket.to!ICMPv4EchoReply;
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -323,6 +275,20 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       _originTime = originTime;
       _receiveTime = receiveTime;
       _transmitTime = transmitTime;
+    }
+
+    this(Json json) {
+      super(json);
+      _originTime = json.originTime.to!uint;
+      _receiveTime = json.receiveTime.to!uint;
+      _transmitTime = json.transmitTime.to!uint;
+    }
+
+    this(ubyte[] encodedPacket) {
+      super(encodedPacket);
+      _originTime = encodedPacket.read!uint();
+      _receiveTime = encodedPacket.read!uint();
+      _transmitTime = encodedPacket.read!uint();
     }
 
     override Json toJson() const {
@@ -427,19 +393,6 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
     uint _transmitTime = 0;
 }
 
-Protocol toICMPv4Timestamp(Json json) {
-  ICMPv4Timestamp packet = new ICMPv4Timestamp(json.packetType.to!ubyte);
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  packet.originTime = json.originTime.to!uint;
-  packet.receiveTime = json.receiveTime.to!uint;
-  packet.transmitTime = json.transmitTime.to!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 14;
@@ -448,7 +401,7 @@ unittest {
   json.originTime = 21;
   json.receiveTime = 42;
   json.transmitTime = 84;
-  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)toICMPv4Timestamp(json);
+  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)to!ICMPv4Timestamp(json);
   assert(packet.type == 14);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -474,7 +427,7 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)toICMPv4Timestamp(json);
+  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)to!ICMPv4Timestamp(json);
   assert(packet.type == 14);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -484,21 +437,9 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4Timestamp(ubyte[] encodedPacket) {
-  ICMPv4Timestamp packet = new ICMPv4Timestamp(encodedPacket.read!ubyte());
-  encodedPacket.read!ubyte();
-  encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  packet.originTime = encodedPacket.read!uint();
-  packet.receiveTime = encodedPacket.read!uint();
-  packet.transmitTime = encodedPacket.read!uint();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
-  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)encodedPacket.toICMPv4Timestamp;
+  ICMPv4Timestamp packet = cast(ICMPv4Timestamp)encodedPacket.to!ICMPv4Timestamp;
   assert(packet.type == 8);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -507,19 +448,6 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-Protocol toICMPv4TimestampRequest(Json json) {
-  ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest(json.packetType.to!ubyte);
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  packet.originTime = json.originTime.to!uint;
-  packet.receiveTime = json.receiveTime.to!uint;
-  packet.transmitTime = json.transmitTime.to!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.packetType = 14;
@@ -528,7 +456,7 @@ unittest {
   json.originTime = 21;
   json.receiveTime = 42;
   json.transmitTime = 84;
-  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)toICMPv4TimestampRequest(json);
+  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)to!ICMPv4TimestampRequest(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
@@ -553,47 +481,23 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)toICMPv4TimestampRequest(json);
+  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)to!ICMPv4TimestampRequest(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
   assert(packet.receiveTime == 42);
   assert(packet.transmitTime == 84);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
-}
-
-Protocol toICMPv4TimestampRequest(ubyte[] encodedPacket) {
-  ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest();
-  encodedPacket.read!uint();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  packet.originTime = encodedPacket.read!uint();
-  packet.receiveTime = encodedPacket.read!uint();
-  packet.transmitTime = encodedPacket.read!uint();
-  return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
-  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)encodedPacket.toICMPv4TimestampRequest;
+  ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)encodedPacket.to!ICMPv4TimestampRequest;
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
   assert(packet.receiveTime == 42);
   assert(packet.transmitTime == 84);
-}
-
-Protocol toICMPv4TimestampReply(Json json) {
-  ICMPv4TimestampReply packet = new ICMPv4TimestampReply(json.packetType.to!ubyte);
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  packet.originTime = json.originTime.to!uint;
-  packet.receiveTime = json.receiveTime.to!uint;
-  packet.transmitTime = json.transmitTime.to!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -604,7 +508,7 @@ unittest {
   json.originTime = 21;
   json.receiveTime = 42;
   json.transmitTime = 84;
-  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)toICMPv4TimestampReply(json);
+  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)to!ICMPv4TimestampReply(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
@@ -629,29 +533,18 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)toICMPv4TimestampReply(json);
+  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)to!ICMPv4TimestampReply(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
   assert(packet.receiveTime == 42);
   assert(packet.transmitTime == 84);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
-}
-
-Protocol toICMPv4TimestampReply(ubyte[] encodedPacket) {
-  ICMPv4TimestampReply packet = new ICMPv4TimestampReply();
-  encodedPacket.read!uint();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  packet.originTime = encodedPacket.read!uint();
-  packet.receiveTime = encodedPacket.read!uint();
-  packet.transmitTime = encodedPacket.read!uint();
-  return packet;
 }
 
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
-  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)encodedPacket.toICMPv4TimestampReply;
+  ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)encodedPacket.to!ICMPv4TimestampReply;
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert(packet.originTime == 21);
@@ -659,23 +552,12 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-Protocol toICMPv4InformationRequest(Json json) {
-  ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
-  packet.checksum = json.checksum.to!ushort;
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.checksum = 0;
   json.id = 1;
   json.seq = 2;
-  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)toICMPv4InformationRequest(json);
+  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)to!ICMPv4InformationRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -695,39 +577,19 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)toICMPv4InformationRequest(json);
+  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)to!ICMPv4InformationRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4InformationRequest(ubyte[] encodedPacket) {
-  ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
-  encodedPacket.read!ushort();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
-  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)encodedPacket.toICMPv4InformationRequest;
+  ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)encodedPacket.to!ICMPv4InformationRequest;
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
-}
-
-Protocol toICMPv4InformationReply(Json json) {
-  ICMPv4InformationReply packet = new ICMPv4InformationReply();
-  packet.checksum = json.checksum.to!ushort;
-  packet.id = json.id.to!ushort;
-  packet.seq = json.seq.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
 }
 
 unittest {
@@ -735,7 +597,7 @@ unittest {
   json.checksum = 0;
   json.id = 1;
   json.seq = 2;
-  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)toICMPv4InformationReply(json);
+  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)to!ICMPv4InformationReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -755,25 +617,16 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)toICMPv4InformationReply(json);
+  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)to!ICMPv4InformationReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toICMPv4InformationReply(ubyte[] encodedPacket) {
-  ICMPv4InformationReply packet = new ICMPv4InformationReply();
-  encodedPacket.read!ushort();
-  packet.checksum = encodedPacket.read!ushort();
-  packet.id = encodedPacket.read!ushort();
-  packet.seq = encodedPacket.read!ushort();
-  return packet;
-}
-
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
-  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)encodedPacket.toICMPv4InformationReply;
+  ICMPv4InformationReply packet = cast(ICMPv4InformationReply)encodedPacket.to!ICMPv4InformationReply;
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);

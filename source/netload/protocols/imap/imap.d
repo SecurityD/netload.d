@@ -13,6 +13,14 @@ class IMAP : Protocol {
       _body = b;
     }
 
+    this(Json json) {
+      _body = json.body_.to!string;
+    }
+
+    this(ubyte[] encoded) {
+      this(cast(string)(encoded));
+    }
+
     override @property inout string name() { return "IMAP"; };
     override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
@@ -51,26 +59,15 @@ class IMAP : Protocol {
     string _body;
 }
 
-Protocol toIMAP(Json json) {
-  IMAP packet = new IMAP();
-  packet.str = json.body_.to!string;
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  IMAP packet = cast(IMAP)toIMAP(json);
+  IMAP packet = cast(IMAP)to!IMAP(json);
   assert(packet.str == "test");
-}
-
-Protocol toIMAP(ubyte[] encoded) {
-  IMAP packet = new IMAP(cast(string)(encoded));
-  return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  IMAP packet = cast(IMAP)encoded.toIMAP();
+  IMAP packet = cast(IMAP)encoded.to!IMAP();
   assert(packet.str == "test");
 }

@@ -2,16 +2,17 @@ module netload.protocols.ethernet.ethernet;
 
 import netload.core.protocol;
 import netload.protocols;
+import std.conv;
 import vibe.data.json;
 import std.bitmanip;
 
-private Protocol function(ubyte[])[ushort] etherType;
+private Protocol delegate(ubyte[])[ushort] etherType;
 
 static this() {
-  etherType[0x0800] = &toIP;
-  etherType[0x0806] = &toARP;
-  etherType[0x8035] = &toARP;
-  etherType[0x814C] = &toSNMPv3;
+  etherType[0x0800] = delegate(ubyte[] encoded){ return (cast(Protocol)to!IP(encoded)); };
+  etherType[0x0806] = delegate(ubyte[] encoded){ return (cast(Protocol)to!ARP(encoded)); };
+  etherType[0x8035] = delegate(ubyte[] encoded){ return (cast(Protocol)to!ARP(encoded)); };
+  etherType[0x814C] = delegate(ubyte[] encoded){ return (cast(Protocol)to!SNMPv3(encoded)); };
 }
 
 class Ethernet : Protocol {
@@ -23,6 +24,33 @@ class Ethernet : Protocol {
     this(ubyte[6] srcMac, ubyte[6] destMac) {
       _srcMacAddress = srcMac;
       _destMacAddress = destMac;
+    }
+
+    this(Json json) {
+      _prelude = deserializeJson!(ubyte[7])(json.prelude);
+      _srcMacAddress = deserializeJson!(ubyte[6])(json.src_mac_address);
+      _destMacAddress = deserializeJson!(ubyte[6])(json.dest_mac_address);
+      _protocolType = json.protocol_type.get!ushort;
+      _fcs = json.fcs.get!uint;
+      auto packetData = ("data" in json);
+      if (json.data.type != Json.Type.Null && packetData != null)
+        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    }
+
+    this(ubyte[] encoded) {
+      encoded = cast(ubyte[])[1, 0, 1, 0, 1, 0, 1] ~ encoded;
+      _prelude[0..7] = encoded[0..7];
+      _destMacAddress[0..6] = encoded[7..13];
+      _srcMacAddress[0..6] = encoded[13..19];
+      _protocolType = encoded.peek!(ushort)(19);
+      _fcs = encoded.peek!(uint)(encoded.length - 4);
+      if (encoded[21..$].length > 4) {
+        auto func = (_protocolType in etherType);
+        if (func !is null)
+          _data = etherType[_protocolType](encoded[21..($ - 4)]);
+        else
+          _data = to!Raw(encoded[21..($ - 4)]);
+      }
     }
 
     override @property inout string name() { return "Ethernet"; };
@@ -123,19 +151,6 @@ class Ethernet : Protocol {
     uint _fcs = 0;
 }
 
-Protocol toEthernet(Json json) {
-  Ethernet packet = new Ethernet();
-  packet.prelude = deserializeJson!(ubyte[7])(json.prelude);
-  packet.srcMacAddress = deserializeJson!(ubyte[6])(json.src_mac_address);
-  packet.destMacAddress = deserializeJson!(ubyte[6])(json.dest_mac_address);
-  packet.protocolType = json.protocol_type.get!ushort;
-  packet.fcs = json.fcs.get!uint;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
@@ -143,7 +158,7 @@ unittest {
   json.dest_mac_address = serializeToJson([0, 0, 0, 0, 0, 0]);
   json.protocol_type = 0x0800;
   json.fcs = 0;
-  Ethernet packet = cast(Ethernet)toEthernet(json);
+  Ethernet packet = cast(Ethernet)to!Ethernet(json);
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.protocolType == 0x0800);
 }
@@ -164,40 +179,22 @@ unittest  {
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
-  Ethernet packet = cast(Ethernet)toEthernet(json);
+  Ethernet packet = cast(Ethernet)to!Ethernet(json);
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.protocolType == 0x0800);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
-Protocol toEthernet(ubyte[] encoded) {
-  Ethernet packet = new Ethernet();
-  encoded = cast(ubyte[])[1, 0, 1, 0, 1, 0, 1] ~ encoded;
-  packet.prelude[0..7] = encoded[0..7];
-  packet.destMacAddress[0..6] = encoded[7..13];
-  packet.srcMacAddress[0..6] = encoded[13..19];
-  packet.protocolType = encoded.peek!(ushort)(19);
-  packet.fcs = encoded.peek!(uint)(encoded.length - 4);
-  if (encoded[21..$].length > 4) {
-    auto func = (packet.protocolType in etherType);
-    if (func !is null)
-      packet.data = etherType[packet.protocolType](encoded[21..($ - 4)]);
-    else
-      packet.data = toRaw(encoded[21..($ - 4)]);
-  }
-  return packet;
-}
-
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
-  Ethernet packet = cast(Ethernet)encoded.toEthernet();
+  Ethernet packet = cast(Ethernet)encoded.to!Ethernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
 }
 
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [0, 0, 0, 0];
-  Ethernet packet = cast(Ethernet)encoded.toEthernet();
+  Ethernet packet = cast(Ethernet)encoded.to!Ethernet();
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
   assert((cast(IP)packet.data).destIpAddress == 1);

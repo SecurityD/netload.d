@@ -14,6 +14,10 @@ class Raw : Protocol {
       _bytes = array;
     }
 
+    this(Json json) {
+      _bytes = deserializeJson!(ubyte[])(json.bytes);
+    }
+
     override @property inout string name() { return "Raw"; };
     override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
@@ -49,27 +53,15 @@ class Raw : Protocol {
     ubyte[] _bytes;
 }
 
-Protocol toRaw(Json json) {
-  Raw packet = new Raw();
-  packet.bytes = deserializeJson!(ubyte[])(json.bytes);
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.bytes = serializeToJson([0, 1, 2]);
-  Raw packet = cast(Raw)toRaw(json);
+  Raw packet = cast(Raw)to!Raw(json);
   assert(packet.bytes == [0, 1, 2]);
-}
-
-Protocol toRaw(ubyte[] encoded) {
-  Raw packet = new Raw(encoded);
-  packet.bytes = encoded;
-  return packet;
 }
 
 unittest {
   ubyte[] encoded = [0, 1, 2];
-  Raw packet = cast(Raw)encoded.toRaw();
+  Raw packet = cast(Raw)encoded.to!Raw();
   assert(packet.bytes == [0, 1, 2]);
 }

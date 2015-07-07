@@ -13,6 +13,14 @@ class POP3 : Protocol {
       _body = b;
     }
 
+    this(Json json) {
+      _body = json.body_.to!string;
+    }
+
+    this(ubyte[] encoded) {
+      this(cast(string)(encoded));
+    }
+
     override @property inout string name() { return "POP3"; };
     override @property Protocol data() { return null; }
     override @property void data(Protocol p) { }
@@ -51,26 +59,15 @@ class POP3 : Protocol {
     string _body;
 }
 
-Protocol toPOP3(Json json) {
-  POP3 packet = new POP3();
-  packet.str = json.body_.to!string;
-  return packet;
-}
-
 unittest {
   Json json = Json.emptyObject;
   json.body_ = "test";
-  POP3 packet = cast(POP3)toPOP3(json);
+  POP3 packet = cast(POP3)to!POP3(json);
   assert(packet.str == "test");
-}
-
-Protocol toPOP3(ubyte[] encoded) {
-  POP3 packet = new POP3(cast(string)(encoded));
-  return packet;
 }
 
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
-  POP3 packet = cast(POP3)encoded.toPOP3();
+  POP3 packet = cast(POP3)encoded.to!POP3();
   assert(packet.str == "test");
 }
