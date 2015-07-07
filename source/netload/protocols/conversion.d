@@ -64,15 +64,15 @@ shared static this() {
   protocolConversion["Ethernet"] = delegate(Json json){ return (cast(Protocol)to!Ethernet(json)); };
   protocolConversion["Dot11"] = delegate(Json json){ return (cast(Protocol)to!Dot11(json)); };
   protocolConversion["DHCP"] = delegate(Json json){ return (cast(Protocol)to!DHCP(json)); };
-  // protocolConversion["DNS"] = delegate(Json json){ return (cast(Protocol)to!DNS(json)); };
-  // protocolConversion["DNSQuery"] = delegate(Json json){ return (cast(Protocol)to!DNSQuery(json)); };
-  // protocolConversion["DNSResource"] = delegate(Json json){ return (cast(Protocol)to!DNSResource(json)); };
-  // protocolConversion["DNSQR"] = delegate(Json json){ return (cast(Protocol)to!DNSQR(json)); };
-  // protocolConversion["DNSRR"] = delegate(Json json){ return (cast(Protocol)to!DNSRR(json)); };
-  // protocolConversion["DNSSOAResource"] = delegate(Json json){ return (cast(Protocol)to!DNSSOAResource(json)); };
-  // protocolConversion["DNSMXResource"] = delegate(Json json){ return (cast(Protocol)to!DNSMXResource(json)); };
-  // protocolConversion["DNSAResource"] = delegate(Json json){ return (cast(Protocol)to!DNSAResource(json)); };
-  // protocolConversion["DNSPTRResource"] = delegate(Json json){ return (cast(Protocol)to!DNSPTRResource(json)); };
+  protocolConversion["DNS"] = delegate(Json json){ return (cast(Protocol)to!DNS(json)); };
+  protocolConversion["DNSQuery"] = delegate(Json json){ return (cast(Protocol)to!DNSQuery(json)); };
+  protocolConversion["DNSResource"] = delegate(Json json){ return (cast(Protocol)to!DNSResource(json)); };
+  protocolConversion["DNSQR"] = delegate(Json json){ return (cast(Protocol)to!DNSQR(json)); };
+  protocolConversion["DNSRR"] = delegate(Json json){ return (cast(Protocol)to!DNSRR(json)); };
+  protocolConversion["DNSSOAResource"] = delegate(Json json){ return (cast(Protocol)to!DNSSOAResource(json)); };
+  protocolConversion["DNSMXResource"] = delegate(Json json){ return (cast(Protocol)to!DNSMXResource(json)); };
+  protocolConversion["DNSAResource"] = delegate(Json json){ return (cast(Protocol)to!DNSAResource(json)); };
+  protocolConversion["DNSPTRResource"] = delegate(Json json){ return (cast(Protocol)to!DNSPTRResource(json)); };
 }
 
 unittest {
