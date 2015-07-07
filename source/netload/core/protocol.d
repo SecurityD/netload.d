@@ -17,6 +17,7 @@ interface Protocol {
       }
     }
 
+
     unittest {
       netload.protocols.udp.UDP packet = new netload.protocols.udp.UDP(80, 80);
       netload.protocols.ip.IP ip = new netload.protocols.ip.IP();
@@ -29,6 +30,24 @@ interface Protocol {
       } catch(Exception e) {
         assert(true);
       }
+    }
+
+    final ProtocolType add(ProtocolType : Protocol)() {
+      if (data is null) {
+        auto newLayer = new ProtocolType;
+        data = newLayer;
+        return newLayer;
+      } else
+        return data.add!ProtocolType;
+    }
+
+    unittest {
+      import netload.protocols;
+      auto packet = new IP;
+      packet
+        .add!TCP
+        .add!HTTP;
+      assert(packet.layer!HTTP);
     }
 
     @property inout string name();
