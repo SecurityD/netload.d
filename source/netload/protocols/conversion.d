@@ -21,6 +21,12 @@ import netload.protocols.snmp;
 import netload.protocols.tcp;
 import netload.protocols.udp;
 
+Protocol toProtocol(Json json) {
+  if (json.name.type != Json.Type.Null && json.name != null)
+    return protocolConversion[json.name.to!string](json);
+  throw new Exception("Invalid Json.");
+}
+
 Protocol function(Json)[string] protocolConversion;
 
 shared static this() {
