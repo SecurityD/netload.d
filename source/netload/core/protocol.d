@@ -1,6 +1,8 @@
 module netload.core.protocol;
 import vibe.data.json;
 import std.string;
+import std.file;
+import netload.protocols;
 
 interface Protocol {
   public:
@@ -54,4 +56,14 @@ interface Protocol {
     Json toJson() const;
     ubyte[] toBytes() const;
     string toString() const;
+}
+
+void write(Protocol packet, string filename) {
+  std.file.write(filename, packet.toJson.toString);
+}
+
+Protocol read(string filename) {
+  string data = cast(string)std.file.read(filename);
+  Json json = parseJsonString(data);
+  return toProtocol(json);
 }
