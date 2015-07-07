@@ -4,11 +4,27 @@ import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
 
-alias ICMP = TemplateICMP!Any;
+enum ICMPType {
+  ANY,
+  NONE,
+  ECHO_REQUEST,
+  ECHO_REPLY,
+  INFORMATION_REQUEST,
+  INFORMATION_REPLY,
+  TIMESTAMP_REQUEST,
+  TIMESTAMP_REPLY,
+  DEST_UNREACH,
+  TIME_EXCEED,
+  SOURCE_QUENCH,
+  REDIRECT,
+  PARAM_PROBLEM,
+  ADVERT,
+  SOLLICITATION
+};
 
-enum Any;
+alias ICMP = ICMPBase!(ICMPType.ANY);
 
-class ICMPBase : Protocol {
+class ICMPBase(ICMPType __type__) : Protocol {
   public:
     this() {}
 
@@ -101,6 +117,12 @@ class ICMPBase : Protocol {
     @property {
       inout ushort checksum() { return _checksum; }
       void checksum(ushort checksum) { _checksum = checksum; }
+      static if (__type__ == ICMPType.ANY) {
+        inout ubyte type() { return _type; }
+        void type(ubyte type) { _type = type; }
+        inout ubyte code() { return _code; }
+        void code(ubyte code) { _code = code; }
+      }
     }
 
   protected:
@@ -108,22 +130,6 @@ class ICMPBase : Protocol {
     ubyte _type = 0;
     ubyte _code = 0;
     ushort _checksum = 0;
-}
-
-class TemplateICMP(T:Any) : ICMPBase {
-  public:
-    this() {}
-
-    this(ubyte type, ubyte code) {
-      super(type, code);
-    }
-
-    @property {
-      inout ubyte type() { return _type; }
-      void type(ubyte type) { _type = type; }
-      inout ubyte code() { return _code; }
-      void code(ubyte code) { _code = code; }
-    }
 }
 
 Protocol toICMP(Json json) {

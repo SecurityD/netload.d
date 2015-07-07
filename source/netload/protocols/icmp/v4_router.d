@@ -5,26 +5,30 @@ import netload.protocols.icmp.common;
 import vibe.data.json;
 import std.bitmanip;
 
-alias ICMPv4RouterAdvert = TemplateRouter!Advert;
-alias ICMPv4RouterSollicitation = TemplateRouter!Sollicitation;
+alias ICMPv4RouterAdvert = ICMPv4Router!(ICMPType.ADVERT);
+alias ICMPv4RouterSollicitation = ICMPv4Router!(ICMPType.SOLLICITATION);
 
-enum Advert;
-enum Sollicitation;
-
-class TemplateRouter(T:Advert) : ICMPBase {
+class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
-    this() {
-      super(9, 0);
-      _routerAddr = new ubyte[4][_numAddr];
-      _prefAddr = new ubyte[4][_numAddr];
+    static if (__type__ == ICMPType.SOLLICITATION) {
+      this() {
+        super(10, 0);
+      }
     }
+    else static if (__type__ == ICMPType.ADVERT) {
+      this() {
+        super(9, 0);
+        _routerAddr = new ubyte[4][_numAddr];
+        _prefAddr = new ubyte[4][_numAddr];
+      }
 
-    this(ubyte numAddr, ushort life = 0) {
-      super(9, 0);
-      _numAddr = numAddr;
-      _life = life;
-      _routerAddr = new ubyte[4][_numAddr];
-      _prefAddr = new ubyte[4][_numAddr];
+      this(ubyte numAddr, ushort life = 0) {
+        super(9, 0);
+        _numAddr = numAddr;
+        _life = life;
+        _routerAddr = new ubyte[4][_numAddr];
+        _prefAddr = new ubyte[4][_numAddr];
+      }
     }
 
     override Json toJson() const {
@@ -83,11 +87,13 @@ class TemplateRouter(T:Advert) : ICMPBase {
       packet.write!ubyte(_type, 0);
       packet.write!ubyte(_code, 1);
       packet.write!ushort(_checksum, 2);
-      packet.write!ubyte(_numAddr, 4);
-      packet.write!ubyte(_addrEntrySize, 5);
-      packet.write!ushort(_life, 6);
-      for (ubyte i = 0; i < _numAddr; i++) {
-        packet ~= _routerAddr[i] ~ _prefAddr[i];
+      static if (__type__ == ICMPType.ADVERT) {
+        packet.write!ubyte(_numAddr, 4);
+        packet.write!ubyte(_addrEntrySize, 5);
+        packet.write!ushort(_life, 6);
+        for (ubyte i = 0; i < _numAddr; i++) {
+          packet ~= _routerAddr[i] ~ _prefAddr[i];
+        }
       }
       if (_data !is null)
         packet ~= _data.toBytes;
@@ -107,6 +113,21 @@ class TemplateRouter(T:Advert) : ICMPBase {
       packet.data = new Raw([42, 21, 84]);
 
       assert(packet.toBytes == [9, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
+    }
+
+    unittest {
+      ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
+      assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
     @property {
@@ -213,80 +234,48 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
-class TemplateRouter(T:Sollicitation) : ICMPBase {
-  public:
-    this() {
-      super(10, 0);
-    }
-
-    override ubyte[] toBytes() const {
-      ubyte[] packet = new ubyte[8];
-      packet.write!ubyte(_type, 0);
-      packet.write!ubyte(_code, 1);
-      packet.write!ushort(_checksum, 2);
-      if (_data !is null)
-        packet ~= _data.toBytes;
-      return packet;
-    }
-
-    unittest {
-      ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
-      assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0]);
-    }
-
-    unittest {
-      import netload.protocols.raw;
-
-      ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
-
-      packet.data = new Raw([42, 21, 84]);
-
-      assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
-    }
-}
-
-Protocol toICMPv4RouterSollicitation(Json json) {
-  ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
-  packet.checksum = json.checksum.to!ushort;
-  auto data = ("data" in json);
-  if (json.data.type != Json.Type.Null && data != null)
-    packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
-  return packet;
-}
-
-unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
-  assert(packet.checksum == 0);
-}
-
-unittest  {
-  import netload.protocols.raw;
-
-  Json json = Json.emptyObject;
-
-  json.name = "ICMP";
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
-
-  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
-  assert(packet.checksum == 0);
-  assert((cast(Raw)packet.data).bytes == [42,21,84]);
-}
-
-Protocol toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
-  ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
-  encodedPacket.read!ushort();
-  packet.checksum = encodedPacket.read!ushort();
-  return packet;
-}
-
-unittest {
-  ubyte[] encodedPacket = [10, 0, 0, 0, 0, 0, 0, 0];
-  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)encodedPacket.toICMPv4RouterSollicitation;
-  assert(packet.checksum == 0);
-}
+// Protocol toICMPv4RouterSollicitation(Json json) {
+//   ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
+//   packet.checksum = json.checksum.to!ushort;
+//   auto data = ("data" in json);
+//   if (json.data.type != Json.Type.Null && data != null)
+//     packet.data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
+//   return packet;
+// }
+//
+// unittest {
+//   Json json = Json.emptyObject;
+//   json.checksum = 0;
+//   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
+//   assert(packet.checksum == 0);
+// }
+//
+// unittest  {
+//   import netload.protocols.raw;
+//
+//   Json json = Json.emptyObject;
+//
+//   json.name = "ICMP";
+//   json.checksum = 0;
+//
+//   json.data = Json.emptyObject;
+//   json.data.name = "Raw";
+//   json.data.bytes = serializeToJson([42,21,84]);
+//
+//   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)toICMPv4RouterSollicitation(json);
+//   assert(packet.checksum == 0);
+//   assert((cast(Raw)packet.data).bytes == [42,21,84]);
+// }
+//
+// Protocol toICMPv4RouterSollicitation(ubyte[] encodedPacket) {
+//   ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
+//   encodedPacket.read!ushort();
+//   packet.checksum = encodedPacket.read!ushort();
+//   return packet;
+// }
+//
+// unittest {
+//   ubyte[] encodedPacket = [10, 0, 0, 0, 0, 0, 0, 0];
+//   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)encodedPacket.toICMPv4RouterSollicitation;
+//   assert(packet.checksum == 0);
+// }

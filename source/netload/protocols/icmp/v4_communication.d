@@ -5,28 +5,32 @@ import netload.protocols.icmp.common;
 import vibe.data.json;
 import std.bitmanip;
 
-alias ICMPv4Communication = TemplateICMPv4!Communication;
-alias ICMPv4EchoRequest = TemplateCommunication!EchoRequest;
-alias ICMPv4EchoReply = TemplateCommunication!EchoReply;
-alias ICMPv4TimestampRequest = TemplateTimestamp!Request;
-alias ICMPv4TimestampReply = TemplateTimestamp!Reply;
-alias ICMPv4InformationRequest = TemplateCommunication!InformationRequest;
-alias ICMPv4InformationReply = TemplateCommunication!InformationReply;
+alias ICMPv4Communication = ICMPv4CommunicationBase!(ICMPType.ANY);
+alias ICMPv4EchoRequest = ICMPv4CommunicationBase!(ICMPType.ECHO_REQUEST);
+alias ICMPv4EchoReply = ICMPv4CommunicationBase!(ICMPType.ECHO_REPLY);
+alias ICMPv4InformationRequest = ICMPv4CommunicationBase!(ICMPType.INFORMATION_REQUEST);
+alias ICMPv4InformationReply = ICMPv4CommunicationBase!(ICMPType.INFORMATION_REPLY);
+alias ICMPv4Timestamp = ICMPv4TimestampBase!(ICMPType.ANY);
+alias ICMPv4TimestampRequest = ICMPv4TimestampBase!(ICMPType.TIMESTAMP_REQUEST);
+alias ICMPv4TimestampReply = ICMPv4TimestampBase!(ICMPType.TIMESTAMP_REPLY);
 
-enum EchoRequest;
-enum EchoReply;
-enum Request;
-enum Reply;
-enum InformationRequest;
-enum InformationReply;
-enum Communication;
-
-class CommunicationBase : ICMPBase {
+class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
-    this() {}
-
     this(ubyte type) {
       super(type, 0);
+    }
+
+    this() {
+      static if (__type__ == ICMPType.ANY)
+        super();
+      else static if (__type__ == ICMPType.ECHO_REQUEST)
+        this(8);
+      else static if (__type__ == ICMPType.ECHO_REPLY)
+        this(0);
+      else static if (__type__ == ICMPType.INFORMATION_REQUEST)
+        this(15);
+      else static if (__type__ == ICMPType.INFORMATION_REPLY)
+        this(16);
     }
 
     override Json toJson() const {
@@ -107,27 +111,15 @@ class CommunicationBase : ICMPBase {
       void id(ushort id) { _id = id; }
       inout ushort seq() { return _seq; }
       void seq(ushort seq) { _seq = seq; }
+      static if (__type__ == ICMPType.ANY) {
+        inout ubyte type() { return _type; }
+        void type(ubyte type) { _type = type; }
+      }
     }
 
   protected:
     ushort _id = 0;
     ushort _seq = 0;
-}
-
-class TemplateICMPv4(Communication) : CommunicationBase {
-  public:
-    this() {
-      super();
-    }
-
-    this(ubyte type) {
-      super(type);
-    }
-
-    @property {
-      inout ubyte type() { return _type; }
-      void type(ubyte type) { _type = type; }
-    }
 }
 
 Protocol toICMPv4Communication(Json json) {
@@ -195,13 +187,6 @@ unittest {
   assert(packet.seq == 2);
 }
 
-class TemplateCommunication(T:EchoRequest) : ICMPv4Communication {
-  public:
-    this() {
-      super(8);
-    }
-}
-
 Protocol toICMPv4EchoRequest(Json json) {
   ICMPv4EchoRequest packet = new ICMPv4EchoRequest();
   packet.checksum = json.checksum.to!ushort;
@@ -260,13 +245,6 @@ unittest {
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
-}
-
-class TemplateCommunication(T:EchoReply) : ICMPv4Communication {
-  public:
-    this() {
-      super(0);
-    }
 }
 
 Protocol toICMPv4EchoReply(Json json) {
@@ -329,12 +307,19 @@ unittest {
   assert(packet.seq == 2);
 }
 
-class ICMPv4Timestamp : ICMPv4Communication {
+class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType.NONE) {
   public:
-    this() {}
+    this() {
+      super();
+    }
 
     this(ubyte type, uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
-      super(type);
+      static if (__type__ == ICMPType.ANY)
+        super(type);
+      else static if (__type__ == ICMPType.TIMESTAMP_REQUEST)
+        super(13);
+      else static if (__type__ == ICMPType.TIMESTAMP_REPLY)
+        super(14);
       _originTime = originTime;
       _receiveTime = receiveTime;
       _transmitTime = transmitTime;
@@ -430,6 +415,10 @@ class ICMPv4Timestamp : ICMPv4Communication {
       void receiveTime(uint receiveTime) { _receiveTime = receiveTime; }
       inout uint transmitTime() { return _transmitTime; }
       void transmitTime(uint transmitTime) { _transmitTime = transmitTime; }
+      static if (__type__ == ICMPType.ANY) {
+        inout ubyte type() { return _type; }
+        void type(ubyte type) { _type = type; }
+      }
     }
 
   private:
@@ -518,13 +507,6 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-class TemplateTimestamp(T:Request) : ICMPv4Timestamp {
-  public:
-    this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
-      super(13, originTime, receiveTime, transmitTime);
-    }
-}
-
 Protocol toICMPv4TimestampRequest(Json json) {
   ICMPv4TimestampRequest packet = new ICMPv4TimestampRequest(json.packetType.to!ubyte);
   packet.id = json.id.to!ushort;
@@ -599,13 +581,6 @@ unittest {
   assert(packet.originTime == 21);
   assert(packet.receiveTime == 42);
   assert(packet.transmitTime == 84);
-}
-
-class TemplateTimestamp(T:Reply) : ICMPv4Timestamp {
-  public:
-    this(uint originTime = 0, uint receiveTime = 0, uint transmitTime = 0) {
-      super(14, originTime, receiveTime, transmitTime);
-    }
 }
 
 Protocol toICMPv4TimestampReply(Json json) {
@@ -684,13 +659,6 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
-class TemplateCommunication(T:InformationRequest) : ICMPv4Communication {
-  public:
-    this() {
-      super(15);
-    }
-}
-
 Protocol toICMPv4InformationRequest(Json json) {
   ICMPv4InformationRequest packet = new ICMPv4InformationRequest();
   packet.checksum = json.checksum.to!ushort;
@@ -749,13 +717,6 @@ unittest {
   assert(packet.checksum == 0);
   assert(packet.id == 1);
   assert(packet.seq == 2);
-}
-
-class TemplateCommunication(T:InformationReply) : ICMPv4Communication {
-  public:
-    this() {
-      super(16);
-    }
 }
 
 Protocol toICMPv4InformationReply(Json json) {

@@ -6,27 +6,157 @@ import netload.protocols.ip;
 import vibe.data.json;
 import std.bitmanip;
 
-alias ICMPv4Error = TemplateICMPv4!Error;
-alias ICMPv4DestUnreach = TemplateError!DestUnreach;
-alias ICMPv4TimeExceed = TemplateError!TimeExceed;
-alias ICMPv4ParamProblem = TemplateError!ParamProblem;
-alias ICMPv4SourceQuench = TemplateError!SourceQuench;
-alias ICMPv4Redirect = TemplateError!Redirect;
+alias ICMPv4Error = ICMPv4ErrorBase!(ICMPType.ANY);
+alias ICMPv4DestUnreach = ICMPv4ErrorBase!(ICMPType.DEST_UNREACH);
+alias ICMPv4TimeExceed = ICMPv4ErrorBase!(ICMPType.TIME_EXCEED);
+alias ICMPv4SourceQuench = ICMPv4ErrorBase!(ICMPType.SOURCE_QUENCH);
+alias ICMPv4Redirect = ICMPv4ErrorBase!(ICMPType.REDIRECT);
+alias ICMPv4ParamProblem = ICMPv4ErrorBase!(ICMPType.PARAM_PROBLEM);
 
-enum Error;
-enum DestUnreach;
-enum TimeExceed;
-enum ParamProblem;
-enum SourceQuench;
-enum Redirect;
-
-class ErrorBase : ICMPBase {
+class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
-    this() {}
+    static if (__type__ == ICMPType.ANY) {
+      this() {
+        super();
+      }
 
-    this(ubyte type, ubyte code = 0, IP data = null) {
-      super(type, code);
-      _data = data;
+      this(ubyte type, ubyte code = 0, IP data = null) {
+        super(type, code);
+        _data = data;
+      }
+    }
+    else static if (__type__ == ICMPType.DEST_UNREACH) {
+      this() {
+        super(3, 0);
+      }
+
+      this(ubyte code, IP data) {
+        super(3, code);
+        _data = data;
+      }
+    }
+    else static if (__type__ == ICMPType.TIME_EXCEED) {
+      this() {
+        super(11, 0);
+      }
+
+      this(ubyte code, IP data) {
+        super(11, code);
+        _data = data;
+      }
+    }
+    else static if (__type__ == ICMPType.SOURCE_QUENCH) {
+      this() {
+        super(4, 0);
+      }
+
+      this(ubyte code, IP data) {
+        super(4, code);
+        _data = data;
+      }
+    }
+    else static if (__type__ == ICMPType.REDIRECT) {
+      this() {
+        super(5, 0);
+      }
+
+      this(ubyte code, uint gateway, IP data) {
+        super(5, code);
+        _data = data;
+        _gateway = gateway;
+      }
+    }
+    else static if (__type__ == ICMPType.PARAM_PROBLEM) {
+      this() {
+        super(12, 0);
+      }
+
+      this(ubyte code, ubyte ptr, IP data) {
+        super(12, code);
+        _data = data;
+        _ptr = ptr;
+      }
+    }
+
+    static if (__type__ == ICMPType.REDIRECT) {
+      override Json toJson() const {
+        Json packet = super.toJson();
+        packet.gateway = _gateway;
+        return packet;
+      }
+    }
+    else static if (__type__ == ICMPType.PARAM_PROBLEM) {
+      override Json toJson() const {
+        Json packet = super.toJson();
+        packet.ptr = _ptr;
+        return packet;
+      }
+    }
+
+    unittest {
+      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
+      assert(packet.toJson.packetType == 5);
+      assert(packet.toJson.code == 2);
+      assert(packet.toJson.checksum == 0);
+      assert(packet.toJson.gateway == 42);
+    }
+
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4Redirect icmp = new ICMPv4Redirect(2, 42, null);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 5);
+      assert(json.code == 2);
+      assert(json.checksum == 0);
+      assert(json.gateway == 42);
+
+      json = json.data;
+    }
+
+    unittest {
+      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
+      assert(packet.toJson.packetType == 12);
+      assert(packet.toJson.code == 2);
+      assert(packet.toJson.checksum == 0);
+      assert(packet.toJson.ptr == 1);
+    }
+
+    unittest {
+      import netload.protocols.ethernet;
+      import netload.protocols.raw;
+      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+
+      ICMPv4ParamProblem icmp = new ICMPv4ParamProblem(2, 1, null);
+      packet.data = icmp;
+
+      packet.data.data = new Raw([42, 21, 84]);
+
+      Json json = packet.toJson;
+      assert(json.name == "Ethernet");
+      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
+      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+
+      json = json.data;
+      assert(json.name == "ICMP");
+      assert(json.packetType == 12);
+      assert(json.code == 2);
+      assert(json.checksum == 0);
+      assert(json.ptr == 1);
+
+      json = json.data;
     }
 
     override ubyte[] toBytes() const {
@@ -34,6 +164,10 @@ class ErrorBase : ICMPBase {
       packet.write!ubyte(_type, 0);
       packet.write!ubyte(_code, 1);
       packet.write!ushort(_checksum, 2);
+      static if (__type__ == ICMPType.REDIRECT)
+        packet.write!uint(_gateway, 4);
+      static if (__type__ == ICMPType.PARAM_PROBLEM)
+        packet.write!ubyte(_ptr, 4);
       if (_data !is null)
         packet ~= _data.toBytes;
       return packet;
@@ -53,24 +187,64 @@ class ErrorBase : ICMPBase {
 
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
-}
 
-class TemplateICMPv4(T:Error) : ErrorBase {
-  public:
-    this() {
-      super();
+    unittest {
+      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
+      assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42]);
     }
 
-    this(ubyte type, ubyte code = 0, IP data = null) {
-      super(type, code, data);
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42] ~ [42, 21, 84]);
     }
 
-  @property {
-    inout ubyte type() { return _type; }
-    void type(ubyte type) { _type = type; }
-    inout ubyte code() { return _code; }
-    void code(ubyte code) { _code = code; }
-  }
+    unittest {
+      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
+      assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0]);
+    }
+
+    unittest {
+      import netload.protocols.raw;
+
+      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
+
+      packet.data = new Raw([42, 21, 84]);
+
+      assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0] ~ [42, 21, 84]);
+    }
+
+    @property {
+      inout ubyte code() { return _code; }
+      void code(ubyte code) { _code = code; }
+      static if (__type__ == ICMPType.ANY) {
+        inout ubyte type() { return _type; }
+        void type(ubyte type) { _type = type; }
+      }
+    }
+
+    static if (__type__ == ICMPType.REDIRECT) {
+      @property {
+        inout uint gateway() { return _gateway; }
+        void gateway(uint gateway) { _gateway = gateway; }
+      }
+
+      private:
+        uint _gateway = 0;
+    }
+    else static if (__type__ == ICMPType.PARAM_PROBLEM) {
+      @property {
+        inout ubyte ptr() { return _ptr; }
+        void ptr(ubyte ptr) { _ptr = ptr; }
+      }
+
+      private:
+        ubyte _ptr = 0;
+    }
 }
 
 Protocol toICMPv4Error(Json json) {
@@ -133,22 +307,6 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class TemplateError(T:DestUnreach) : ErrorBase {
-  public:
-    this() {
-      super(3);
-    }
-
-    this(ubyte code, IP data) {
-      super(3, code, data);
-    }
-
-  @property {
-    inout ubyte code() { return _code; }
-    void code(ubyte code) { _code = code; }
-  }
-}
-
 Protocol toICMPv4DestUnreach(Json json) {
   ICMPv4DestUnreach packet = new ICMPv4DestUnreach();
   packet.code = json.code.to!ubyte;
@@ -203,22 +361,6 @@ unittest {
   assert(packet.checksum == 0);
 }
 
-class TemplateError(T:TimeExceed) : ErrorBase {
-  public:
-    this() {
-      super(11);
-    }
-
-    this(ubyte code, IP data) {
-      super(11, code, data);
-    }
-
-  @property {
-    inout ubyte code() { return _code; }
-    void code(ubyte code) { _code = code; }
-  }
-}
-
 Protocol toICMPv4TimeExceed(Json json) {
   ICMPv4TimeExceed packet = new ICMPv4TimeExceed();
   packet.code = json.code.to!ubyte;
@@ -271,88 +413,6 @@ unittest {
   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)encodedPacket.toICMPv4TimeExceed;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-class TemplateError(T:ParamProblem) : ErrorBase {
-  public:
-    this() {
-      super(12);
-    }
-
-    this(ubyte code, ubyte ptr, IP data) {
-      super(12, code, data);
-      _ptr = ptr;
-    }
-
-    override Json toJson() const {
-      Json packet = super.toJson();
-      packet.ptr = _ptr;
-      return packet;
-    }
-
-    unittest {
-      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
-      assert(packet.toJson.packetType == 12);
-      assert(packet.toJson.code == 2);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.ptr == 1);
-    }
-
-    unittest {
-      import netload.protocols.ethernet;
-      import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
-
-      ICMPv4ParamProblem icmp = new ICMPv4ParamProblem(2, 1, null);
-      packet.data = icmp;
-
-      packet.data.data = new Raw([42, 21, 84]);
-
-      Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
-
-      json = json.data;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 12);
-      assert(json.code == 2);
-      assert(json.checksum == 0);
-      assert(json.ptr == 1);
-
-      json = json.data;
-    }
-
-    override ubyte[] toBytes() const {
-      ubyte[] packet = super.toBytes();
-      packet.write!ubyte(_ptr, 4);
-      return packet;
-    }
-
-    unittest {
-      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
-      assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0]);
-    }
-
-    unittest {
-      import netload.protocols.raw;
-
-      ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
-
-      packet.data = new Raw([42, 21, 84]);
-
-      assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0] ~ [42, 21, 84]);
-    }
-
-    @property {
-      inout ubyte code() { return _code; }
-      void code(ubyte code) { _code = code; }
-      inout ubyte ptr() { return _ptr; }
-      void ptr(ubyte ptr) { _ptr = ptr; }
-    }
-
-  private:
-    ubyte _ptr = 0;
 }
 
 Protocol toICMPv4ParamProblem(Json json) {
@@ -417,22 +477,6 @@ unittest {
   assert(packet.ptr == 1);
 }
 
-class TemplateError(T:SourceQuench) : ErrorBase {
-  public:
-    this() {
-      super(4);
-    }
-
-    this(ubyte code, IP data) {
-      super(4, code, data);
-    }
-
-  @property {
-    inout ubyte code() { return _code; }
-    void code(ubyte code) { _code = code; }
-  }
-}
-
 Protocol toICMPv4SourceQuench(Json json) {
   ICMPv4SourceQuench packet = new ICMPv4SourceQuench();
   packet.code = json.code.to!ubyte;
@@ -485,88 +529,6 @@ unittest {
   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)encodedPacket.toICMPv4SourceQuench;
   assert(packet.code == 2);
   assert(packet.checksum == 0);
-}
-
-class TemplateError(T:Redirect) : ErrorBase {
-  public:
-    this() {
-      super(5);
-    }
-
-    this(ubyte code, uint gateway, IP data) {
-      super(5, code, data);
-      _gateway = gateway;
-    }
-
-    override Json toJson() const {
-      Json packet = super.toJson();
-      packet.gateway = _gateway;
-      return packet;
-    }
-
-    unittest {
-      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
-      assert(packet.toJson.packetType == 5);
-      assert(packet.toJson.code == 2);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.gateway == 42);
-    }
-
-    unittest {
-      import netload.protocols.ethernet;
-      import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
-
-      ICMPv4Redirect icmp = new ICMPv4Redirect(2, 42, null);
-      packet.data = icmp;
-
-      packet.data.data = new Raw([42, 21, 84]);
-
-      Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
-
-      json = json.data;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 5);
-      assert(json.code == 2);
-      assert(json.checksum == 0);
-      assert(json.gateway == 42);
-
-      json = json.data;
-    }
-
-    override ubyte[] toBytes() const {
-      ubyte[] packet = super.toBytes();
-      packet.write!uint(_gateway, 4);
-      return packet;
-    }
-
-    unittest {
-      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
-      assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42]);
-    }
-
-    unittest {
-      import netload.protocols.raw;
-
-      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
-
-      packet.data = new Raw([42, 21, 84]);
-
-      assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42] ~ [42, 21, 84]);
-    }
-
-    @property {
-      inout ubyte code() { return _code; }
-      void code(ubyte code) { _code = code; }
-      inout uint gateway() { return _gateway; }
-      void gateway(uint gateway) { _gateway = gateway; }
-    }
-
-  private:
-    uint _gateway = 0;
 }
 
 Protocol toICMPv4Redirect(Json json) {
