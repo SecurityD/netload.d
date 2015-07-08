@@ -159,21 +159,12 @@ class DNSBase(DNSType __type__) : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNS packet = new DNS(10, true);
 
-      DNS dns = new DNS(10, true);
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNS");
       assert(json.id == 10);
       assert(json.truncation == true);
@@ -690,21 +681,12 @@ class DNSQR : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSQR packet = new DNSQR("google.fr", QType.A, QClass.IN);
 
-      DNSQR dns = new DNSQR("google.fr", QType.A, QClass.IN);
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSQR");
       assert(json.qname == "google.fr");
       assert(json.qtype == 1);
@@ -862,21 +844,12 @@ class DNSRR : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
 
-      DNSRR dns = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSRR");
       assert(json.rname == "google.fr");
       assert(json.rtype == 1);
@@ -1066,21 +1039,12 @@ class DNSSOAResource  : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSSOAResource packet = new DNSSOAResource();
 
-      DNSSOAResource dns = new DNSSOAResource();
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSSOAResource");
       assert(json.primary == ".");
       assert(json.admin == ".");
@@ -1264,21 +1228,12 @@ class DNSMXResource : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSMXResource packet = new DNSMXResource(2, "google.fr");
 
-      DNSMXResource dns = new DNSMXResource(2, "google.fr");
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSMXResource");
       assert(json.mxname == "google.fr");
       assert(json.pref == 2);
@@ -1401,21 +1356,12 @@ class DNSAResource : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSAResource packet = new DNSAResource();
 
-      DNSAResource dns = new DNSAResource();
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSAResource");
       assert(json.ip == "127.0.0.1");
 
@@ -1527,21 +1473,12 @@ class DNSPTRResource : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DNSPTRResource packet = new DNSPTRResource("google.fr");
 
-      DNSPTRResource dns = new DNSPTRResource("google.fr");
-      packet.data = dns;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DNSPTRResource");
       assert(json.ptrname == "google.fr");
 

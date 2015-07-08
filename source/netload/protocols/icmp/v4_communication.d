@@ -62,21 +62,12 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      ICMPv4Communication packet = new ICMPv4Communication(8);
 
-      ICMPv4Communication icmp = new ICMPv4Communication(8);
-      packet.data = icmp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "ICMP");
       assert(json.packetType == 8);
       assert(json.code == 0);
@@ -312,21 +303,12 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
 
-      ICMPv4Timestamp icmp = new ICMPv4Timestamp(14, 21, 42, 84);
-      packet.data = icmp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "ICMP");
       assert(json.packetType == 14);
       assert(json.code == 0);

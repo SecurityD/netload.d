@@ -132,34 +132,25 @@ class NTPv4 : NTPCommon, Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      auto packet = new NTPv4;
+      packet.leapIndicator = 0x00;
+      packet.versionNumber = 0x03;
+      packet.mode = 0x03;
+      packet.stratum = 0x03;
+      packet.poll = 0x06;
+      packet.precision = 0xec;
+      packet.rootDelay = 0x03_53;
+      packet.rootDispersion = 0x03_6c;
+      packet.referenceClockIdentifier = 0x5f_51_ad_08;
+      packet.referenceTimestamp = 0xd9_39_0d_b2_a4_63_7a_91;
+      packet.originateTimestamp = 0xd9_39_0d_73_37_64_28_6d;
+      packet.receiveTimestamp = 0xd9_39_0d_73_39_4d_93_98;
+      packet.transmitTimestamp = 0xd9_39_0d_b3_58_3e_91_e8;
 
-      auto ntp = new NTPv4;
-      ntp.leapIndicator = 0x00;
-      ntp.versionNumber = 0x03;
-      ntp.mode = 0x03;
-      ntp.stratum = 0x03;
-      ntp.poll = 0x06;
-      ntp.precision = 0xec;
-      ntp.rootDelay = 0x03_53;
-      ntp.rootDispersion = 0x03_6c;
-      ntp.referenceClockIdentifier = 0x5f_51_ad_08;
-      ntp.referenceTimestamp = 0xd9_39_0d_b2_a4_63_7a_91;
-      ntp.originateTimestamp = 0xd9_39_0d_73_37_64_28_6d;
-      ntp.receiveTimestamp = 0xd9_39_0d_73_39_4d_93_98;
-      ntp.transmitTimestamp = 0xd9_39_0d_b3_58_3e_91_e8;
-      packet.data = ntp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "NTPv4");
       assert(json.leap_indicator == 0x00);
       assert(json.version_number == 0x03);

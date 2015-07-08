@@ -86,25 +86,17 @@ class ARP : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
 
-      ARP arp = new ARP(1, 1, 6, 4);
-      arp.senderHwAddr = [128, 128, 128, 128, 128, 128];
-      arp.targetHwAddr = [0, 0, 0, 0, 0, 0];
-      arp.senderProtocolAddr = [127, 0, 0, 1];
-      arp.targetProtocolAddr = [10, 14, 255, 255];
-      packet.data = arp;
+      ARP packet = new ARP(1, 1, 6, 4);
+      packet.senderHwAddr = [128, 128, 128, 128, 128, 128];
+      packet.targetHwAddr = [0, 0, 0, 0, 0, 0];
+      packet.senderProtocolAddr = [127, 0, 0, 1];
+      packet.targetProtocolAddr = [10, 14, 255, 255];
 
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "ARP");
       assert(json.hwType == 1);
       assert(json.protocolType == 1);

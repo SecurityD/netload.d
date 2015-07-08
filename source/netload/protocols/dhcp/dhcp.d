@@ -120,21 +120,12 @@ class DHCP : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
 
-      DHCP dhcp = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
-      packet.data = dhcp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "DHCP");
       assert(json.op == 2);
       assert(json.htype == 1);

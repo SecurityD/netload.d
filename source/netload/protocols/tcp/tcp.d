@@ -120,21 +120,12 @@ class TCP : Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      TCP packet = new TCP(8000, 7000);
 
-      TCP tcp = new TCP(8000, 7000);
-      packet.data = tcp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "TCP");
       assert(json.src_port == 8000);
       assert(json.dest_port == 7000);
