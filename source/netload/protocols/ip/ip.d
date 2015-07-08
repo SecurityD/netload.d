@@ -118,14 +118,11 @@ class IP : Protocol {
       }
 
       unittest {
-        import netload.protocols.ethernet;
         import netload.protocols.raw;
-        Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
 
-        IP ip = new IP();
-        packet.data = ip;
+        IP packet = new IP();
 
-        packet.data.data = new Raw([42, 21, 84]);
+        packet.data = new Raw([42, 21, 84]);
       }
 
       override ubyte[] toBytes() const {

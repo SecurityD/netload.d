@@ -99,32 +99,24 @@ class NTPv0 : NTPCommon, Protocol {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
 
-      auto ntp = new NTPv0;
-      ntp.leapIndicator = 2u;
-      ntp.status = 4u;
-      ntp.type = 50u;
-      ntp.precision = 100u;
-      ntp.estimatedError = 150u;
-      ntp.estimatedDriftRate = 200u;
-      ntp.referenceClockIdentifier = 250u;
-      ntp.referenceTimestamp = 300u;
-      ntp.originateTimestamp = 350u;
-      ntp.receiveTimestamp = 400u;
-      ntp.transmitTimestamp = 450u;
-      packet.data = ntp;
+      auto packet = new NTPv0;
+      packet.leapIndicator = 2u;
+      packet.status = 4u;
+      packet.type = 50u;
+      packet.precision = 100u;
+      packet.estimatedError = 150u;
+      packet.estimatedDriftRate = 200u;
+      packet.referenceClockIdentifier = 250u;
+      packet.referenceTimestamp = 300u;
+      packet.originateTimestamp = 350u;
+      packet.receiveTimestamp = 400u;
+      packet.transmitTimestamp = 450u;
 
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "NTPv0");
       assert(json.leap_indicator == 2u);
       assert(json.status == 4u);

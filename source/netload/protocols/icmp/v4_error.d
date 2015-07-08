@@ -124,21 +124,12 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 
     unittest {
-      import netload.protocols.ethernet;
       import netload.protocols.raw;
-      Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
+      ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
 
-      ICMPv4Redirect icmp = new ICMPv4Redirect(2, 42, null);
-      packet.data = icmp;
-
-      packet.data.data = new Raw([42, 21, 84]);
+      packet.data = new Raw([42, 21, 84]);
 
       Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
-
-      json = json.data;
       assert(json.name == "ICMP");
       assert(json.packetType == 5);
       assert(json.code == 2);
