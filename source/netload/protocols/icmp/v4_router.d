@@ -1,6 +1,7 @@
 module netload.protocols.icmp.v4_router;
 
 import netload.core.protocol;
+import netload.core.addr;
 import netload.protocols.icmp.common;
 import vibe.data.json;
 import std.bitmanip;
@@ -47,8 +48,19 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
         this(json.numAddr.to!ubyte, json.addrEntrySize.to!ubyte);
         checksum = json.checksum.to!ushort;
         life = json.life.to!ushort;
-        routerAddr = deserializeJson!(ubyte[4][])(json.routerAddr);
-        prefAddr = deserializeJson!(ubyte[4][])(json.prefAddr);
+        string[] buf;
+        uint i = 0;
+        buf = deserializeJson!(string[])(json.routerAddr);
+        foreach(member; buf) {
+          _routerAddr[i] = stringToIp(member);
+          i++;
+        }
+        i = 0;
+        buf = deserializeJson!(string[])(json.prefAddr);
+        foreach(member; buf) {
+          _prefAddr[i] = stringToIp(member);
+          i++;
+        }
         auto packetData = ("data" in json);
         if (json.data.type != Json.Type.Null && packetData != null)
           data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
@@ -73,8 +85,16 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       packet.numAddr = _numAddr;
       packet.addrEntrySize = _addrEntrySize;
       packet.life = _life;
-      packet.routerAddr = serializeToJson(_routerAddr);
-      packet.prefAddr = serializeToJson(_prefAddr);
+      string[] buf = [];
+      foreach(member; _routerAddr) {
+        buf ~= ipToString(member);
+      }
+      packet.routerAddr = serializeToJson(buf);
+      buf = [];
+      foreach(member; _prefAddr) {
+        buf ~= ipToString(member);
+      }
+      packet.prefAddr = serializeToJson(buf);
       return packet;
     }
 
@@ -86,8 +106,8 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toJson.numAddr == 3);
       assert(packet.toJson.addrEntrySize == 2);
       assert(packet.toJson.life == 2);
-      assert(deserializeJson!(ubyte[4][])(packet.toJson.routerAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
-      assert(deserializeJson!(ubyte[4][])(packet.toJson.prefAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+      assert(deserializeJson!(string[])(packet.toJson.routerAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      assert(deserializeJson!(string[])(packet.toJson.prefAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
     }
 
     unittest {
@@ -102,8 +122,8 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "ICMP");
@@ -113,8 +133,8 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(json.numAddr == 3);
       assert(json.addrEntrySize == 2);
       assert(json.life == 2);
-      assert(deserializeJson!(ubyte[4][])(json.routerAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
-      assert(deserializeJson!(ubyte[4][])(json.prefAddr) == [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+      assert(deserializeJson!(string[])(json.routerAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      assert(deserializeJson!(string[])(json.prefAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
 
       json = json.data;
     }
@@ -194,8 +214,8 @@ unittest {
   json.numAddr = 3;
   json.addrEntrySize = 2;
   json.life = 1;
-  json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  json.routerAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
+  json.prefAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)to!ICMPv4RouterAdvert(json);
   assert(packet.checksum == 0);
   assert(packet.life == 1);
@@ -215,8 +235,8 @@ unittest  {
   json.numAddr = 3;
   json.addrEntrySize = 2;
   json.life = 1;
-  json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  json.routerAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
+  json.prefAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
 
   json.data = Json.emptyObject;
   json.data.name = "Raw";

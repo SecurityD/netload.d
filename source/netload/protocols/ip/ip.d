@@ -1,6 +1,7 @@
 module netload.protocols.ip.ip;
 
 import netload.core.protocol;
+import netload.core.addr;
 import netload.protocols;
 import vibe.data.json;
 import std.bitmanip;
@@ -37,7 +38,7 @@ class IP : Protocol {
 
       }
 
-      this(uint src, uint dest) {
+      this(ubyte[4] src, ubyte[4] dest) {
         _srcIpAddress = src;
         _destIpAddress = dest;
       }
@@ -55,8 +56,8 @@ class IP : Protocol {
         _ttl = json.ttl.get!ubyte;
         _protocol = json.protocol.get!ubyte;
         _checksum = json.checksum.get!ushort;
-        _srcIpAddress = json.src_ip_address.get!uint;
-        _destIpAddress = json.dest_ip_address.get!uint;
+        _srcIpAddress = stringToIp(json.src_ip_address.get!string);
+        _destIpAddress = stringToIp(json.dest_ip_address.get!string);
         auto packetData = ("data" in json);
         if (json.data.type != Json.Type.Null && packetData != null)
           _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
@@ -71,8 +72,10 @@ class IP : Protocol {
         _ttl = encoded.read!ubyte();
         _protocol = encoded.read!ubyte();
         _checksum = encoded.read!ushort();
-        _srcIpAddress = encoded.read!uint();
-        _destIpAddress = encoded.read!uint();
+        _srcIpAddress = encoded[0..4];
+        encoded.read!uint();
+        _destIpAddress = encoded[0..4];
+        encoded.read!uint();
         auto func = (_protocol in ipType);
         if (func !is null)
           _data = ipType[_protocol](encoded);
@@ -99,8 +102,8 @@ class IP : Protocol {
         json.ttl = ttl;
         json.protocol = protocol;
         json.checksum = checksum;
-        json.src_ip_address = srcIpAddress;
-        json.dest_ip_address = destIpAddress;
+        json.src_ip_address = ipToString(srcIpAddress);
+        json.dest_ip_address = ipToString(destIpAddress);
         json.name = name;
         if (_data is null)
           json.data = null;
@@ -126,7 +129,7 @@ class IP : Protocol {
       }
 
       override ubyte[] toBytes() const {
-        ubyte[] encoded = new ubyte[20];
+        ubyte[] encoded = new ubyte[12];
         encoded.write!ubyte(_versionAndLength.versionAndLength, 0);
         encoded.write!ubyte(tos, 1);
         encoded.write!ushort(length, 2);
@@ -135,8 +138,7 @@ class IP : Protocol {
         encoded.write!ubyte(ttl, 8);
         encoded.write!ubyte(protocol, 9);
         encoded.write!ushort(checksum, 10);
-        encoded.write!uint(srcIpAddress, 12);
-        encoded.write!uint(destIpAddress, 16);
+        encoded ~= srcIpAddress ~ destIpAddress;
         if (_data !is null)
           encoded ~= _data.toBytes;
         return encoded;
@@ -183,10 +185,10 @@ class IP : Protocol {
       @property void protocol(ubyte proto) { _protocol = proto; }
       @property ushort checksum() const { return _checksum; }
       @property void checksum(ushort hash) { _checksum = hash; }
-      @property uint srcIpAddress() const { return _srcIpAddress; }
-      @property void srcIpAddress(uint address) { _srcIpAddress = address; }
-      @property uint destIpAddress() const { return _destIpAddress; }
-      @property void destIpAddress(uint address) { _destIpAddress = address; }
+      @property ubyte[4] srcIpAddress() const { return _srcIpAddress; }
+      @property void srcIpAddress(ubyte[4] address) { _srcIpAddress = address; }
+      @property ubyte[4] destIpAddress() const { return _destIpAddress; }
+      @property void destIpAddress(ubyte[4] address) { _destIpAddress = address; }
 
     private:
       Protocol _data = null;
@@ -198,8 +200,8 @@ class IP : Protocol {
       ubyte _ttl = 0;
       ubyte _protocol = 0;
       ushort _checksum = 0;
-      uint _srcIpAddress = 0;
-      uint _destIpAddress = 0;
+      ubyte[4] _srcIpAddress = [0, 0, 0, 0];
+      ubyte[4] _destIpAddress = [0, 0, 0, 0];
 }
 
 unittest {
@@ -216,10 +218,10 @@ unittest {
   json.ttl = 0;
   json.protocol = 0;
   json.checksum = 0;
-  json.src_ip_address = 20;
-  json.dest_ip_address = 0;
+  json.src_ip_address = ipToString([127, 0, 0, 1]);
+  json.dest_ip_address = ipToString([0, 0, 0, 0]);
   IP packet = cast(IP)to!IP(json);
-  assert(packet.srcIpAddress == 20);
+  assert(packet.srcIpAddress == [127, 0, 0, 1]);
 }
 
 unittest  {
@@ -240,28 +242,28 @@ unittest  {
   json.ttl = 0;
   json.protocol = 0;
   json.checksum = 0;
-  json.src_ip_address = 20;
-  json.dest_ip_address = 0;
+  json.src_ip_address = ipToString([127, 0, 0, 1]);
+  json.dest_ip_address = ipToString([0, 0, 0, 0]);
 
   json.data = Json.emptyObject;
   json.data.name = "Raw";
   json.data.bytes = serializeToJson([42,21,84]);
 
   IP packet = cast(IP)to!IP(json);
-  assert(packet.srcIpAddress == 20);
+  assert(packet.srcIpAddress == [127, 0, 0, 1]);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
  IP packet = cast(IP)encoded.to!IP;
- assert(packet.destIpAddress == 1);
+ assert(packet.destIpAddress == [0, 0, 0, 1]);
 }
 
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
   IP packet = cast(IP)encoded.to!IP;
-  assert(packet.destIpAddress == 1);
+  assert(packet.destIpAddress == [0, 0, 0, 1]);
   assert((cast(TCP)packet.data).srcPort == 8000);
   assert((cast(TCP)packet.data).destPort == 7000);
   assert((cast(TCP)packet.data).window == 8192);

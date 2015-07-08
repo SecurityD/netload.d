@@ -1,5 +1,6 @@
 module netload.protocols.dot11.dot11;
 
+import netload.core.addr;
 import netload.core.protocol;
 import vibe.data.json;
 import std.bitmanip;
@@ -59,10 +60,10 @@ class Dot11 : Protocol {
       fromDS = json.from_DS.to!bool;
       toDS = json.to_DS.to!bool;
       _duration = json.duration.to!ushort;
-      addr1 = deserializeJson!(ubyte[6])(json.addr1);
-      addr2 = deserializeJson!(ubyte[6])(json.addr2);
-      addr3 = deserializeJson!(ubyte[6])(json.addr3);
-      addr4 = deserializeJson!(ubyte[6])(json.addr4);
+      addr1 = stringToMac(json.addr1.to!string);
+      addr2 = stringToMac(json.addr2.to!string);
+      addr3 = stringToMac(json.addr3.to!string);
+      addr4 = stringToMac(json.addr4.to!string);
       _seq = json.seq.to!ushort;
       _fcs = json.fcs.to!uint;
       auto packetData = ("data" in json);
@@ -99,10 +100,10 @@ class Dot11 : Protocol {
       packet.duration = _duration;
       packet.seq = _seq;
       packet.fcs = _fcs;
-      packet.addr1 = serializeToJson(_addr[0]);
-      packet.addr2 = serializeToJson(_addr[1]);
-      packet.addr3 = serializeToJson(_addr[2]);
-      packet.addr4 = serializeToJson(_addr[3]);
+      packet.addr1 = macToString(_addr[0]);
+      packet.addr2 = macToString(_addr[1]);
+      packet.addr3 = macToString(_addr[2]);
+      packet.addr4 = macToString(_addr[3]);
       packet.subtype = _frameControl.subtype;
       packet.packet_type = _frameControl.type;
       packet.vers = _frameControl.vers;
@@ -126,10 +127,10 @@ class Dot11 : Protocol {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
       assert(packet.toJson.packet_type == 0);
       assert(packet.toJson.subtype == 8);
-      assert(deserializeJson!(ubyte[6])(packet.toJson.addr1) == [255,255,255,255,255,255]);
-      assert(deserializeJson!(ubyte[6])(packet.toJson.addr2) == [0,0,0,0,0,0]);
-      assert(deserializeJson!(ubyte[6])(packet.toJson.addr3) == [1,2,3,4,5,6]);
-      assert(deserializeJson!(ubyte[6])(packet.toJson.addr4) == [0,0,0,0,0,0]);
+      assert(packet.toJson.addr1 == "ff:ff:ff:ff:ff:ff");
+      assert(packet.toJson.addr2 == "00:00:00:00:00:00");
+      assert(packet.toJson.addr3 == "01:02:03:04:05:06");
+      assert(packet.toJson.addr4 == "00:00:00:00:00:00");
       assert(packet.toJson.duration == 0);
       assert(packet.toJson.seq == 0);
       assert(packet.toJson.fcs == 0);
@@ -158,10 +159,10 @@ class Dot11 : Protocol {
       assert(json.name == "Dot11");
       assert(json.packet_type == 0);
       assert(json.subtype == 8);
-      assert(deserializeJson!(ubyte[6])(json.addr1) == [255,255,255,255,255,255]);
-      assert(deserializeJson!(ubyte[6])(json.addr2) == [0,0,0,0,0,0]);
-      assert(deserializeJson!(ubyte[6])(json.addr3) == [1,2,3,4,5,6]);
-      assert(deserializeJson!(ubyte[6])(json.addr4) == [0,0,0,0,0,0]);
+      assert(json.addr1 == "ff:ff:ff:ff:ff:ff");
+      assert(json.addr2 == "00:00:00:00:00:00");
+      assert(json.addr3 == "01:02:03:04:05:06");
+      assert(json.addr4 == "00:00:00:00:00:00");
       assert(json.duration == 0);
       assert(json.seq == 0);
       assert(json.fcs == 0);
@@ -280,10 +281,10 @@ unittest {
   json.from_DS = 0;
   json.to_DS = 0;
   json.duration = 0;
-  json.addr1 = serializeToJson([255, 255, 255, 255, 255, 255]);
-  json.addr2 = serializeToJson([0, 0, 0, 0, 0, 0]);
-  json.addr3 = serializeToJson([1, 2, 3, 4, 5, 6]);
-  json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
+  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
+  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
+  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
   json.seq = 0;
   json.fcs = 0;
   Dot11 packet = cast(Dot11)to!Dot11(json);
@@ -325,10 +326,10 @@ unittest  {
   json.from_DS = 0;
   json.to_DS = 0;
   json.duration = 0;
-  json.addr1 = serializeToJson([255, 255, 255, 255, 255, 255]);
-  json.addr2 = serializeToJson([0, 0, 0, 0, 0, 0]);
-  json.addr3 = serializeToJson([1, 2, 3, 4, 5, 6]);
-  json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
+  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
+  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
+  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
   json.seq = 0;
   json.fcs = 0;
 
