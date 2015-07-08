@@ -101,8 +101,8 @@ class ARP : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "ARP");

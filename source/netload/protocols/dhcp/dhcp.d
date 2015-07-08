@@ -1,6 +1,7 @@
 module netload.protocols.dhcp.dhcp;
 
 import netload.core.protocol;
+import netload.core.addr;
 import vibe.data.json;
 import std.bitmanip;
 import std.exception;
@@ -42,10 +43,10 @@ class DHCP : Protocol {
       _xid = json.xid.to!uint;
       _secs = json.secs.to!ushort;
       _flags.broadcast = json.broadcast.to!bool;
-      _ciaddr = deserializeJson!(ubyte[4])(json.ciaddr);
-      _yiaddr = deserializeJson!(ubyte[4])(json.yiaddr);
-      _siaddr = deserializeJson!(ubyte[4])(json.siaddr);
-      _giaddr = deserializeJson!(ubyte[4])(json.giaddr);
+      _ciaddr = stringToIp(json.ciaddr.to!string);
+      _yiaddr = stringToIp(json.yiaddr.to!string);
+      _siaddr = stringToIp(json.siaddr.to!string);
+      _giaddr = stringToIp(json.giaddr.to!string);
       _chaddr = deserializeJson!(ubyte[16])(json.chaddr);
       _sname = deserializeJson!(ubyte[64])(json.sname);
       _file = deserializeJson!(ubyte[128])(json.file);
@@ -87,10 +88,10 @@ class DHCP : Protocol {
       packet.xid = _xid;
       packet.secs = _secs;
       packet.broadcast = _flags.broadcast;
-      packet.ciaddr = serializeToJson(_ciaddr);
-      packet.yiaddr = serializeToJson(_yiaddr);
-      packet.siaddr = serializeToJson(_siaddr);
-      packet.giaddr = serializeToJson(_giaddr);
+      packet.ciaddr = ipToString(_ciaddr);
+      packet.yiaddr = ipToString(_yiaddr);
+      packet.siaddr = ipToString(_siaddr);
+      packet.giaddr = ipToString(_giaddr);
       packet.chaddr = serializeToJson(_chaddr);
       packet.sname = serializeToJson(_sname);
       packet.file = serializeToJson(_file);
@@ -112,10 +113,10 @@ class DHCP : Protocol {
       assert(packet.toJson.xid == 42);
       assert(packet.toJson.secs == 0);
       assert(packet.toJson.broadcast == false);
-      assert(deserializeJson!(ubyte[4])(packet.toJson.ciaddr) == [127, 0, 0, 1]);
-      assert(deserializeJson!(ubyte[4])(packet.toJson.yiaddr) == [127, 0, 1, 1]);
-      assert(deserializeJson!(ubyte[4])(packet.toJson.siaddr) == [10, 14, 19, 42]);
-      assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
+      assert(packet.toJson.ciaddr == "127.0.0.1");
+      assert(packet.toJson.yiaddr == "127.0.1.1");
+      assert(packet.toJson.siaddr == "10.14.19.42");
+      assert(packet.toJson.giaddr == "10.14.59.255");
     }
 
     unittest {
@@ -130,8 +131,8 @@ class DHCP : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DHCP");
@@ -142,10 +143,10 @@ class DHCP : Protocol {
       assert(json.xid == 42);
       assert(json.secs == 0);
       assert(json.broadcast == false);
-      assert(deserializeJson!(ubyte[4])(json.ciaddr) == [127, 0, 0, 1]);
-      assert(deserializeJson!(ubyte[4])(json.yiaddr) == [127, 0, 1, 1]);
-      assert(deserializeJson!(ubyte[4])(json.siaddr) == [10, 14, 19, 42]);
-      assert(deserializeJson!(ubyte[4])(json.giaddr) == [10, 14, 59, 255]);
+      assert(json.ciaddr == "127.0.0.1");
+      assert(json.yiaddr == "127.0.1.1");
+      assert(json.siaddr == "10.14.19.42");
+      assert(json.giaddr == "10.14.59.255");
 
       json = json.data;
       assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
@@ -249,10 +250,10 @@ unittest {
   json.xid = 42;
   json.secs = 0;
   json.broadcast = false;
-  json.ciaddr = serializeToJson([127, 0, 0, 1]);
-  json.yiaddr = serializeToJson([127, 0, 1, 1]);
-  json.siaddr = serializeToJson([10, 14, 19, 42]);
-  json.giaddr = serializeToJson([10, 14, 59, 255]);
+  json.ciaddr = ipToString([127, 0, 0, 1]);
+  json.yiaddr = ipToString([127, 0, 1, 1]);
+  json.siaddr = ipToString([10, 14, 19, 42]);
+  json.giaddr = ipToString([10, 14, 59, 255]);
   json.chaddr = serializeToJson(new ubyte[16]);
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);
@@ -265,10 +266,10 @@ unittest {
   assert(packet.toJson.xid == 42);
   assert(packet.toJson.secs == 0);
   assert(packet.toJson.broadcast == false);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.ciaddr) == [127, 0, 0, 1]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.yiaddr) == [127, 0, 1, 1]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.siaddr) == [10, 14, 19, 42]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
+  assert(packet.toJson.ciaddr == "127.0.0.1");
+  assert(packet.toJson.yiaddr == "127.0.1.1");
+  assert(packet.toJson.siaddr == "10.14.19.42");
+  assert(packet.toJson.giaddr == "10.14.59.255");
 }
 
 unittest  {
@@ -285,10 +286,10 @@ unittest  {
   json.xid = 42;
   json.secs = 0;
   json.broadcast = false;
-  json.ciaddr = serializeToJson([127, 0, 0, 1]);
-  json.yiaddr = serializeToJson([127, 0, 1, 1]);
-  json.siaddr = serializeToJson([10, 14, 19, 42]);
-  json.giaddr = serializeToJson([10, 14, 59, 255]);
+  json.ciaddr = ipToString([127, 0, 0, 1]);
+  json.yiaddr = ipToString([127, 0, 1, 1]);
+  json.siaddr = ipToString([10, 14, 19, 42]);
+  json.giaddr = ipToString([10, 14, 59, 255]);
   json.chaddr = serializeToJson(new ubyte[16]);
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);

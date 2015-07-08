@@ -3,6 +3,7 @@ module netload.protocols.conversion;
 import vibe.data.json;
 import netload.core.protocol;
 import std.conv;
+import netload.core.addr;
 
 import netload.protocols.arp;
 import netload.protocols.dhcp;
@@ -371,10 +372,10 @@ unittest {
   json.ttl = 0;
   json.protocol = 0;
   json.checksum = 0;
-  json.src_ip_address = 20;
-  json.dest_ip_address = 0;
+  json.src_ip_address = ipToString([127, 0, 0, 1]);
+  json.dest_ip_address = ipToString([0, 0, 0, 0]);
   IP packet = cast(IP)(protocolConversion["IP"](json));
-  assert(packet.srcIpAddress == 20);
+  assert(packet.srcIpAddress == [127, 0, 0, 1]);
 }
 
 unittest {
@@ -567,8 +568,8 @@ unittest {
   json.numAddr = 3;
   json.addrEntrySize = 2;
   json.life = 1;
-  json.routerAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
-  json.prefAddr = serializeToJson([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
+  json.routerAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
+  json.prefAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)(protocolConversion["ICMPv4RouterAdvert"](json));
   assert(packet.checksum == 0);
   assert(packet.life == 1);
@@ -595,8 +596,8 @@ unittest {
 unittest {
   Json json = Json.emptyObject;
   json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
-  json.src_mac_address = serializeToJson([255, 255, 255, 255, 255, 255]);
-  json.dest_mac_address = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.src_mac_address = macToString([255, 255, 255, 255, 255, 255]);
+  json.dest_mac_address = macToString([0, 0, 0, 0, 0, 0]);
   json.protocol_type = 0x0800;
   json.fcs = 0;
   Ethernet packet = cast(Ethernet)(protocolConversion["Ethernet"](json));
@@ -618,10 +619,10 @@ unittest {
   json.from_DS = 0;
   json.to_DS = 0;
   json.duration = 0;
-  json.addr1 = serializeToJson([255, 255, 255, 255, 255, 255]);
-  json.addr2 = serializeToJson([0, 0, 0, 0, 0, 0]);
-  json.addr3 = serializeToJson([1, 2, 3, 4, 5, 6]);
-  json.addr4 = serializeToJson([0, 0, 0, 0, 0, 0]);
+  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
+  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
+  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
+  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
   json.seq = 0;
   json.fcs = 0;
   Dot11 packet = cast(Dot11)(protocolConversion["Dot11"](json));
@@ -655,10 +656,10 @@ unittest {
   json.xid = 42;
   json.secs = 0;
   json.broadcast = false;
-  json.ciaddr = serializeToJson([127, 0, 0, 1]);
-  json.yiaddr = serializeToJson([127, 0, 1, 1]);
-  json.siaddr = serializeToJson([10, 14, 19, 42]);
-  json.giaddr = serializeToJson([10, 14, 59, 255]);
+  json.ciaddr = ipToString([127, 0, 0, 1]);
+  json.yiaddr = ipToString([127, 0, 1, 1]);
+  json.siaddr = ipToString([10, 14, 19, 42]);
+  json.giaddr = ipToString([10, 14, 59, 255]);
   json.chaddr = serializeToJson(new ubyte[16]);
   json.sname = serializeToJson(new ubyte[64]);
   json.file = serializeToJson(new ubyte[128]);
@@ -671,160 +672,160 @@ unittest {
   assert(packet.toJson.xid == 42);
   assert(packet.toJson.secs == 0);
   assert(packet.toJson.broadcast == false);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.ciaddr) == [127, 0, 0, 1]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.yiaddr) == [127, 0, 1, 1]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.siaddr) == [10, 14, 19, 42]);
-  assert(deserializeJson!(ubyte[4])(packet.toJson.giaddr) == [10, 14, 59, 255]);
+  assert(packet.toJson.ciaddr == "127.0.0.1");
+  assert(packet.toJson.yiaddr == "127.0.1.1");
+  assert(packet.toJson.siaddr == "10.14.19.42");
+  assert(packet.toJson.giaddr == "10.14.59.255");
 }
 
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.qdcount = 0;
-//   json.ancount = 0;
-//   json.nscount = 0;
-//   json.arcount = 0;
-//   json.qr = false;
-//   json.opcode = 0;
-//   json.auth_answer = false;
-//   json.truncation = false;
-//   json.record_desired = true;
-//   json.record_available = false;
-//   json.zero = 0;
-//   json.rcode = 0;
-//   json.id = 0;
-//   DNS packet = cast(DNS)(protocolConversion["DNS"](json));
-//   assert(packet.id == 0);
-//   assert(packet.qdcount == 0);
-//   assert(packet.ancount == 0);
-//   assert(packet.nscount == 0);
-//   assert(packet.arcount == 0);
-//   assert(packet.qr == false);
-//   assert(packet.opcode == 0);
-//   assert(packet.aa == false);
-//   assert(packet.rd == true);
-//   assert(packet.tc == false);
-//   assert(packet.ra == false);
-//   assert(packet.z == 0);
-//   assert(packet.rcode == 0);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.qdcount = 0;
-//   json.ancount = 0;
-//   json.nscount = 0;
-//   json.arcount = 0;
-//   json.qr = false;
-//   json.opcode = 1;
-//   json.auth_answer = false;
-//   json.truncation = false;
-//   json.record_desired = true;
-//   json.record_available = true;
-//   json.zero = 0;
-//   json.rcode = 0;
-//   json.id = 0;
-//   DNSQuery packet = cast(DNSQuery)(protocolConversion["DNSQuery"](json));
-//   assert(packet.id == 0);
-//   assert(packet.qdcount == 0);
-//   assert(packet.ancount == 0);
-//   assert(packet.nscount == 0);
-//   assert(packet.arcount == 0);
-//   assert(packet.opcode == 1);
-//   assert(packet.rd == true);
-//   assert(packet.tc == false);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.qdcount = 0;
-//   json.ancount = 0;
-//   json.nscount = 0;
-//   json.arcount = 0;
-//   json.qr = false;
-//   json.opcode = 0;
-//   json.auth_answer = false;
-//   json.truncation = false;
-//   json.record_desired = true;
-//   json.record_available = false;
-//   json.zero = 0;
-//   json.rcode = 0;
-//   json.id = 0;
-//   DNSResource packet = cast(DNSResource)(protocolConversion["DNSResource"](json));
-//   assert(packet.id == 0);
-//   assert(packet.qdcount == 0);
-//   assert(packet.ancount == 0);
-//   assert(packet.nscount == 0);
-//   assert(packet.arcount == 0);
-//   assert(packet.aa == false);
-//   assert(packet.tc == false);
-//   assert(packet.ra == false);
-//   assert(packet.rcode == 0);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.qname = "google.fr";
-//   json.qtype = QType.A;
-//   json.qclass = QClass.IN;
-//   DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
-//   assert(packet.qname == "google.fr");
-//   assert(packet.qtype == 1);
-//   assert(packet.qclass == 1);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.rname = "google.fr";
-//   json.rtype = QType.A;
-//   json.rclass = QClass.IN;
-//   json.ttl = 600;
-//   json.rdlength = 10;
-//   DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
-//   assert(packet.rname == "google.fr");
-//   assert(packet.rtype == 1);
-//   assert(packet.rclass == 1);
-//   assert(packet.ttl == 600);
-//   assert(packet.rdlength == 10);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.primary = "google.fr";
-//   json.admin = "admin.google.fr";
-//   json.serial = 8000;
-//   json.refresh = 2500;
-//   json.retry = 2500;
-//   json.expirationLimit = 400;
-//   json.minTtl = 10;
-//   DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
-//   assert(packet.primary == "google.fr");
-//   assert(packet.admin == "admin.google.fr");
-//   assert(packet.serial == 8000);
-//   assert(packet.refresh == 2500);
-//   assert(packet.retry == 2500);
-//   assert(packet.expirationLimit == 400);
-//   assert(packet.minTtl == 10);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.pref = 1;
-//   json.mxname = "google.fr";
-//   DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
-//   assert(packet.pref == 1);
-//   assert(packet.mxname == "google.fr");
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.ip = serializeToJson([127, 0, 0, 1]);
-//   DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
-//   assert(packet.ip == [127, 0, 0, 1]);
-// }
-//
-// unittest {
-//   Json json = Json.emptyObject;
-//   json.ptrname = "google.fr";
-//   DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
-//   assert(packet.ptrname == "google.fr");
-// }
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNS packet = cast(DNS)(protocolConversion["DNS"](json));
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.qr == false);
+  assert(packet.opcode == 0);
+  assert(packet.aa == false);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.z == 0);
+  assert(packet.rcode == 0);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 1;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = true;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNSQuery packet = cast(DNSQuery)(protocolConversion["DNSQuery"](json));
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.opcode == 1);
+  assert(packet.rd == true);
+  assert(packet.tc == false);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qdcount = 0;
+  json.ancount = 0;
+  json.nscount = 0;
+  json.arcount = 0;
+  json.qr = false;
+  json.opcode = 0;
+  json.auth_answer = false;
+  json.truncation = false;
+  json.record_desired = true;
+  json.record_available = false;
+  json.zero = 0;
+  json.rcode = 0;
+  json.id = 0;
+  DNSResource packet = cast(DNSResource)(protocolConversion["DNSResource"](json));
+  assert(packet.id == 0);
+  assert(packet.qdcount == 0);
+  assert(packet.ancount == 0);
+  assert(packet.nscount == 0);
+  assert(packet.arcount == 0);
+  assert(packet.aa == false);
+  assert(packet.tc == false);
+  assert(packet.ra == false);
+  assert(packet.rcode == 0);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.qname = "google.fr";
+  json.qtype = QType.A;
+  json.qclass = QClass.IN;
+  DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
+  assert(packet.qname == "google.fr");
+  assert(packet.qtype == 1);
+  assert(packet.qclass == 1);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.rname = "google.fr";
+  json.rtype = QType.A;
+  json.rclass = QClass.IN;
+  json.ttl = 600;
+  json.rdlength = 10;
+  DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
+  assert(packet.rname == "google.fr");
+  assert(packet.rtype == 1);
+  assert(packet.rclass == 1);
+  assert(packet.ttl == 600);
+  assert(packet.rdlength == 10);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.primary = "google.fr";
+  json.admin = "admin.google.fr";
+  json.serial = 8000;
+  json.refresh = 2500;
+  json.retry = 2500;
+  json.expirationLimit = 400;
+  json.minTtl = 10;
+  DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
+  assert(packet.primary == "google.fr");
+  assert(packet.admin == "admin.google.fr");
+  assert(packet.serial == 8000);
+  assert(packet.refresh == 2500);
+  assert(packet.retry == 2500);
+  assert(packet.expirationLimit == 400);
+  assert(packet.minTtl == 10);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.pref = 1;
+  json.mxname = "google.fr";
+  DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
+  assert(packet.pref == 1);
+  assert(packet.mxname == "google.fr");
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.ip = ipToString([127, 0, 0, 1]);
+  DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
+  assert(packet.ip == [127, 0, 0, 1]);
+}
+
+unittest {
+  Json json = Json.emptyObject;
+  json.ptrname = "google.fr";
+  DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
+  assert(packet.ptrname == "google.fr");
+}

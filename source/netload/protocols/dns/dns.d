@@ -2,6 +2,7 @@ module netload.protocols.dns.dns;
 
 import netload.core.protocol;
 import netload.protocols;
+import netload.core.addr;
 import vibe.data.json;
 import std.bitmanip;
 import std.string;
@@ -169,8 +170,8 @@ class DNSBase(DNSType __type__) : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNS");
@@ -700,8 +701,8 @@ class DNSQR : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSQR");
@@ -872,8 +873,8 @@ class DNSRR : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSRR");
@@ -1076,8 +1077,8 @@ class DNSSOAResource  : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSSOAResource");
@@ -1274,8 +1275,8 @@ class DNSMXResource : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSMXResource");
@@ -1368,7 +1369,7 @@ class DNSAResource : Protocol {
     }
 
     this(Json json) {
-      ip = deserializeJson!(ubyte[4])(json.ip);
+      ip = stringToIp(json.ip.to!string);
       auto packetData = ("data" in json);
       if (json.data.type != Json.Type.Null && packetData != null)
         data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
@@ -1385,7 +1386,7 @@ class DNSAResource : Protocol {
 
     override Json toJson() const {
       Json packet = Json.emptyObject;
-      packet.ip = serializeToJson(_ip);
+      packet.ip = ipToString(_ip);
       packet.name = name;
       if (_data is null)
         packet.data = null;
@@ -1396,7 +1397,7 @@ class DNSAResource : Protocol {
 
     unittest {
       DNSAResource packet = new DNSAResource();
-      assert(deserializeJson!(ubyte[4])(packet.toJson.ip) == [127, 0, 0, 1]);
+      assert(packet.toJson.ip == "127.0.0.1");
     }
 
     unittest {
@@ -1411,12 +1412,12 @@ class DNSAResource : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSAResource");
-      assert(deserializeJson!(ubyte[4])(json.ip) == [127, 0, 0, 1]);
+      assert(json.ip == "127.0.0.1");
 
       json = json.data;
       assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
@@ -1457,7 +1458,7 @@ class DNSAResource : Protocol {
 
 unittest {
   Json json = Json.emptyObject;
-  json.ip = serializeToJson([127, 0, 0, 1]);
+  json.ip = ipToString([127, 0, 0, 1]);
   DNSAResource packet = cast(DNSAResource)to!DNSAResource(json);
   assert(packet.ip == [127, 0, 0, 1]);
 }
@@ -1468,7 +1469,7 @@ unittest  {
   Json json = Json.emptyObject;
 
   json.name = "DNSAResource";
-  json.ip = serializeToJson([127, 0, 0, 1]);
+  json.ip = ipToString([127, 0, 0, 1]);
 
   json.data = Json.emptyObject;
   json.data.name = "Raw";
@@ -1537,8 +1538,8 @@ class DNSPTRResource : Protocol {
 
       Json json = packet.toJson;
       assert(json.name == "Ethernet");
-      assert(deserializeJson!(ubyte[6])(json.dest_mac_address) == [0, 0, 0, 0, 0, 0]);
-      assert(deserializeJson!(ubyte[6])(json.src_mac_address) == [255, 255, 255, 255, 255, 255]);
+      assert(json.dest_mac_address == "00:00:00:00:00:00");
+      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
 
       json = json.data;
       assert(json.name == "DNSPTRResource");
