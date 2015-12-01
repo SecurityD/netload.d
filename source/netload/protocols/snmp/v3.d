@@ -359,12 +359,12 @@ private ASN1 makeASN1(T)(T data, ASN1.Type type, ulong minifyTo = 4) {
   auto a = appender!(ubyte[])();
   a.append!T(data);
   ret.type = type;
-  ulong i = 0;
+  uint i = 0;
   while (a.data[i] == 0 && i < a.data.length) { ++i; }
   if (i == a.data.length)
     --i;
   if (a.data.length - i < minifyTo)
-    i = a.data.length - minifyTo;
+    i = cast(uint)(a.data.length - minifyTo);
   ret.data = a.data[i .. $];
   return ret;
 }

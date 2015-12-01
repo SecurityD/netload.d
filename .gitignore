@@ -8,3 +8,10 @@ tests/sniffer/sniffer
 *.a
 **/**/dub.selections.json
 __test__library__
+.vs
+libeay32.dll
+libevent.dll
+netload.d.lib
+netload.sln
+netload.visualdproj
+ssleay32.dll

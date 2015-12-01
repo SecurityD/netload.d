@@ -1,5 +1,5 @@
 {
-	"name": "netload.d",
+	"name": "netload-d",
 	"description": "Packet manipulation framework for D Language",
 	"copyright": "Copyright © 2015, main",
 	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer"],
@@ -10,5 +10,6 @@
 		"pcap"
 	],
 	"versions" : ["VibeCustomMain"],
-	"targetType": "library"
+	"targetType": "library",
+	"targetName": "netload.d"
 }
