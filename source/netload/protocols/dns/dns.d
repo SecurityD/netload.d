@@ -697,7 +697,7 @@ class DNSQR : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      uint inc = (_qname.length > 1 ? _qname.length + 1 : 0);
+      ulong inc = (_qname.length > 1 ? _qname.length + 1 : 0);
       ubyte[] packet = new ubyte[5 + inc];
 
       writeLabels(0, _qname, packet);
@@ -730,7 +730,7 @@ class DNSQR : Protocol {
 
     unittest {
       auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
-      assert(packet.toString == `{"qname":"google.fr","name":"DNSQR","data":null,"qtype":1,"qclass":1}`);
+      assert(packet.toString == `{"qtype":1,"qname":"google.fr","name":"DNSQR","data":null,"qclass":1}`);
     }
 
     @property string qname() const { return _qname; }
@@ -862,7 +862,7 @@ class DNSRR : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      uint inc = (_rname.length > 1 ? _rname.length + 1 : 0);
+      ulong inc = (_rname.length > 1 ? _rname.length + 1 : 0);
       ubyte[] packet = new ubyte[11 + inc];
       writeLabels(0, _rname, packet);
       packet.write!ushort(_rtype, (1 + inc));
@@ -895,7 +895,7 @@ class DNSRR : Protocol {
 
     unittest {
       DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
-      assert(packet.toString == `{"rdlength":0,"ttl":2500,"name":"DNSRR","data":null,"rname":"google.fr","rtype":1,"rclass":1}`);
+      assert(packet.toString == `{"ttl":2500,"rname":"google.fr","name":"DNSRR","rtype":1,"rdlength":0,"data":null,"rclass":1}`);
     }
 
     @property string rname() { return _rname; }
@@ -1059,7 +1059,7 @@ class DNSSOAResource  : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      uint inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
+      ulong inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
       ubyte[] packet = new ubyte[22 + inc];
       uint pos = 0;
 
@@ -1243,7 +1243,7 @@ class DNSMXResource : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      uint inc = (_mxname.length > 1 ? _mxname.length + 1 : 0);
+      ulong inc = (_mxname.length > 1 ? _mxname.length + 1 : 0);
       ubyte[] packet = new ubyte[3 + inc];
       packet.write!ushort(_pref, 0);
       writeLabels(2, _mxname, packet);
@@ -1487,7 +1487,7 @@ class DNSPTRResource : Protocol {
     }
 
     override ubyte[] toBytes() const {
-      uint inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
+      ulong inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
       ubyte[] packet = new ubyte[1 + inc];
       writeLabels(0, _ptrname, packet);
       if (_data !is null)
