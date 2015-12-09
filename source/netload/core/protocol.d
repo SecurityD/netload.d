@@ -19,7 +19,6 @@ interface Protocol {
       }
     }
 
-
     unittest {
       netload.protocols.udp.UDP packet = new netload.protocols.udp.UDP(80, 80);
       netload.protocols.ip.IP ip = new netload.protocols.ip.IP();
