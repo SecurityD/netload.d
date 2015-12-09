@@ -1,4 +1,4 @@
-//module netload.protocols.checksum;
+module netload.protocols.checksum;
 //
 //union UshortBytes {
 //  ubyte[2] raw;

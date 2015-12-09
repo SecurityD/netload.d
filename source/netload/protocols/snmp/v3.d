@@ -1,4 +1,4 @@
-//module netload.protocols.snmp.v3;
+module netload.protocols.snmp.v3;
 //
 //import std.string;
 //import std.bitmanip;

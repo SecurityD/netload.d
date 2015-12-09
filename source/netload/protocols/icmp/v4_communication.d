@@ -1,4 +1,4 @@
-//module netload.protocols.icmp.v4_communication;
+module netload.protocols.icmp.v4_communication;
 //
 //import netload.core.protocol;
 //import netload.protocols.icmp.common;

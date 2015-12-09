@@ -1,4 +1,4 @@
-//module netload.protocols.icmp.common;
+module netload.protocols.icmp.common;
 //
 //import netload.core.protocol;
 //import vibe.data.json;

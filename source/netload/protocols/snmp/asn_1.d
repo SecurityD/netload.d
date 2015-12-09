@@ -1,4 +1,4 @@
-//module netload.protocols.snmp.asn_1;
+module netload.protocols.snmp.asn_1;
 //
 //struct ASN1 {
 //  enum Type : ubyte {

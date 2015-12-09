@@ -1,4 +1,4 @@
-//module netload.protocols.pop3.pop3;
+module netload.protocols.pop3.pop3;
 //
 //import vibe.data.json;
 //import netload.core.protocol;

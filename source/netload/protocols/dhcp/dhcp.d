@@ -1,4 +1,4 @@
-//module netload.protocols.dhcp.dhcp;
+module netload.protocols.dhcp.dhcp;
 //
 //import netload.core.protocol;
 //import netload.core.addr;

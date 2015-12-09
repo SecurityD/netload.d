@@ -1,4 +1,4 @@
-//module netload.protocols.ethernet.ethernet;
+module netload.protocols.ethernet.ethernet;
 //
 //import netload.core.protocol;
 //import netload.core.addr;

@@ -1,4 +1,4 @@
-//module netload.protocols.ntp.common;
+module netload.protocols.ntp.common;
 //
 //package(netload.protocols.ntp) abstract class NTPCommon {
 //  public:

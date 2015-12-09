@@ -1,4 +1,4 @@
-//module netload.protocols.smtp.smtp;
+module netload.protocols.smtp.smtp;
 //
 //import vibe.data.json;
 //import netload.core.protocol;

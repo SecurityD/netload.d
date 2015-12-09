@@ -1,4 +1,4 @@
-//module netload.protocols.ip.ip;
+module netload.protocols.ip.ip;
 //
 //import netload.core.protocol;
 //import netload.core.addr;

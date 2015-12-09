@@ -1,4 +1,4 @@
-//module netload.protocols.conversion;
+module netload.protocols.conversion;
 //
 //import vibe.data.json;
 //import netload.core.protocol;

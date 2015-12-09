@@ -1,4 +1,4 @@
-//module netload.protocols.ntp.v4;
+module netload.protocols.ntp.v4;
 //
 //import std.bitmanip;
 //import std.bigint;

@@ -1,4 +1,4 @@
-//module netload.protocols.snmp.v1;
+module netload.protocols.snmp.v1;
 //
 //import std.string;
 //

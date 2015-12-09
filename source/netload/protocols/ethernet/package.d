@@ -1,3 +1,3 @@
-//module netload.protocols.ethernet;
+module netload.protocols.ethernet;
 //
 //public import netload.protocols.ethernet.ethernet;

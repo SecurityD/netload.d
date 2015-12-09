@@ -1,4 +1,4 @@
-//module netload.protocols.dot11.dot11;
+module netload.protocols.dot11.dot11;
 //
 //import netload.core.addr;
 //import netload.core.protocol;
