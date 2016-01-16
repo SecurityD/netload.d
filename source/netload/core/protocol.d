@@ -8,6 +8,9 @@ interface Protocol {
   public:
     @property Protocol data();
     @property void data(Protocol p);
+    @property int osiLayer() const;
+    @property inout string name();
+
     final ProtocolType add(ProtocolType : Protocol)() {
       if (data is null) {
         auto newLayer = new ProtocolType;
@@ -26,8 +29,7 @@ interface Protocol {
 	//  assert(packet.layer!HTTP);
 	//}
 
-    @property inout string name();
-	//JSONValue toJson() const;
+    JSONValue toJson() const;
     ubyte[] toBytes() const;
 }
 
