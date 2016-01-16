@@ -15,3 +15,5 @@ netload.d.lib
 netload.sln
 netload.visualdproj
 ssleay32.dll
+__test__library__.exe
+build.sh
