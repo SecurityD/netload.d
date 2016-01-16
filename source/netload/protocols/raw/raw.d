@@ -1,7 +1,8 @@
 module netload.protocols.raw.raw;
 
-import stdx.data.json;
 import netload.core.protocol;
+import netload.core.conversion.ubyte_conversion;
+import stdx.data.json;
 import std.outbuffer;
 import std.conv;
 
@@ -15,24 +16,28 @@ class Raw : Protocol {
 	  _bytes = array;
 	}
 
-	//this(Json json) {
-	//  _bytes = deserializeJson!(ubyte[])(json.bytes);
-	//}
+	this(JSONValue json) {
+    _bytes = json["bytes"].to!(ubyte[]);
+	}
 
 	override @property inout string name() { return "Raw"; };
 	override @property Protocol data() { return null; }
 	override @property void data(Protocol p) { }
-	//override @property int osiLayer() const { return 7; }
+	override @property int osiLayer() const { return 7; }
 
-	//override Json toJson() const {
-	//  Json json = Json.emptyObject;
-	//  json.bytes = serializeToJson(_bytes);
-	//  json.name = name;
-	//  return json;
-	//}
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "bytes" : JSONValue(_bytes.toJson),
+      "name" : JSONValue(name)
+    ];
+    return json;
+	}
 
 	unittest {
 	  Raw packet = new Raw([0, 1, 2]);
+    JSONValue json = packet.toJson();
+    assert(json["bytes"] == [0, 1, 2]);
+    assert(json["name"] == "Raw");
 	}
 
 	override ubyte[] toBytes() const { return _bytes.dup; }
@@ -52,14 +57,17 @@ class Raw : Protocol {
 	@property void bytes(ubyte[] array) { _bytes = array; }
   private:
 	ubyte[] _bytes;
+
+  static Raw opCall(const JSONValue json) {
+    return Raw(json);
+  }
 }
 
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.bytes = serializeToJson([0, 1, 2]);
-//  Raw packet = cast(Raw)to!Raw(json);
-//  assert(packet.bytes == [0, 1, 2]);
-//}
+unittest {
+  JSONValue json = toJSONValue(`{ "bytes": [0, 1, 2] }`);
+  Raw packet = Raw(json);
+  assert(packet.bytes == [0, 1, 2]);
+}
 
 unittest {
   ubyte[] encoded = [0, 1, 2];

@@ -3,7 +3,8 @@ module netload.protocols.dns.dns;
 import netload.core.protocol;
 import netload.protocols;
 import netload.core.addr;
-import vibe.data.json;
+import stdx.data.json;
+import std.conv;
 import std.bitmanip;
 import std.string;
 
@@ -60,30 +61,30 @@ class DNSBase(DNSType __type__) : Protocol {
 	  _bits.raw[1] = 0;
 	}
 
-	this(Json json) {
+	this(JSONValue json) {
 	  static if (__type__ == DNSType.ANY) {
-		this(json.id.to!ushort, json.truncation.to!bool);
-		_bits.opcode = json.opcode.to!ubyte;
-		_bits.rd = json.record_desired.to!bool;
-		_bits.qr = json.qr.to!bool;
-		_bits.aa = json.auth_answer.to!bool;
-		_bits.ra = json.record_available.to!bool;
-		_bits.z = json.zero.to!ubyte;
-		_bits.rcode = json.rcode.to!ubyte;
+		this(json["id"].to!ushort, json["truncation"].to!bool);
+		_bits.opcode = json["opcode"].to!ubyte;
+		_bits.rd = json["record_desired"].to!bool;
+		_bits.qr = json["qr"].to!bool;
+		_bits.aa = json["auth_answer"].to!bool;
+		_bits.ra = json["record_available"].to!bool;
+		_bits.z = json["zero"].to!ubyte;
+		_bits.rcode = json["rcode"].to!ubyte;
 	  }
 	  else static if (__type__ == DNSType.QUERY) {
-		this(json.id.to!ushort, json.truncation.to!bool, json.opcode.to!ubyte, json.record_desired.to!bool);
+		this(json["id"].to!ushort, json["truncation"].to!bool, json["opcode"].to!ubyte, json["record_desired"].to!bool);
 	  }
 	  else static if (__type__ == DNSType.RESOURCE) {
-		this(json.id.to!ushort, json.truncation.to!bool, json.auth_answer.to!bool, json.record_available.to!bool, json.rcode.to!ubyte);
+		this(json["id"].to!ushort, json["truncation"].to!bool, json["auth_answer"].to!bool, json["record_available"].to!bool, json["rcode"].to!ubyte);
 	  }
-	  qdcount = json.qdcount.to!ushort;
-	  ancount = json.ancount.to!ushort;
-	  nscount = json.nscount.to!ushort;
-	  arcount = json.arcount.to!ushort;
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		_data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	  qdcount = json["qdcount"].to!ushort;
+	  ancount = json["ancount"].to!ushort;
+	  nscount = json["nscount"].to!ushort;
+	  arcount = json["arcount"].to!ushort;
+	  /*auto packetData = json["data"];
+	  if (packetData != null)
+		  _data = netload.protocols.conversion.protocolConversion[packetData["name"].to!string](*packetData);*/
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -129,9 +130,9 @@ class DNSBase(DNSType __type__) : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.id = _id;
+	override JSONValue toJson() const {
+	  JSONValue packet = JSONValue();
+	  /*packet.id = _id;
 	  packet.qr = _bits.qr;
 	  packet.opcode = _bits.opcode;
 	  packet.auth_answer = _bits.aa;
@@ -148,11 +149,11 @@ class DNSBase(DNSType __type__) : Protocol {
 	  if (_data is null)
 		packet.data = null;
 	  else
-		packet.data = _data.toJson;
+		packet.data = _data.toJson;*/
 	  return packet;
 	}
 
-	unittest {
+	/*unittest {
 	  DNS packet = new DNS(10, true);
 	  assert(packet.toJson().id == 10);
 	  assert(packet.toJson().truncation == true);
@@ -171,7 +172,7 @@ class DNSBase(DNSType __type__) : Protocol {
 
 	  json = json.data;
 	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
-	}
+	}*/
 
 	override ubyte[] toBytes() const {
 	  ubyte[] packet = new ubyte[12];
@@ -217,7 +218,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	  assert(packet.toBytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson().toPrettyString; }
+	/*override string toString() const { return toJson().toPrettyString; }*/
 
 	@property ushort id() { return _id; }
 	@property void id(ushort id) { _id = id; }
@@ -261,7 +262,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	ushort _nscount = 0;
 	ushort _arcount = 0;
 }
-
+/*
 unittest {
   Json json = Json.emptyObject;
   json.qdcount = 0;
@@ -503,8 +504,8 @@ unittest {
   assert(packet.tc == true);
   assert(packet.ra == true);
   assert(packet.rcode == 2);
-}
-
+}*/
+/*
 enum QType {
   A	= 1,
   NS = 2,
@@ -1549,3 +1550,4 @@ unittest {
   DNSPTRResource packet = cast(DNSPTRResource)encodedPacket.to!DNSPTRResource;
   assert(packet.ptrname == "google.fr");
 }
+*/

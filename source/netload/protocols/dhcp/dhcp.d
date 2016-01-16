@@ -1,5 +1,5 @@
 module netload.protocols.dhcp.dhcp;
-
+/*
 import netload.core.protocol;
 import netload.core.addr;
 import stdx.data.json;
@@ -322,3 +322,4 @@ unittest {
   assert(packet.giaddr == [10, 14, 59, 255]);
   assert(packet.options == [42, 56, 0]);
 }
+*/
