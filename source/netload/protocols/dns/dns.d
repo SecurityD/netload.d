@@ -3,6 +3,7 @@ module netload.protocols.dns.dns;
 import netload.core.protocol;
 import netload.protocols;
 import netload.core.addr;
+import netload.core.conversion.ubyte_conversion;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;
@@ -56,6 +57,10 @@ enum DNSType {
 
 class DNSBase(DNSType __type__) : Protocol {
   public:
+    static DNSBase!(__type__) opCall(inout JSONValue json) {
+      return new DNSBase!(__type__)(json);
+    }
+
 	this() {
 	  _bits.raw[0] = 0;
 	  _bits.raw[1] = 0;
@@ -82,9 +87,8 @@ class DNSBase(DNSType __type__) : Protocol {
 	  ancount = json["ancount"].to!ushort;
 	  nscount = json["nscount"].to!ushort;
 	  arcount = json["arcount"].to!ushort;
-	  /*auto packetData = json["data"];
-	  if (packetData != null)
-		  _data = netload.protocols.conversion.protocolConversion[packetData["name"].to!string](*packetData);*/
+	  /*if ("data" in json)
+		  _data = netload.protocols.conversion.protocolConversion[json["data"]["name"].to!string](json["data"]);*/
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -131,32 +135,33 @@ class DNSBase(DNSType __type__) : Protocol {
 	override @property int osiLayer() const { return 7; }
 
 	override JSONValue toJson() const {
-	  JSONValue packet = JSONValue();
-	  /*packet.id = _id;
-	  packet.qr = _bits.qr;
-	  packet.opcode = _bits.opcode;
-	  packet.auth_answer = _bits.aa;
-	  packet.truncation = _bits.tc;
-	  packet.record_desired = _bits.rd;
-	  packet.record_available = _bits.ra;
-	  packet.zero = _bits.z;
-	  packet.rcode = _bits.rcode;
-	  packet.qdcount = _qdcount;
-	  packet.ancount = _ancount;
-	  packet.nscount = _nscount;
-	  packet.arcount = _arcount;
-	  packet.name = name;
+	  JSONValue packet = [
+      "id": JSONValue(_id),
+      "qr": JSONValue(_bits.qr),
+  	  "opcode": JSONValue(_bits.opcode),
+  	  "auth_answer": JSONValue(_bits.aa),
+  	  "truncation": JSONValue(_bits.tc),
+  	  "record_desired": JSONValue(_bits.rd),
+  	  "record_available": JSONValue(_bits.ra),
+  	  "zero": JSONValue(_bits.z),
+  	  "rcode": JSONValue(_bits.rcode),
+  	  "qdcount": JSONValue(_qdcount),
+  	  "ancount": JSONValue(_ancount),
+  	  "nscount": JSONValue(_nscount),
+  	  "arcount": JSONValue(_arcount),
+  	  "name": JSONValue(name)
+    ];
 	  if (_data is null)
-		packet.data = null;
+		  packet["data"] = null;
 	  else
-		packet.data = _data.toJson;*/
+		  packet["data"] = _data.toJson;
 	  return packet;
 	}
 
-	/*unittest {
+	unittest {
 	  DNS packet = new DNS(10, true);
-	  assert(packet.toJson().id == 10);
-	  assert(packet.toJson().truncation == true);
+	  assert(packet.toJson()["id"] == 10);
+	  assert(packet.toJson()["truncation"] == true);
 	}
 
 	unittest {
@@ -165,14 +170,16 @@ class DNSBase(DNSType __type__) : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNS");
-	  assert(json.id == 10);
-	  assert(json.truncation == true);
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNS");
+	  assert(json["id"] == 10);
+	  assert(json["truncation"] == true);
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
-	}*/
+	  json = json["data"];
+
+	  assert(json["name"] == "Raw");
+    assert(json["bytes"] == [42,21,84]);
+	}
 
 	override ubyte[] toBytes() const {
 	  ubyte[] packet = new ubyte[12];
@@ -262,23 +269,24 @@ class DNSBase(DNSType __type__) : Protocol {
 	ushort _nscount = 0;
 	ushort _arcount = 0;
 }
-/*
+
 unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNS packet = cast(DNS)to!DNS(json);
+  JSONValue json = [
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(0),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(false),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
+  DNS packet = DNS(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -297,28 +305,30 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNS"),
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(0),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(false),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
 
-  json.name = "DNS";
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
+  ubyte[] bytes = [42,21,84];
+  json["data"] = [
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue(bytes.toJson)
+  ];
 
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
-
-  DNS packet = cast(DNS)to!DNS(json);
+  DNS packet = DNS(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -332,7 +342,7 @@ unittest  {
   assert(packet.ra == false);
   assert(packet.z == 0);
   assert(packet.rcode == 0);
-  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
 }
 
 unittest {
@@ -354,21 +364,22 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 1;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = true;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSQuery packet = cast(DNSQuery)to!DNSQuery(json);
+  JSONValue json = [
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(1),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(true),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
+  DNSQuery packet = DNSQuery(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -382,28 +393,30 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNS"),
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(1),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(true),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
 
-  json.name = "DNS";
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 1;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = true;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
+  ubyte[] bytes = [42,21,84];
+  json["data"] = [
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue(bytes.toJson)
+  ];
 
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
-
-  DNSQuery packet = cast(DNSQuery)to!DNSQuery(json);
+  DNSQuery packet = DNSQuery(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -412,7 +425,7 @@ unittest  {
   assert(packet.opcode == 1);
   assert(packet.rd == true);
   assert(packet.tc == false);
-  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
 }
 
 unittest {
@@ -429,21 +442,22 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
-  DNSResource packet = cast(DNSResource)to!DNSResource(json);
+  JSONValue json = [
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(0),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(false),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
+  DNSResource packet = DNSResource(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -458,28 +472,30 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNS"),
+    "qdcount": JSONValue(0),
+    "ancount": JSONValue(0),
+    "nscount": JSONValue(0),
+    "arcount": JSONValue(0),
+    "qr": JSONValue(false),
+    "opcode": JSONValue(0),
+    "auth_answer": JSONValue(false),
+    "truncation": JSONValue(false),
+    "record_desired": JSONValue(true),
+    "record_available": JSONValue(false),
+    "zero": JSONValue(0),
+    "rcode": JSONValue(0),
+    "id": JSONValue(0)
+  ];
 
-  json.name = "DNS";
-  json.qdcount = 0;
-  json.ancount = 0;
-  json.nscount = 0;
-  json.arcount = 0;
-  json.qr = false;
-  json.opcode = 0;
-  json.auth_answer = false;
-  json.truncation = false;
-  json.record_desired = true;
-  json.record_available = false;
-  json.zero = 0;
-  json.rcode = 0;
-  json.id = 0;
+  ubyte[] bytes = [42,21,84];
+  json["data"] = [
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue(bytes.toJson)
+  ];
 
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
-
-  DNSResource packet = cast(DNSResource)to!DNSResource(json);
+  DNSResource packet = DNSResource(json);
   assert(packet.id == 0);
   assert(packet.qdcount == 0);
   assert(packet.ancount == 0);
@@ -489,7 +505,7 @@ unittest  {
   assert(packet.tc == false);
   assert(packet.ra == false);
   assert(packet.rcode == 0);
-  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
 }
 
 unittest {
@@ -504,7 +520,7 @@ unittest {
   assert(packet.tc == true);
   assert(packet.ra == true);
   assert(packet.rcode == 2);
-}*/
+}
 /*
 enum QType {
   A	= 1,

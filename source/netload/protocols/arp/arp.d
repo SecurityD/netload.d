@@ -28,9 +28,8 @@ public:
 		targetHwAddr = json["targetHwAddr"].toUbyteArray;
 		senderProtocolAddr = json["senderProtocolAddr"].toUbyteArray;
 		targetProtocolAddr = json["targetProtocolAddr"].toUbyteArray;
-		//auto packetData = json["data"];
-		//if (packetData != null)
-		//  data = netload.protocols.conversion.protocolConversion[packetData["name"].to!string](*packetData);
+		/*if ("data" in json)
+		  data = netload.protocols.conversion.protocolConversion[json["data"]["name"].to!string](json["data"]);*/
 	}
 
 	this(ubyte[] encoded) {
