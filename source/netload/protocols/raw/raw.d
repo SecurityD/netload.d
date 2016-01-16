@@ -17,7 +17,7 @@ class Raw : Protocol {
 	}
 
 	this(JSONValue json) {
-    _bytes = json["bytes"].to!(ubyte[]);
+    _bytes = json["bytes"].toUbyteArray;
 	}
 
 	override @property inout string name() { return "Raw"; };
@@ -55,16 +55,19 @@ class Raw : Protocol {
 
 	@property const(ubyte[]) bytes() const { return _bytes; }
 	@property void bytes(ubyte[] array) { _bytes = array; }
+  static Raw opCall(inout JSONValue val) {
+		return new Raw(val);
+	}
+
   private:
 	ubyte[] _bytes;
-
-  static Raw opCall(const JSONValue json) {
-    return Raw(json);
-  }
 }
 
 unittest {
-  JSONValue json = toJSONValue(`{ "bytes": [0, 1, 2] }`);
+  ubyte[] bytes = [0, 1, 2];
+  JSONValue json = [
+    "bytes": JSONValue(bytes.toJson)
+  ];
   Raw packet = Raw(json);
   assert(packet.bytes == [0, 1, 2]);
 }
