@@ -2,10 +2,10 @@ module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
 import netload.protocols;
+import netload.core.conversion.ubyte_conversion;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
-import netload.core.conversion.ubyte_conversion;
 
 private Protocol delegate(ubyte[])[ushort] tcpType;
 

@@ -2,10 +2,10 @@ module netload.protocols.udp.udp;
 
 import netload.core.protocol;
 import netload.protocols;
+import netload.core.conversion.ubyte_conversion;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;
-import netload.core.conversion.ubyte_conversion;
 
 private Protocol delegate(ubyte[])[ushort] udpType;
 

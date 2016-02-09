@@ -2,10 +2,10 @@ module netload.protocols.dot11.dot11;
 
 import netload.core.addr;
 import netload.core.protocol;
+import netload.core.conversion.ubyte_conversion;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
-import netload.core.conversion.ubyte_conversion;
 
 union Bitfields {
   ubyte[2] raw;

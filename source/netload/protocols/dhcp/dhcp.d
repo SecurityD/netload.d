@@ -1,12 +1,12 @@
 module netload.protocols.dhcp.dhcp;
 
 import netload.core.protocol;
+import netload.core.conversion.ubyte_conversion;
 import netload.core.addr;
 import stdx.data.json;
 import std.bitmanip;
 import std.exception;
 import std.conv;
-import netload.core.conversion.ubyte_conversion;
 
 union Bitfields {
   ushort raw;

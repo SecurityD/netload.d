@@ -1,8 +1,8 @@
 module netload.protocols.http.http;
 
+import netload.core.protocol;
 import stdx.data.json;
 import std.conv;
-import netload.core.protocol;
 
 class HTTP : Protocol {
   public:

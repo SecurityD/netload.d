@@ -1,10 +1,10 @@
 module netload.protocols.arp.arp;
 
 import netload.core.protocol;
+import netload.core.conversion.ubyte_conversion;
 import std.conv;
 import stdx.data.json;
 import std.bitmanip;
-import netload.core.conversion.ubyte_conversion;
 
 class ARP : Protocol {
 public:
