@@ -69,12 +69,12 @@ shared static this() {
   protocolConversion["DNS"] = delegate(JSONValue json){ return (cast(Protocol)DNS(json)); };
   protocolConversion["DNSQuery"] = delegate(JSONValue json){ return (cast(Protocol)DNSQuery(json)); };
   protocolConversion["DNSResource"] = delegate(JSONValue json){ return (cast(Protocol)DNSResource(json)); };
-//  protocolConversion["DNSQR"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSQR(json)); };
-//  protocolConversion["DNSRR"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSRR(json)); };
-//  protocolConversion["DNSSOAResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSSOAResource(json)); };
-//  protocolConversion["DNSMXResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSMXResource(json)); };
-//  protocolConversion["DNSAResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSAResource(json)); };
-//  protocolConversion["DNSPTRResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSPTRResource(json)); };
+  protocolConversion["DNSQR"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSQR(json)); };
+  protocolConversion["DNSRR"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSRR(json)); };
+  protocolConversion["DNSSOAResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSSOAResource(json)); };
+  protocolConversion["DNSMXResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSMXResource(json)); };
+  protocolConversion["DNSAResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSAResource(json)); };
+  protocolConversion["DNSPTRResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSPTRResource(json)); };
 }
 
 unittest {
@@ -768,70 +768,76 @@ unittest {
   assert(packet.rcode == 0);
 }
 
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.qname = "google.fr";
-//  json.qtype = QType.A;
-//  json.qclass = QClass.IN;
-//  DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
-//  assert(packet.qname == "google.fr");
-//  assert(packet.qtype == 1);
-//  assert(packet.qclass == 1);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.rname = "google.fr";
-//  json.rtype = QType.A;
-//  json.rclass = QClass.IN;
-//  json.ttl = 600;
-//  json.rdlength = 10;
-//  DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
-//  assert(packet.rname == "google.fr");
-//  assert(packet.rtype == 1);
-//  assert(packet.rclass == 1);
-//  assert(packet.ttl == 600);
-//  assert(packet.rdlength == 10);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.primary = "google.fr";
-//  json.admin = "admin.google.fr";
-//  json.serial = 8000;
-//  json.refresh = 2500;
-//  json.retry = 2500;
-//  json.expirationLimit = 400;
-//  json.minTtl = 10;
-//  DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
-//  assert(packet.primary == "google.fr");
-//  assert(packet.admin == "admin.google.fr");
-//  assert(packet.serial == 8000);
-//  assert(packet.refresh == 2500);
-//  assert(packet.retry == 2500);
-//  assert(packet.expirationLimit == 400);
-//  assert(packet.minTtl == 10);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.pref = 1;
-//  json.mxname = "google.fr";
-//  DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
-//  assert(packet.pref == 1);
-//  assert(packet.mxname == "google.fr");
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.ip = ipToString([127, 0, 0, 1]);
-//  DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
-//  assert(packet.ip == [127, 0, 0, 1]);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.ptrname = "google.fr";
-//  DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
-//  assert(packet.ptrname == "google.fr");
-//}
+unittest {
+  JSONValue json = [
+    "qname": JSONValue("google.fr"),
+    "qtype": JSONValue(QType.A),
+    "qclass": JSONValue(QClass.IN)
+  ];
+  DNSQR packet = cast(DNSQR)(protocolConversion["DNSQR"](json));
+  assert(packet.qname == "google.fr");
+  assert(packet.qtype == 1);
+  assert(packet.qclass == 1);
+}
+
+unittest {
+  JSONValue json = [
+    "rname": JSONValue("google.fr"),
+    "rtype": JSONValue(QType.A),
+    "rclass": JSONValue(QClass.IN),
+    "ttl": JSONValue(600),
+    "rdlength": JSONValue(10)
+  ];
+  DNSRR packet = cast(DNSRR)(protocolConversion["DNSRR"](json));
+  assert(packet.rname == "google.fr");
+  assert(packet.rtype == 1);
+  assert(packet.rclass == 1);
+  assert(packet.ttl == 600);
+  assert(packet.rdlength == 10);
+}
+
+unittest {
+  JSONValue json = [
+    "primary": JSONValue("google.fr"),
+    "admin": JSONValue("admin.google.fr"),
+    "serial": JSONValue(8000),
+    "refresh": JSONValue(2500),
+    "retry": JSONValue(2500),
+    "expirationLimit": JSONValue(400),
+    "minTtl": JSONValue(10)
+  ];
+  DNSSOAResource packet = cast(DNSSOAResource)(protocolConversion["DNSSOAResource"](json));
+  assert(packet.primary == "google.fr");
+  assert(packet.admin == "admin.google.fr");
+  assert(packet.serial == 8000);
+  assert(packet.refresh == 2500);
+  assert(packet.retry == 2500);
+  assert(packet.expirationLimit == 400);
+  assert(packet.minTtl == 10);
+}
+
+unittest {
+  JSONValue json = [
+    "pref": JSONValue(1),
+    "mxname": JSONValue("google.fr")
+  ];
+  DNSMXResource packet = cast(DNSMXResource)(protocolConversion["DNSMXResource"](json));
+  assert(packet.pref == 1);
+  assert(packet.mxname == "google.fr");
+}
+
+unittest {
+  JSONValue json = [
+    "ip": JSONValue(ipToString([127, 0, 0, 1]))
+  ];
+  DNSAResource packet = cast(DNSAResource)(protocolConversion["DNSAResource"](json));
+  assert(packet.ip == [127, 0, 0, 1]);
+}
+
+unittest {
+  JSONValue json = [
+    "ptrname": JSONValue("google.fr")
+  ];
+  DNSPTRResource packet = cast(DNSPTRResource)(protocolConversion["DNSPTRResource"](json));
+  assert(packet.ptrname == "google.fr");
+}
