@@ -39,7 +39,7 @@ shared static this() {
 //  protocolConversion["SNMPv1"] = delegate(JSONValue json){ return (cast(Protocol)to!SNMPv1(json)); };
 //  protocolConversion["SNMPv3"] = delegate(JSONValue json){ return (cast(Protocol)to!SNMPv3(json)); };
 //  protocolConversion["SMTP"] = delegate(JSONValue json){ return (cast(Protocol)to!SMTP(json)); };
-//  protocolConversion["Raw"] = delegate(JSONValue json){ return (cast(Protocol)to!Raw(json)); };
+  protocolConversion["Raw"] = delegate(JSONValue json){ return (cast(Protocol)to!Raw(json)); };
 //  protocolConversion["POP3"] = delegate(JSONValue json){ return (cast(Protocol)to!POP3(json)); };
 //  protocolConversion["NTPv0"] = delegate(JSONValue json){ return (cast(Protocol)to!NTPv0(json)); };
 //  protocolConversion["NTPv4"] = delegate(JSONValue json){ return (cast(Protocol)to!NTPv4(json)); };
@@ -260,14 +260,15 @@ unittest {
 //  SMTP packet = cast(SMTP)(protocolConversion["SMTP"](json));
 //  assert(packet.str == "test");
 //}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.bytes = serializeToJson([0, 1, 2]);
-//  Raw packet = cast(Raw)(protocolConversion["Raw"](json));
-//  assert(packet.bytes == [0, 1, 2]);
-//}
-//
+
+unittest {
+  JSONValue json = [
+    "bytes": JSONValue([0, 1, 2].toJson)
+  ];
+  Raw packet = cast(Raw)(protocolConversion["Raw"](json));
+  assert(packet.bytes == [0, 1, 2]);
+}
+
 //unittest {
 //  Json json = Json.emptyObject;
 //  json.body_ = "test";

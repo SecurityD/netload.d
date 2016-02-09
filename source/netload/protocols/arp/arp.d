@@ -28,8 +28,8 @@ public:
 		targetHwAddr = json["targetHwAddr"].toUbyteArray;
 		senderProtocolAddr = json["senderProtocolAddr"].toUbyteArray;
 		targetProtocolAddr = json["targetProtocolAddr"].toUbyteArray;
-		/*if ("data" in json)
-		  data = netload.protocols.conversion.protocolConversion[json["data"]["name"].to!string](json["data"]);*/
+		if ("data" in json)
+			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encoded) {
@@ -110,7 +110,8 @@ public:
 		assert(json["senderProtocolAddr"].toUbyteArray == [127, 0, 0, 1]);
 		assert(json["targetProtocolAddr"].toUbyteArray == [10, 14, 255, 255]);
 
-		//	  json = json["data"];
+		json = json["data"];
+		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -152,7 +153,7 @@ public:
 		assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255] ~ [42, 21, 84]);
 	}
 
-	//override string toString() const { return toJson.toPrettyString; }
+	override string toString() const { return toJson.toJSON; }
 
 	@property ushort hwType() const { return _hwType; }
 	@property void hwType(ushort hwType) { _hwType = hwType; }
@@ -241,8 +242,7 @@ unittest  {
 	assert(packet.targetHwAddr == [0, 0, 0, 0, 0, 0]);
 	assert(packet.senderProtocolAddr == [127, 0, 0, 1]);
 	assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
-	//FIXME: missing conversion
-	//assert((cast(Raw)packet.data).bytes == [42,21,84]);
+	assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 unittest {
