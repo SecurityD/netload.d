@@ -34,8 +34,8 @@ Protocol delegate(JSONValue)[string] protocolConversion;
 
 shared static this() {
   protocolConversion["ARP"] = delegate(JSONValue json){ return (cast(Protocol)ARP(json)); };
-//  protocolConversion["UDP"] = delegate(JSONValue json){ return (cast(Protocol)to!UDP(json)); };
-//  protocolConversion["TCP"] = delegate(JSONValue json){ return (cast(Protocol)to!TCP(json)); };
+  protocolConversion["UDP"] = delegate(JSONValue json){ return (cast(Protocol)to!UDP(json)); };
+  protocolConversion["TCP"] = delegate(JSONValue json){ return (cast(Protocol)to!TCP(json)); };
 //  protocolConversion["SNMPv1"] = delegate(JSONValue json){ return (cast(Protocol)to!SNMPv1(json)); };
 //  protocolConversion["SNMPv3"] = delegate(JSONValue json){ return (cast(Protocol)to!SNMPv3(json)); };
 //  protocolConversion["SMTP"] = delegate(JSONValue json){ return (cast(Protocol)to!SMTP(json)); };
@@ -43,7 +43,7 @@ shared static this() {
 //  protocolConversion["POP3"] = delegate(JSONValue json){ return (cast(Protocol)to!POP3(json)); };
 //  protocolConversion["NTPv0"] = delegate(JSONValue json){ return (cast(Protocol)to!NTPv0(json)); };
 //  protocolConversion["NTPv4"] = delegate(JSONValue json){ return (cast(Protocol)to!NTPv4(json)); };
-//  protocolConversion["IP"] = delegate(JSONValue json){ return (cast(Protocol)to!IP(json)); };
+  protocolConversion["IP"] = delegate(JSONValue json){ return (cast(Protocol)to!IP(json)); };
 //  protocolConversion["IMAP"] = delegate(JSONValue json){ return (cast(Protocol)to!IMAP(json)); };
 //  protocolConversion["ICMP"] = delegate(JSONValue json){ return (cast(Protocol)to!ICMP(json)); };
 //  protocolConversion["ICMPv4Communication"] = delegate(JSONValue json){ return (cast(Protocol)to!ICMPv4Communication(json)); };
@@ -62,10 +62,10 @@ shared static this() {
 //  protocolConversion["ICMPv4Redirect"] = delegate(JSONValue json){ return (cast(Protocol)to!ICMPv4Redirect(json)); };
 //  protocolConversion["ICMPv4RouterAdvert"] = delegate(JSONValue json){ return (cast(Protocol)to!ICMPv4RouterAdvert(json)); };
 //  protocolConversion["ICMPv4RouterSollicitation"] = delegate(JSONValue json){ return (cast(Protocol)to!ICMPv4RouterSollicitation(json)); };
-//  protocolConversion["HTTP"] = delegate(JSONValue json){ return (cast(Protocol)to!HTTP(json)); };
-//  protocolConversion["Ethernet"] = delegate(JSONValue json){ return (cast(Protocol)to!Ethernet(json)); };
-//  protocolConversion["Dot11"] = delegate(JSONValue json){ return (cast(Protocol)to!Dot11(json)); };
-//  protocolConversion["DHCP"] = delegate(JSONValue json){ return (cast(Protocol)to!DHCP(json)); };
+  protocolConversion["HTTP"] = delegate(JSONValue json){ return (cast(Protocol)to!HTTP(json)); };
+  protocolConversion["Ethernet"] = delegate(JSONValue json){ return (cast(Protocol)to!Ethernet(json)); };
+  protocolConversion["Dot11"] = delegate(JSONValue json){ return (cast(Protocol)to!Dot11(json)); };
+  protocolConversion["DHCP"] = delegate(JSONValue json){ return (cast(Protocol)to!DHCP(json)); };
   protocolConversion["DNS"] = delegate(JSONValue json){ return (cast(Protocol)DNS(json)); };
   protocolConversion["DNSQuery"] = delegate(JSONValue json){ return (cast(Protocol)DNSQuery(json)); };
   protocolConversion["DNSResource"] = delegate(JSONValue json){ return (cast(Protocol)DNSResource(json)); };
@@ -101,41 +101,43 @@ unittest {
   assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.src_port = 8000;
-//  json.dest_port = 7000;
-//  json.len = 0;
-//  json.checksum = 0;
-//  UDP packet = cast(UDP)(protocolConversion["UDP"](json));
-//  assert(packet.srcPort == 8000);
-//  assert(packet.destPort == 7000);
-//  assert(packet.length == 0);
-//  assert(packet.checksum == 0);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.src_port = 8000;
-//  json.dest_port = 7000;
-//  json.sequence_number = 0;
-//  json.ack_number = 0;
-//  json.fin = false;
-//  json.syn = true;
-//  json.rst = false;
-//  json.psh = false;
-//  json.ack = true;
-//  json.urg = false;
-//  json.reserved = 0;
-//  json.offset = 0;
-//  json.window = 0;
-//  json.checksum = 0;
-//  json.urgent_ptr = 0;
-//  TCP packet = cast(TCP)(protocolConversion["TCP"](json));
-//  assert(packet.srcPort == json.src_port.get!ushort);
-//  assert(packet.destPort == json.dest_port.get!ushort);
-//}
-//
+unittest {
+  JSONValue json = [
+    "src_port": JSONValue(8000),
+    "dest_port": JSONValue(7000),
+    "len": JSONValue(0),
+    "checksum": JSONValue(0)
+  ];
+  UDP packet = cast(UDP)(protocolConversion["UDP"](json));
+  assert(packet.srcPort == 8000);
+  assert(packet.destPort == 7000);
+  assert(packet.length == 0);
+  assert(packet.checksum == 0);
+}
+
+unittest {
+  JSONValue json = [
+    "src_port": JSONValue(8000),
+    "dest_port": JSONValue(7000),
+    "sequence_number": JSONValue(0),
+    "ack_number": JSONValue(0),
+    "fin": JSONValue(false),
+    "syn": JSONValue(true),
+    "rst": JSONValue(false),
+    "psh": JSONValue(false),
+    "ack": JSONValue(true),
+    "urg": JSONValue(false),
+    "reserved": JSONValue(0),
+    "offset": JSONValue(0),
+    "window": JSONValue(0),
+    "checksum": JSONValue(0),
+    "urgent_ptr": JSONValue(0)
+  ];
+  TCP packet = cast(TCP)(protocolConversion["TCP"](json));
+  assert(packet.srcPort == json["src_port"].to!ushort);
+  assert(packet.destPort == json["dest_port"].to!ushort);
+}
+
 //unittest {
 //  ASN1 pdu;
 //  pdu.type = ASN1.Type.SET_REQUEST_PDU;
@@ -360,27 +362,28 @@ unittest {
 //  assert(packet.receiveTimestamp == 0xd9_39_0d_73_39_4d_93_98);
 //  assert(packet.transmitTimestamp == 0xd9_39_0d_b3_58_3e_91_e8);
 //}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.ip_version = 0;
-//  json.ihl = 0;
-//  json.tos = 0;
-//  json.header_length = 0;
-//  json.id = 0;
-//  json.offset = 0;
-//  json.reserved = false;
-//  json.df = false;
-//  json.mf = false;
-//  json.ttl = 0;
-//  json.protocol = 0;
-//  json.checksum = 0;
-//  json.src_ip_address = ipToString([127, 0, 0, 1]);
-//  json.dest_ip_address = ipToString([0, 0, 0, 0]);
-//  IP packet = cast(IP)(protocolConversion["IP"](json));
-//  assert(packet.srcIpAddress == [127, 0, 0, 1]);
-//}
-//
+
+unittest {
+  JSONValue json = [
+    "ip_version": JSONValue(0),
+    "ihl": JSONValue(0),
+    "tos": JSONValue(0),
+    "header_length": JSONValue(0),
+    "id": JSONValue(0),
+    "offset": JSONValue(0),
+    "reserved": JSONValue(false),
+    "df": JSONValue(false),
+    "mf": JSONValue(false),
+    "ttl": JSONValue(0),
+    "protocol": JSONValue(0),
+    "checksum": JSONValue(0),
+    "src_ip_address": JSONValue(ipToString([127, 0, 0, 1])),
+    "dest_ip_address": JSONValue(ipToString([0, 0, 0, 0]))
+  ];
+  IP packet = cast(IP)(protocolConversion["IP"](json));
+  assert(packet.srcIpAddress == [127, 0, 0, 1]);
+}
+
 //unittest {
 //  Json json = Json.emptyObject;
 //  json.body_ = "test";
@@ -588,99 +591,103 @@ unittest {
 //  ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)(protocolConversion["ICMPv4RouterSollicitation"](json));
 //  assert(packet.checksum == 0);
 //}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.body_ = "test";
-//  HTTP packet = cast(HTTP)(protocolConversion["HTTP"](json));
-//  assert(packet.str == "test");
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
-//  json.src_mac_address = macToString([255, 255, 255, 255, 255, 255]);
-//  json.dest_mac_address = macToString([0, 0, 0, 0, 0, 0]);
-//  json.protocol_type = 0x0800;
-//  json.fcs = 0;
-//  Ethernet packet = cast(Ethernet)(protocolConversion["Ethernet"](json));
-//  assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
-//  assert(packet.protocolType == 0x0800);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  json.subtype = 8;
-//  json.packet_type = 0;
-//  json.vers = 0;
-//  json.rsvd = 0;
-//  json.wep = 0;
-//  json.more_data = 0;
-//  json.power = 0;
-//  json.retry = 0;
-//  json.more_frag = 0;
-//  json.from_DS = 0;
-//  json.to_DS = 0;
-//  json.duration = 0;
-//  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
-//  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
-//  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
-//  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
-//  json.seq = 0;
-//  json.fcs = 0;
-//  Dot11 packet = cast(Dot11)(protocolConversion["Dot11"](json));
-//  assert(packet.type == 0);
-//  assert(packet.subtype == 8);
-//  assert(packet.addr1 == [255,255,255,255,255,255]);
-//  assert(packet.addr2 == [0,0,0,0,0,0]);
-//  assert(packet.addr3 == [1,2,3,4,5,6]);
-//  assert(packet.addr4 == [0,0,0,0,0,0]);
-//  assert(packet.duration == 0);
-//  assert(packet.seq == 0);
-//  assert(packet.fcs == 0);
-//  assert(packet.vers == 0);
-//  assert(packet.rsvd == 0);
-//  assert(packet.wep == 0);
-//  assert(packet.moreData == 0);
-//  assert(packet.power == 0);
-//  assert(packet.retry == 0);
-//  assert(packet.moreFrag == 0);
-//  assert(packet.fromDS == 0);
-//  assert(packet.toDS == 0);
-//}
-//
-//unittest {
-//  Json json = Json.emptyObject;
-//  ubyte[] options;
-//  json.op = 2;
-//  json.htype = 1;
-//  json.hlen = 6;
-//  json.hops = 0;
-//  json.xid = 42;
-//  json.secs = 0;
-//  json.broadcast = false;
-//  json.ciaddr = ipToString([127, 0, 0, 1]);
-//  json.yiaddr = ipToString([127, 0, 1, 1]);
-//  json.siaddr = ipToString([10, 14, 19, 42]);
-//  json.giaddr = ipToString([10, 14, 59, 255]);
-//  json.chaddr = serializeToJson(new ubyte[16]);
-//  json.sname = serializeToJson(new ubyte[64]);
-//  json.file = serializeToJson(new ubyte[128]);
-//  json.options = serializeToJson(options);
-//  DHCP packet = cast(DHCP)(protocolConversion["DHCP"](json));
-//  assert(packet.toJson.op == 2);
-//  assert(packet.toJson.htype == 1);
-//  assert(packet.toJson.hlen == 6);
-//  assert(packet.toJson.hops == 0);
-//  assert(packet.toJson.xid == 42);
-//  assert(packet.toJson.secs == 0);
-//  assert(packet.toJson.broadcast == false);
-//  assert(packet.toJson.ciaddr == "127.0.0.1");
-//  assert(packet.toJson.yiaddr == "127.0.1.1");
-//  assert(packet.toJson.siaddr == "10.14.19.42");
-//  assert(packet.toJson.giaddr == "10.14.59.255");
-//}
-//
+
+unittest {
+  JSONValue json = [
+    "body_": JSONValue("test")
+  ];
+  HTTP packet = cast(HTTP)(protocolConversion["HTTP"](json));
+  assert(packet.str == "test");
+}
+
+unittest {
+  JSONValue json = [
+    "prelude": JSONValue(([1, 0, 1, 0, 1, 0, 1]).toJson),
+    "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "protocol_type": JSONValue(0x0800),
+    "fcs": JSONValue(0)
+  ];
+  Ethernet packet = cast(Ethernet)(protocolConversion["Ethernet"](json));
+  assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
+  assert(packet.protocolType == 0x0800);
+}
+
+unittest {
+  JSONValue json = [
+    "subtype": JSONValue(8),
+    "packet_type": JSONValue(0),
+    "vers": JSONValue(0),
+    "rsvd": JSONValue(0),
+    "wep": JSONValue(0),
+    "more_data": JSONValue(0),
+    "power": JSONValue(0),
+    "retry": JSONValue(0),
+    "more_frag": JSONValue(0),
+    "from_DS": JSONValue(0),
+    "to_DS": JSONValue(0),
+    "duration": JSONValue(0),
+    "addr1": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "addr2": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "addr3": JSONValue(macToString([1, 2, 3, 4, 5, 6])),
+    "addr4": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "seq": JSONValue(0),
+    "fcs": JSONValue(0)
+  ];
+  Dot11 packet = cast(Dot11)(protocolConversion["Dot11"](json));
+  assert(packet.type == 0);
+  assert(packet.subtype == 8);
+  assert(packet.addr1 == [255,255,255,255,255,255]);
+  assert(packet.addr2 == [0,0,0,0,0,0]);
+  assert(packet.addr3 == [1,2,3,4,5,6]);
+  assert(packet.addr4 == [0,0,0,0,0,0]);
+  assert(packet.duration == 0);
+  assert(packet.seq == 0);
+  assert(packet.fcs == 0);
+  assert(packet.vers == 0);
+  assert(packet.rsvd == 0);
+  assert(packet.wep == 0);
+  assert(packet.moreData == 0);
+  assert(packet.power == 0);
+  assert(packet.retry == 0);
+  assert(packet.moreFrag == 0);
+  assert(packet.fromDS == 0);
+  assert(packet.toDS == 0);
+}
+
+unittest {
+  ubyte[] options;
+  JSONValue json = [
+    "op": JSONValue(2),
+    "htype": JSONValue(1),
+    "hlen": JSONValue(6),
+    "hops": JSONValue(0),
+    "xid": JSONValue(42),
+    "secs": JSONValue(0),
+    "broadcast": JSONValue(false),
+    "ciaddr": JSONValue(ipToString([127, 0, 0, 1])),
+    "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
+    "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
+    "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
+    "chaddr": JSONValue((new ubyte[16]).toJson),
+    "sname": JSONValue((new ubyte[64]).toJson),
+    "file": JSONValue((new ubyte[128]).toJson),
+    "options": JSONValue((options).toJson)
+  ];
+  DHCP packet = cast(DHCP)(protocolConversion["DHCP"](json));
+  assert(packet.op == 2);
+  assert(packet.htype == 1);
+  assert(packet.hlen == 6);
+  assert(packet.hops == 0);
+  assert(packet.xid == 42);
+  assert(packet.secs == 0);
+  assert(packet.broadcast == false);
+  assert(packet.ciaddr == [127, 0, 0, 1]);
+  assert(packet.yiaddr == [127, 0, 1, 1]);
+  assert(packet.siaddr == [10, 14, 19, 42]);
+  assert(packet.giaddr == [10, 14, 59, 255]);
+}
+
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
