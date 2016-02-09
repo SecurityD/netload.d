@@ -1,11 +1,12 @@
 module netload.protocols.dhcp.dhcp;
-/*
+
 import netload.core.protocol;
 import netload.core.addr;
 import stdx.data.json;
 import std.bitmanip;
 import std.exception;
 import std.conv;
+import netload.core.conversion.ubyte_conversion;
 
 union Bitfields {
   ushort raw;
@@ -17,6 +18,10 @@ union Bitfields {
 
 class DHCP : Protocol {
   public:
+  static DHCP opCall(inout JSONValue val) {
+		return new DHCP(val);
+	}
+
 	this() {
 	  _flags.raw = 0;
 	}
@@ -36,26 +41,25 @@ class DHCP : Protocol {
 	  _giaddr = giaddr;
 	}
 
-	//this(Json json) {
-	//  _op = json.op.to!ubyte;
-	//  _htype = json.htype.to!ubyte;
-	//  _hlen = json.hlen.to!ubyte;
-	//  _hops = json.hops.to!ubyte;
-	//  _xid = json.xid.to!uint;
-	//  _secs = json.secs.to!ushort;
-	//  _flags.broadcast = json.broadcast.to!bool;
-	//  _ciaddr = stringToIp(json.ciaddr.to!string);
-	//  _yiaddr = stringToIp(json.yiaddr.to!string);
-	//  _siaddr = stringToIp(json.siaddr.to!string);
-	//  _giaddr = stringToIp(json.giaddr.to!string);
-	//  _chaddr = deserializeJson!(ubyte[16])(json.chaddr);
-	//  _sname = deserializeJson!(ubyte[64])(json.sname);
-	//  _file = deserializeJson!(ubyte[128])(json.file);
-	//  _options = deserializeJson!(ubyte[])(json.options);
-	//  auto packetData = ("data" in json);
-	//  if (json.data.type != Json.Type.Null && packetData != null)
-	//    _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
-	//}
+	this(JSONValue json) {
+	  _op = json["op"].to!ubyte;
+	  _htype = json["htype"].to!ubyte;
+	  _hlen = json["hlen"].to!ubyte;
+	  _hops = json["hops"].to!ubyte;
+	  _xid = json["xid"].to!uint;
+	  _secs = json["secs"].to!ushort;
+	  _flags.broadcast = json["broadcast"].to!bool;
+	  _ciaddr = stringToIp(json["ciaddr"].get!string);
+	  _yiaddr = stringToIp(json["yiaddr"].get!string);
+	  _siaddr = stringToIp(json["siaddr"].get!string);
+	  _giaddr = stringToIp(json["giaddr"].get!string);
+	  _chaddr = json["chaddr"].toUbyteArray;
+	  _sname = json["sname"].toUbyteArray;
+	  _file = json["file"].toUbyteArray;
+	  _options = json["options"].toUbyteArray;
+    if ("data" in json && json["data"] != null)
+			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
+	}
 
 	this(ubyte[] encodedPacket) {
 	  _op = encodedPacket.read!ubyte();
@@ -78,71 +82,72 @@ class DHCP : Protocol {
 	override @property Protocol data() { return _data; }
 	override @property void data(Protocol p) { _data = p; }
 	override @property inout string name() const { return "DHCP"; }
-	//override @property int osiLayer() const { return 3; }
+	override @property int osiLayer() const { return 3; }
 
-	//override Json toJson() const {
-	//  Json packet = Json.emptyObject;
-	//  packet.op = _op;
-	//  packet.htype = _htype;
-	//  packet.hlen = _hlen;
-	//  packet.hops = _hops;
-	//  packet.xid = _xid;
-	//  packet.secs = _secs;
-	//  packet.broadcast = _flags.broadcast;
-	//  packet.ciaddr = ipToString(_ciaddr);
-	//  packet.yiaddr = ipToString(_yiaddr);
-	//  packet.siaddr = ipToString(_siaddr);
-	//  packet.giaddr = ipToString(_giaddr);
-	//  packet.chaddr = serializeToJson(_chaddr);
-	//  packet.sname = serializeToJson(_sname);
-	//  packet.file = serializeToJson(_file);
-	//  packet.options = serializeToJson(_options);
-	//  packet.name = name;
-	//  if (_data is null)
-	//    packet.data = null;
-	//  else
-	//    packet.data = _data.toJson;
-	//  return packet;
-	//}
-	//
-	//unittest {
-	//  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
-	//  assert(packet.toJson.op == 2);
-	//  assert(packet.toJson.htype == 1);
-	//  assert(packet.toJson.hlen == 6);
-	//  assert(packet.toJson.hops == 0);
-	//  assert(packet.toJson.xid == 42);
-	//  assert(packet.toJson.secs == 0);
-	//  assert(packet.toJson.broadcast == false);
-	//  assert(packet.toJson.ciaddr == "127.0.0.1");
-	//  assert(packet.toJson.yiaddr == "127.0.1.1");
-	//  assert(packet.toJson.siaddr == "10.14.19.42");
-	//  assert(packet.toJson.giaddr == "10.14.59.255");
-	//}
-	//
-	//unittest {
-	//  import netload.protocols.raw;
-	//  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
-	//
-	//  packet.data = new Raw([42, 21, 84]);
-	//
-	//  Json json = packet.toJson;
-	//  assert(json.name == "DHCP");
-	//  assert(json.op == 2);
-	//  assert(json.htype == 1);
-	//  assert(json.hlen == 6);
-	//  assert(json.hops == 0);
-	//  assert(json.xid == 42);
-	//  assert(json.secs == 0);
-	//  assert(json.broadcast == false);
-	//  assert(json.ciaddr == "127.0.0.1");
-	//  assert(json.yiaddr == "127.0.1.1");
-	//  assert(json.siaddr == "10.14.19.42");
-	//  assert(json.giaddr == "10.14.59.255");
-	//
-	//  json = json.data;
-	//  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
-	//}
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "op": JSONValue(_op),
+	    "htype": JSONValue(_htype),
+	    "hlen": JSONValue(_hlen),
+	    "hops": JSONValue(_hops),
+	    "xid": JSONValue(_xid),
+	    "secs": JSONValue(_secs),
+	    "broadcast": JSONValue(_flags.broadcast),
+	    "ciaddr": JSONValue(ipToString(_ciaddr)),
+	    "yiaddr": JSONValue(ipToString(_yiaddr)),
+	    "siaddr": JSONValue(ipToString(_siaddr)),
+	    "giaddr": JSONValue(ipToString(_giaddr)),
+	    "chaddr": JSONValue(_chaddr.toJson),
+	    "sname": JSONValue(_sname.toJson),
+	    "file": JSONValue(_file.toJson),
+	    "options": JSONValue(_options.toJson),
+	    "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
+	}
+
+	unittest {
+	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
+	  assert(packet.toJson["op"] == 2);
+	  assert(packet.toJson["htype"] == 1);
+	  assert(packet.toJson["hlen"] == 6);
+	  assert(packet.toJson["hops"] == 0);
+	  assert(packet.toJson["xid"] == 42);
+	  assert(packet.toJson["secs"] == 0);
+	  assert(packet.toJson["broadcast"] == false);
+	  assert(packet.toJson["ciaddr"] == "127.0.0.1");
+	  assert(packet.toJson["yiaddr"] == "127.0.1.1");
+	  assert(packet.toJson["siaddr"] == "10.14.19.42");
+	  assert(packet.toJson["giaddr"] == "10.14.59.255");
+	}
+
+	unittest {
+	  import netload.protocols.raw;
+	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
+
+	  packet.data = new Raw([42, 21, 84]);
+
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DHCP");
+	  assert(json["op"] == 2);
+	  assert(json["htype"] == 1);
+	  assert(json["hlen"] == 6);
+	  assert(json["hops"] == 0);
+	  assert(json["xid"] == 42);
+	  assert(json["secs"] == 0);
+	  assert(json["broadcast"] == false);
+	  assert(json["ciaddr"] == "127.0.0.1");
+	  assert(json["yiaddr"] == "127.0.1.1");
+	  assert(json["siaddr"] == "10.14.19.42");
+	  assert(json["giaddr"] == "10.14.59.255");
+
+    json = json["data"];
+		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+	}
 
 	override ubyte[] toBytes() const {
 	  ubyte[] packet = new ubyte[12];
@@ -174,11 +179,7 @@ class DHCP : Protocol {
 	  assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
 	}
 
-	//override string toString() const { return toJson().toPrettyString; }
-
-	unittest {
-	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
-	}
+	override string toString() const { return toJson.toJSON; }
 
 	@property ubyte op() const { return _op; };
 	@property void op(ubyte op) { _op = op; };
@@ -232,79 +233,81 @@ class DHCP : Protocol {
 	ubyte[] _options;
 }
 
-//unittest {
-//  Json json = Json.emptyObject;
-//  ubyte[] options;
-//  json.op = 2;
-//  json.htype = 1;
-//  json.hlen = 6;
-//  json.hops = 0;
-//  json.xid = 42;
-//  json.secs = 0;
-//  json.broadcast = false;
-//  json.ciaddr = ipToString([127, 0, 0, 1]);
-//  json.yiaddr = ipToString([127, 0, 1, 1]);
-//  json.siaddr = ipToString([10, 14, 19, 42]);
-//  json.giaddr = ipToString([10, 14, 59, 255]);
-//  json.chaddr = serializeToJson(new ubyte[16]);
-//  json.sname = serializeToJson(new ubyte[64]);
-//  json.file = serializeToJson(new ubyte[128]);
-//  json.options = serializeToJson(options);
-//  DHCP packet = cast(DHCP)to!DHCP(json);
-//  assert(packet.toJson.op == 2);
-//  assert(packet.toJson.htype == 1);
-//  assert(packet.toJson.hlen == 6);
-//  assert(packet.toJson.hops == 0);
-//  assert(packet.toJson.xid == 42);
-//  assert(packet.toJson.secs == 0);
-//  assert(packet.toJson.broadcast == false);
-//  assert(packet.toJson.ciaddr == "127.0.0.1");
-//  assert(packet.toJson.yiaddr == "127.0.1.1");
-//  assert(packet.toJson.siaddr == "10.14.19.42");
-//  assert(packet.toJson.giaddr == "10.14.59.255");
-//}
+unittest {
+  ubyte[] options;
+  JSONValue json = [
+    "op": JSONValue(2),
+    "htype": JSONValue(1),
+    "hlen": JSONValue(6),
+    "hops": JSONValue(0),
+    "xid": JSONValue(42),
+    "secs": JSONValue(0),
+    "broadcast": JSONValue(false),
+    "ciaddr": JSONValue(ipToString([127, 0, 0, 1])),
+    "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
+    "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
+    "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
+    "chaddr": JSONValue((new ubyte[16]).toJson),
+    "sname": JSONValue((new ubyte[64]).toJson),
+    "file": JSONValue((new ubyte[128]).toJson),
+    "options": JSONValue((options).toJson)
+  ];
+  DHCP packet = cast(DHCP)to!DHCP(json);
+  assert(packet.toJson["op"] == 2);
+  assert(packet.toJson["htype"] == 1);
+  assert(packet.toJson["hlen"] == 6);
+  assert(packet.toJson["hops"] == 0);
+  assert(packet.toJson["xid"] == 42);
+  assert(packet.toJson["secs"] == 0);
+  assert(packet.toJson["broadcast"] == false);
+  assert(packet.toJson["ciaddr"] == "127.0.0.1");
+  assert(packet.toJson["yiaddr"] == "127.0.1.1");
+  assert(packet.toJson["siaddr"] == "10.14.19.42");
+  assert(packet.toJson["giaddr"] == "10.14.59.255");
+}
 
-//unittest  {
-//  import netload.protocols.raw;
-//
-//  Json json = Json.emptyObject;
-//  ubyte[] options;
-//
-//  json.name = "DHCP";
-//  json.op = 2;
-//  json.htype = 1;
-//  json.hlen = 6;
-//  json.hops = 0;
-//  json.xid = 42;
-//  json.secs = 0;
-//  json.broadcast = false;
-//  json.ciaddr = ipToString([127, 0, 0, 1]);
-//  json.yiaddr = ipToString([127, 0, 1, 1]);
-//  json.siaddr = ipToString([10, 14, 19, 42]);
-//  json.giaddr = ipToString([10, 14, 59, 255]);
-//  json.chaddr = serializeToJson(new ubyte[16]);
-//  json.sname = serializeToJson(new ubyte[64]);
-//  json.file = serializeToJson(new ubyte[128]);
-//  json.options = serializeToJson(options);
-//
-//  json.data = Json.emptyObject;
-//  json.data.name = "Raw";
-//  json.data.bytes = serializeToJson([42,21,84]);
-//
-//  DHCP packet = cast(DHCP)to!DHCP(json);
-//  assert(packet.op == 2);
-//  assert(packet.htype == 1);
-//  assert(packet.hlen == 6);
-//  assert(packet.hops == 0);
-//  assert(packet.xid == 42);
-//  assert(packet.secs == 0);
-//  assert(packet.broadcast == false);
-//  assert(packet.ciaddr == [127, 0, 0, 1]);
-//  assert(packet.yiaddr == [127, 0, 1, 1]);
-//  assert(packet.siaddr == [10, 14, 19, 42]);
-//  assert(packet.giaddr == [10, 14, 59, 255]);
-//  assert((cast(Raw)packet.data).bytes == [42,21,84]);
-//}
+unittest  {
+  import netload.protocols.raw;
+
+  ubyte[] options;
+  JSONValue json = [
+    "name": JSONValue("DHCP"),
+    "op": JSONValue(2),
+    "htype": JSONValue(1),
+    "hlen": JSONValue(6),
+    "hops": JSONValue(0),
+    "xid": JSONValue(42),
+    "secs": JSONValue(0),
+    "broadcast": JSONValue(false),
+    "ciaddr": JSONValue(ipToString([127, 0, 0, 1])),
+    "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
+    "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
+    "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
+    "chaddr": JSONValue((new ubyte[16]).toJson),
+    "sname": JSONValue((new ubyte[64]).toJson),
+    "file": JSONValue((new ubyte[128]).toJson),
+    "options": JSONValue((options).toJson)
+  ];
+
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+	]);
+
+  DHCP packet = cast(DHCP)to!DHCP(json);
+  assert(packet.op == 2);
+  assert(packet.htype == 1);
+  assert(packet.hlen == 6);
+  assert(packet.hops == 0);
+  assert(packet.xid == 42);
+  assert(packet.secs == 0);
+  assert(packet.broadcast == false);
+  assert(packet.ciaddr == [127, 0, 0, 1]);
+  assert(packet.yiaddr == [127, 0, 1, 1]);
+  assert(packet.siaddr == [10, 14, 19, 42]);
+  assert(packet.giaddr == [10, 14, 59, 255]);
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
+}
 
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
@@ -322,4 +325,3 @@ unittest {
   assert(packet.giaddr == [10, 14, 59, 255]);
   assert(packet.options == [42, 56, 0]);
 }
-*/
