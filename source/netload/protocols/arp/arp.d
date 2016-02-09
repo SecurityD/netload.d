@@ -28,7 +28,7 @@ public:
 		targetHwAddr = json["targetHwAddr"].toUbyteArray;
 		senderProtocolAddr = json["senderProtocolAddr"].toUbyteArray;
 		targetProtocolAddr = json["targetProtocolAddr"].toUbyteArray;
-		if ("data" in json)
+		if ("data" in json && json["data"] != null)
 			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 

@@ -87,8 +87,8 @@ class DNSBase(DNSType __type__) : Protocol {
 	  ancount = json["ancount"].to!ushort;
 	  nscount = json["nscount"].to!ushort;
 	  arcount = json["arcount"].to!ushort;
-	  /*if ("data" in json)
-		  _data = netload.protocols.conversion.protocolConversion[json["data"]["name"].to!string](json["data"]);*/
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -160,8 +160,8 @@ class DNSBase(DNSType __type__) : Protocol {
 
 	unittest {
 	  DNS packet = new DNS(10, true);
-	  assert(packet.toJson()["id"] == 10);
-	  assert(packet.toJson()["truncation"] == true);
+	  assert(packet.toJson["id"] == 10);
+	  assert(packet.toJson["truncation"] == true);
 	}
 
 	unittest {
@@ -225,7 +225,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	  assert(packet.toBytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
 	}
 
-	/*override string toString() const { return toJson().toPrettyString; }*/
+	override string toString() const { return toJson.toJSON; }
 
 	@property ushort id() { return _id; }
 	@property void id(ushort id) { _id = id; }
@@ -342,7 +342,7 @@ unittest  {
   assert(packet.ra == false);
   assert(packet.z == 0);
   assert(packet.rcode == 0);
-  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 unittest {
@@ -425,7 +425,7 @@ unittest  {
   assert(packet.opcode == 1);
   assert(packet.rd == true);
   assert(packet.tc == false);
-  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 unittest {
@@ -505,7 +505,7 @@ unittest  {
   assert(packet.tc == false);
   assert(packet.ra == false);
   assert(packet.rcode == 0);
-  /*assert((cast(Raw)packet.data).bytes == [42,21,84]);*/
+  assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
 unittest {
@@ -521,7 +521,7 @@ unittest {
   assert(packet.ra == true);
   assert(packet.rcode == 2);
 }
-/*
+
 enum QType {
   A	= 1,
   NS = 2,
@@ -651,6 +651,10 @@ private string readLabels(ref ubyte[] encodedPacket) {
 
 class DNSQR : Protocol {
   public:
+  static DNSQR opCall(inout JSONValue json) {
+    return new DNSQR(json);
+  }
+
 	this () {}
 
 	this (string qname, ushort qtype, ushort qclass) {
@@ -659,11 +663,10 @@ class DNSQR : Protocol {
 	  _qclass = qclass;
 	}
 
-	this(Json json) {
-	  this(json.qname.to!string, json.qtype.to!ushort, json.qclass.to!ushort);
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  this(json["qname"].get!string, json["qtype"].to!ushort, json["qclass"].to!ushort);
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -677,24 +680,25 @@ class DNSQR : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.qname = _qname;
-	  packet.qtype = _qtype;
-	  packet.qclass = _qclass;
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "qname": JSONValue(_qname),
+      "qtype": JSONValue(_qtype),
+      "qclass": JSONValue(_qclass),
+      "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+		return json;
 	}
 
 	unittest {
 	  DNSQR packet = new DNSQR("google.fr", QType.A, QClass.IN);
-	  assert(packet.toJson().qname == "google.fr");
-	  assert(packet.toJson().qtype == 1);
-	  assert(packet.toJson().qclass == 1);
+	  assert(packet.toJson["qname"] == "google.fr");
+	  assert(packet.toJson["qtype"] == 1);
+	  assert(packet.toJson["qclass"] == 1);
 	}
 
 	unittest {
@@ -703,14 +707,14 @@ class DNSQR : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSQR");
-	  assert(json.qname == "google.fr");
-	  assert(json.qtype == 1);
-	  assert(json.qclass == 1);
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSQR");
+	  assert(json["qname"] == "google.fr");
+	  assert(json["qtype"] == 1);
+	  assert(json["qclass"] == 1);
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+	  json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -742,12 +746,7 @@ class DNSQR : Protocol {
 	}
 
 	override string toString() const {
-	  return toJson().toString;
-	}
-
-	unittest {
-	  auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
-	  assert(packet.toString == `{"qtype":1,"qname":"google.fr","name":"DNSQR","data":null,"qclass":1}`);
+	  return toJson.toJSON;
 	}
 
 	@property string qname() const { return _qname; }
@@ -765,29 +764,31 @@ class DNSQR : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.qname = "google.fr";
-  json.qtype = QType.A;
-  json.qclass = QClass.IN;
+  JSONValue json = [
+    "qname": JSONValue("google.fr"),
+    "qtype": JSONValue(QType.A),
+    "qclass": JSONValue(QClass.IN)
+  ];
   DNSQR packet = cast(DNSQR)to!DNSQR(json);
   assert(packet.qname == "google.fr");
-  assert(packet.qtype == 1);
-  assert(packet.qclass == 1);
+  assert(packet.qtype == QType.A);
+  assert(packet.qclass == QClass.IN);
 }
 
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSQR"),
+    "qname": JSONValue("google.fr"),
+    "qtype": JSONValue(QType.A),
+    "qclass": JSONValue(QClass.IN)
+  ];
 
-  json.name = "DNSQR";
-  json.qname = "google.fr";
-  json.qtype = QType.A;
-  json.qclass = QClass.IN;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+	]);
 
   DNSQR packet = cast(DNSQR)to!DNSQR(json);
   assert(packet.qname == "google.fr");
@@ -806,6 +807,10 @@ unittest {
 
 class DNSRR : Protocol {
   public:
+  static DNSRR opCall(inout JSONValue json) {
+    return new DNSRR(json);
+  }
+
 	this() {}
 
 	this(string rname, ushort rtype, ushort rclass, uint ttl) {
@@ -815,12 +820,11 @@ class DNSRR : Protocol {
 	  _ttl = ttl;
 	}
 
-	this(Json json) {
-	  this(json.rname.to!string, json.rtype.to!ushort, json.rclass.to!ushort, json.ttl.to!uint);
-	  rdlength = json.rdlength.to!ushort;
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  this(json["rname"].get!string, json["rtype"].to!ushort, json["rclass"].to!ushort, json["ttl"].to!uint);
+	  rdlength = json["rdlength"].to!ushort;
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -836,28 +840,29 @@ class DNSRR : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.rname = _rname;
-	  packet.rtype = _rtype;
-	  packet.rclass = _rclass;
-	  packet.ttl = _ttl;
-	  packet.rdlength = _rdlength;
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "rname": JSONValue(_rname),
+	    "rtype": JSONValue(_rtype),
+	    "rclass": JSONValue(_rclass),
+	    "ttl": JSONValue(_ttl),
+	    "rdlength": JSONValue(_rdlength),
+	    "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
 	}
 
 	unittest {
 	  DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
-	  assert(packet.toJson.rname == "google.fr");
-	  assert(packet.toJson.rtype == 1);
-	  assert(packet.toJson.rclass == 1);
-	  assert(packet.toJson.ttl == 2500);
-	  assert(packet.toJson.rdlength == 0);
+	  assert(packet.toJson["rname"] == "google.fr");
+	  assert(packet.toJson["rtype"] == 1);
+	  assert(packet.toJson["rclass"] == 1);
+	  assert(packet.toJson["ttl"] == 2500);
+	  assert(packet.toJson["rdlength"] == 0);
 	}
 
 	unittest {
@@ -866,16 +871,16 @@ class DNSRR : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSRR");
-	  assert(json.rname == "google.fr");
-	  assert(json.rtype == 1);
-	  assert(json.rclass == 1);
-	  assert(json.ttl == 2500);
-	  assert(json.rdlength == 0);
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSRR");
+	  assert(json["rname"] == "google.fr");
+	  assert(json["rtype"] == 1);
+	  assert(json["rclass"] == 1);
+	  assert(json["ttl"] == 2500);
+	  assert(json["rdlength"] == 0);
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+	  json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -907,12 +912,7 @@ class DNSRR : Protocol {
 	}
 
 	override string toString() const {
-	  return toJson().toString;
-	}
-
-	unittest {
-	  DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
-	  assert(packet.toString == `{"ttl":2500,"rname":"google.fr","name":"DNSRR","rtype":1,"rdlength":0,"data":null,"rclass":1}`);
+	  return toJson.toJSON;
 	}
 
 	@property string rname() { return _rname; }
@@ -936,12 +936,13 @@ class DNSRR : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.rname = "google.fr";
-  json.rtype = QType.A;
-  json.rclass = QClass.IN;
-  json.ttl = 600;
-  json.rdlength = 10;
+  JSONValue json = [
+    "rname": JSONValue("google.fr"),
+    "rtype": JSONValue(QType.A),
+    "rclass": JSONValue(QClass.IN),
+    "ttl": JSONValue(600),
+    "rdlength": JSONValue(10)
+  ];
   DNSRR packet = cast(DNSRR)to!DNSRR(json);
   assert(packet.rname == "google.fr");
   assert(packet.rtype == 1);
@@ -953,18 +954,19 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSRR"),
+    "rname": JSONValue("google.fr"),
+    "rtype": JSONValue(QType.A),
+    "rclass": JSONValue(QClass.IN),
+    "ttl": JSONValue(600),
+    "rdlength": JSONValue(10)
+  ];
 
-  json.name = "DNSRR";
-  json.rname = "google.fr";
-  json.rtype = QType.A;
-  json.rclass = QClass.IN;
-  json.ttl = 600;
-  json.rdlength = 10;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+  ]);
 
   DNSRR packet = cast(DNSRR)to!DNSRR(json);
   assert(packet.rname == "google.fr");
@@ -987,6 +989,10 @@ unittest {
 
 class DNSSOAResource  : Protocol {
   public:
+  static DNSSOAResource opCall(inout JSONValue json) {
+    return new DNSSOAResource(json);
+  }
+
 	this() {}
 
 	this(string primary, string admin, uint serial, uint refresh, uint retry, uint expirationLimit, uint minTtl) {
@@ -999,17 +1005,16 @@ class DNSSOAResource  : Protocol {
 	  _minTtl = minTtl;
 	}
 
-	this(Json json) {
-	  primary = json.primary.to!string;
-	  admin = json.admin.to!string;
-	  serial = json.serial.to!uint;
-	  refresh = json.refresh.to!uint;
-	  retry = json.retry.to!uint;
-	  expirationLimit = json.expirationLimit.to!uint;
-	  minTtl = json.minTtl.to!uint;
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  primary = json["primary"].get!string;
+	  admin = json["admin"].get!string;
+	  serial = json["serial"].to!uint;
+	  refresh = json["refresh"].to!uint;
+	  retry = json["retry"].to!uint;
+	  expirationLimit = json["expirationLimit"].to!uint;
+	  minTtl = json["minTtl"].to!uint;
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -1027,32 +1032,33 @@ class DNSSOAResource  : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.primary = _primary;
-	  packet.admin = _admin;
-	  packet.serial = _serial;
-	  packet.refresh = _refresh;
-	  packet.retry = _retry;
-	  packet.expirationLimit = _expirationLimit;
-	  packet.minTtl = _minTtl;
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "primary": JSONValue(_primary),
+	    "admin": JSONValue(_admin),
+	    "serial": JSONValue(_serial),
+	    "refresh": JSONValue(_refresh),
+	    "retry": JSONValue(_retry),
+	    "expirationLimit": JSONValue(_expirationLimit),
+	    "minTtl": JSONValue(_minTtl),
+	    "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
 	}
 
 	unittest {
 	  DNSSOAResource packet = new DNSSOAResource();
-	  assert(packet.toJson.primary == ".");
-	  assert(packet.toJson.admin == ".");
-	  assert(packet.toJson.serial == 0);
-	  assert(packet.toJson.refresh == 0);
-	  assert(packet.toJson.retry == 0);
-	  assert(packet.toJson.expirationLimit == 0);
-	  assert(packet.toJson.minTtl == 0);
+	  assert(packet.toJson["primary"] == ".");
+	  assert(packet.toJson["admin"] == ".");
+	  assert(packet.toJson["serial"] == 0);
+	  assert(packet.toJson["refresh"] == 0);
+	  assert(packet.toJson["retry"] == 0);
+	  assert(packet.toJson["expirationLimit"] == 0);
+	  assert(packet.toJson["minTtl"] == 0);
 	}
 
 	unittest {
@@ -1061,18 +1067,18 @@ class DNSSOAResource  : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSSOAResource");
-	  assert(json.primary == ".");
-	  assert(json.admin == ".");
-	  assert(json.serial == 0);
-	  assert(json.refresh == 0);
-	  assert(json.retry == 0);
-	  assert(json.expirationLimit == 0);
-	  assert(json.minTtl == 0);
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSSOAResource");
+	  assert(json["primary"] == ".");
+	  assert(json["admin"] == ".");
+	  assert(json["serial"] == 0);
+	  assert(json["refresh"] == 0);
+	  assert(json["retry"] == 0);
+	  assert(json["expirationLimit"] == 0);
+	  assert(json["minTtl"] == 0);
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1107,11 +1113,7 @@ class DNSSOAResource  : Protocol {
 	  assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toPrettyString; }
-
-	unittest {
-	  DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
-	}
+	override string toString() const { return toJson.toJSON; }
 
 	@property string primary() const { return _primary; }
 	@property void primary(string primary) { _primary = primary; }
@@ -1140,14 +1142,15 @@ class DNSSOAResource  : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.primary = "google.fr";
-  json.admin = "admin.google.fr";
-  json.serial = 8000;
-  json.refresh = 2500;
-  json.retry = 2500;
-  json.expirationLimit = 400;
-  json.minTtl = 10;
+  JSONValue json = [
+    "primary": JSONValue("google.fr"),
+    "admin": JSONValue("admin.google.fr"),
+    "serial": JSONValue(8000),
+    "refresh": JSONValue(2500),
+    "retry": JSONValue(2500),
+    "expirationLimit": JSONValue(400),
+    "minTtl": JSONValue(10)
+  ];
   DNSSOAResource packet = cast(DNSSOAResource)to!DNSSOAResource(json);
   assert(packet.primary == "google.fr");
   assert(packet.admin == "admin.google.fr");
@@ -1161,20 +1164,21 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSSOAResource"),
+    "primary": JSONValue("google.fr"),
+    "admin": JSONValue("admin.google.fr"),
+    "serial": JSONValue(8000),
+    "refresh": JSONValue(2500),
+    "retry": JSONValue(2500),
+    "expirationLimit": JSONValue(400),
+    "minTtl": JSONValue(10)
+  ];
 
-  json.name = "DNSSOAResource";
-  json.primary = "google.fr";
-  json.admin = "admin.google.fr";
-  json.serial = 8000;
-  json.refresh = 2500;
-  json.retry = 2500;
-  json.expirationLimit = 400;
-  json.minTtl = 10;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+  ]);
 
   DNSSOAResource packet = cast(DNSSOAResource)to!DNSSOAResource(json);
   assert(packet.primary == "google.fr");
@@ -1201,6 +1205,10 @@ unittest {
 
 class DNSMXResource : Protocol {
   public:
+  static DNSMXResource opCall(inout JSONValue json) {
+    return new DNSMXResource(json);
+  }
+
 	this() {}
 
 	this(ushort pref, string mxname) {
@@ -1208,12 +1216,11 @@ class DNSMXResource : Protocol {
 	  _mxname = mxname;
 	}
 
-	this(Json json) {
-	  pref = json.pref.to!ushort;
-	  mxname = json.mxname.to!string;
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  pref = json["pref"].to!ushort;
+	  mxname = json["mxname"].get!string;
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -1226,22 +1233,23 @@ class DNSMXResource : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.mxname = _mxname;
-	  packet.pref = _pref;
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "mxname": JSONValue(_mxname),
+	    "pref": JSONValue(_pref),
+	    "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
 	}
 
 	unittest {
 	  DNSMXResource packet = new DNSMXResource(2, "google.fr");
-	  assert(packet.toJson.mxname == "google.fr");
-	  assert(packet.toJson.pref == 2);
+	  assert(packet.toJson["mxname"] == "google.fr");
+	  assert(packet.toJson["pref"] == 2);
 	}
 
 	unittest {
@@ -1250,13 +1258,13 @@ class DNSMXResource : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSMXResource");
-	  assert(json.mxname == "google.fr");
-	  assert(json.pref == 2);
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSMXResource");
+	  assert(json["mxname"] == "google.fr");
+	  assert(json["pref"] == 2);
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1284,7 +1292,7 @@ class DNSMXResource : Protocol {
 	  assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toPrettyString; }
+	override string toString() const { return toJson.toJSON; }
 
 	@property ushort pref() const { return _pref; }
 	@property void pref(ushort pref) { _pref = pref; }
@@ -1298,9 +1306,10 @@ class DNSMXResource : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.pref = 1;
-  json.mxname = "google.fr";
+  JSONValue json = [
+    "pref": JSONValue(1),
+    "mxname": JSONValue("google.fr")
+  ];
   DNSMXResource packet = cast(DNSMXResource)to!DNSMXResource(json);
   assert(packet.pref == 1);
   assert(packet.mxname == "google.fr");
@@ -1309,15 +1318,16 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSMXResource"),
+    "pref": JSONValue(1),
+    "mxname": JSONValue("google.fr")
+  ];
 
-  json.name = "DNSMXResource";
-  json.pref = 1;
-  json.mxname = "google.fr";
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+  ]);
 
   DNSMXResource packet = cast(DNSMXResource)to!DNSMXResource(json);
   assert(packet.pref == 1);
@@ -1334,17 +1344,20 @@ unittest {
 
 class DNSAResource : Protocol {
   public:
+  static DNSAResource opCall(inout JSONValue json) {
+    return new DNSAResource(json);
+  }
+
 	this() {}
 
 	this(ubyte[4] ip) {
 	  _ip = ip;
 	}
 
-	this(Json json) {
-	  ip = stringToIp(json.ip.to!string);
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  ip = stringToIp(json["ip"].get!string);
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -1356,20 +1369,21 @@ class DNSAResource : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.ip = ipToString(_ip);
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "ip": JSONValue(ipToString(_ip)),
+      "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
 	}
 
 	unittest {
 	  DNSAResource packet = new DNSAResource();
-	  assert(packet.toJson.ip == "127.0.0.1");
+	  assert(packet.toJson["ip"] == "127.0.0.1");
 	}
 
 	unittest {
@@ -1378,12 +1392,12 @@ class DNSAResource : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSAResource");
-	  assert(json.ip == "127.0.0.1");
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSAResource");
+	  assert(json["ip"] == "127.0.0.1");
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1409,7 +1423,7 @@ class DNSAResource : Protocol {
 	  assert(packet.toBytes == [127, 0, 0, 1] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toPrettyString; }
+	override string toString() const { return toJson.toJSON; }
 
 	@property ubyte[4] ip() const { return _ip; }
 	@property void ip(ubyte[4] ip) { _ip = ip; }
@@ -1420,8 +1434,9 @@ class DNSAResource : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.ip = ipToString([127, 0, 0, 1]);
+  JSONValue json = [
+    "ip": JSONValue(ipToString([127, 0, 0, 1]))
+  ];
   DNSAResource packet = cast(DNSAResource)to!DNSAResource(json);
   assert(packet.ip == [127, 0, 0, 1]);
 }
@@ -1429,14 +1444,15 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSAResource"),
+    "ip": JSONValue(ipToString([127, 0, 0, 1]))
+  ];
 
-  json.name = "DNSAResource";
-  json.ip = ipToString([127, 0, 0, 1]);
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+  ]);
 
   DNSAResource packet = cast(DNSAResource)to!DNSAResource(json);
   assert(packet.ip == [127, 0, 0, 1]);
@@ -1451,17 +1467,20 @@ unittest {
 
 class DNSPTRResource : Protocol {
   public:
+  static DNSPTRResource opCall(inout JSONValue json) {
+    return new DNSPTRResource(json);
+  }
+
 	this() {}
 
 	this(string ptrname) {
 	  _ptrname = ptrname;
 	}
 
-	this(Json json) {
-	  ptrname = json.ptrname.to!string;
-	  auto packetData = ("data" in json);
-	  if (json.data.type != Json.Type.Null && packetData != null)
-		data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+	this(JSONValue json) {
+	  ptrname = json["ptrname"].get!string;
+    if ("data" in json && json["data"] != null)
+      data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
 
 	this(ubyte[] encodedPacket) {
@@ -1473,20 +1492,21 @@ class DNSPTRResource : Protocol {
 	override @property void data(Protocol p) { _data = p; }
 	override @property int osiLayer() const { return 7; }
 
-	override Json toJson() const {
-	  Json packet = Json.emptyObject;
-	  packet.ptrname = _ptrname;
-	  packet.name = name;
-	  if (_data is null)
-		packet.data = null;
-	  else
-		packet.data = _data.toJson;
-	  return packet;
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "ptrname": JSONValue(_ptrname),
+      "name": JSONValue(name)
+    ];
+    if (_data is null)
+			json["data"] = JSONValue(null);
+		else
+			json["data"] = _data.toJson;
+	  return json;
 	}
 
 	unittest {
 	  DNSPTRResource packet = new DNSPTRResource("google.fr");
-	  assert(packet.toJson.ptrname == "google.fr");
+	  assert(packet.toJson["ptrname"] == "google.fr");
 	}
 
 	unittest {
@@ -1495,12 +1515,12 @@ class DNSPTRResource : Protocol {
 
 	  packet.data = new Raw([42, 21, 84]);
 
-	  Json json = packet.toJson;
-	  assert(json.name == "DNSPTRResource");
-	  assert(json.ptrname == "google.fr");
+	  JSONValue json = packet.toJson;
+	  assert(json["name"] == "DNSPTRResource");
+	  assert(json["ptrname"] == "google.fr");
 
-	  json = json.data;
-	  assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+    json = json["data"];
+    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1527,7 +1547,7 @@ class DNSPTRResource : Protocol {
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toPrettyString; }
+	override string toString() const { return toJson.toJSON; }
 
 	@property string ptrname() { return _ptrname; }
 	@property void ptrname(string ptrname) { _ptrname = ptrname; }
@@ -1538,8 +1558,9 @@ class DNSPTRResource : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.ptrname = "google.fr";
+  JSONValue json = [
+    "ptrname": JSONValue("google.fr")
+  ];
   DNSPTRResource packet = cast(DNSPTRResource)to!DNSPTRResource(json);
   assert(packet.ptrname == "google.fr");
 }
@@ -1547,14 +1568,15 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("DNSAResource"),
+    "ptrname": JSONValue("google.fr")
+  ];
 
-  json.name = "DNSAResource";
-  json.ptrname = "google.fr";
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+    "name": JSONValue("Raw"),
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+  ]);
 
   DNSPTRResource packet = cast(DNSPTRResource)to!DNSPTRResource(json);
   assert(packet.ptrname == "google.fr");
@@ -1566,4 +1588,3 @@ unittest {
   DNSPTRResource packet = cast(DNSPTRResource)encodedPacket.to!DNSPTRResource;
   assert(packet.ptrname == "google.fr");
 }
-*/
