@@ -10,7 +10,7 @@ import netload.core.conversion.ubyte_conversion;
 private Protocol delegate(ubyte[])[ushort] udpType;
 
 shared static this() {
-//  udpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!HTTP; };
+  udpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!HTTP; };
 //  udpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
 //  udpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
 //  udpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
