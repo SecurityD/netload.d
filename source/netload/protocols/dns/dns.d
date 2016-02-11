@@ -719,11 +719,11 @@ class DNSQR : Protocol {
 
 	override ubyte[] toBytes() const {
 	  ulong inc = (_qname.length > 1 ? _qname.length + 1 : 0);
-	  ubyte[] packet = new ubyte[5 + inc];
+	  ubyte[] packet = new ubyte[cast(uint)(5 + inc)];
 
 	  writeLabels(0, _qname, packet);
-	  packet.write!ushort(_qtype, (1 + inc));
-	  packet.write!ushort(_qclass, (3 + inc));
+	  packet.write!ushort(_qtype, cast(uint)(1 + inc));
+	  packet.write!ushort(_qclass, cast(uint)(3 + inc));
 	  if (_data !is null)
 		packet ~= _data.toBytes;
 	  return packet;
@@ -885,12 +885,12 @@ class DNSRR : Protocol {
 
 	override ubyte[] toBytes() const {
 	  ulong inc = (_rname.length > 1 ? _rname.length + 1 : 0);
-	  ubyte[] packet = new ubyte[11 + inc];
+	  ubyte[] packet = new ubyte[cast(uint)(11 + inc)];
 	  writeLabels(0, _rname, packet);
-	  packet.write!ushort(_rtype, (1 + inc));
-	  packet.write!ushort(_rclass, (3 + inc));
-	  packet.write!uint(_ttl, (5 + inc));
-	  packet.write!ushort(_rdlength, (9 + inc));
+	  packet.write!ushort(_rtype, cast(uint)(1 + inc));
+	  packet.write!ushort(_rclass, cast(uint)(3 + inc));
+	  packet.write!uint(_ttl, cast(uint)(5 + inc));
+	  packet.write!ushort(_rdlength, cast(uint)(9 + inc));
 	  if (_data !is null)
 		packet ~= _data.toBytes;
 	  return packet;
@@ -1083,16 +1083,16 @@ class DNSSOAResource  : Protocol {
 
 	override ubyte[] toBytes() const {
 	  ulong inc = (_primary.length > 1 ? _primary.length + 1 : 0) + (_admin.length > 1 ? _admin.length + 1 : 0);
-	  ubyte[] packet = new ubyte[22 + inc];
+	  ubyte[] packet = new ubyte[cast(uint)(22 + inc)];
 	  uint pos = 0;
 
 	  pos += writeLabels(pos, _primary, packet) + 1;
 	  writeLabels(pos, _admin, packet);
-	  packet.write!uint(_serial, (2 + inc));
-	  packet.write!uint(_refresh, (6 + inc));
-	  packet.write!uint(_retry, (10 + inc));
-	  packet.write!uint(_expirationLimit, (14 + inc));
-	  packet.write!uint(_minTtl, (18 + inc));
+	  packet.write!uint(_serial, cast(uint)(2 + inc));
+	  packet.write!uint(_refresh, cast(uint)(6 + inc));
+	  packet.write!uint(_retry, cast(uint)(10 + inc));
+	  packet.write!uint(_expirationLimit, cast(uint)(14 + inc));
+	  packet.write!uint(_minTtl, cast(uint)(18 + inc));
 	  if (_data !is null)
 		packet ~= _data.toBytes;
 	  return packet;
@@ -1269,7 +1269,7 @@ class DNSMXResource : Protocol {
 
 	override ubyte[] toBytes() const {
 	  ulong inc = (_mxname.length > 1 ? _mxname.length + 1 : 0);
-	  ubyte[] packet = new ubyte[3 + inc];
+	  ubyte[] packet = new ubyte[cast(uint)(3 + inc)];
 	  packet.write!ushort(_pref, 0);
 	  writeLabels(2, _mxname, packet);
 	  if (_data !is null)
@@ -1525,7 +1525,7 @@ class DNSPTRResource : Protocol {
 
 	override ubyte[] toBytes() const {
 	  ulong inc = (_ptrname.length > 1 ? _ptrname.length + 1 : 0);
-	  ubyte[] packet = new ubyte[1 + inc];
+	  ubyte[] packet = new ubyte[cast(uint)(1 + inc)];
 	  writeLabels(0, _ptrname, packet);
 	  if (_data !is null)
 		packet ~= _data.toBytes;
