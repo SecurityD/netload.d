@@ -11,17 +11,17 @@ private Protocol delegate(ubyte[])[ushort] udpType;
 
 shared static this() {
   udpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!HTTP; };
-//  udpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
-//  udpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
-//  udpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
-//  udpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  udpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  udpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  udpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  udpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
 //  udpType[25] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
 //  udpType[2525] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
 //  udpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
   udpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
   udpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
   udpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DNS; };
-//  udpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
+  udpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
 };
 
 class UDP : Protocol {

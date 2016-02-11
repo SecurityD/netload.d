@@ -11,17 +11,17 @@ private Protocol delegate(ubyte[])[ushort] tcpType;
 
 shared static this() {
   tcpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!HTTP; };
-//  tcpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
-//  tcpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
-//  tcpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
-//  tcpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  tcpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  tcpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  tcpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  tcpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
 //  tcpType[25] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
 //  tcpType[2525] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
 //  tcpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
   tcpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
   tcpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
   tcpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DNS; };
-//  tcpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
+  tcpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
 };
 
 union FlagsAndOffset {
