@@ -54,6 +54,7 @@ interface Protocol {
       assert(packet.layer!HTTP);
     }
 
+    string toString() const;
     JSONValue toJson() const;
     ubyte[] toBytes() const;
 }
