@@ -14,7 +14,7 @@ static this() {
   etherType[0x0800] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!IP); };
   etherType[0x0806] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!ARP); };
   etherType[0x8035] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!ARP); };
-//  etherType[0x814C] = delegate(ubyte[] encoded){ return (cast(Protocol)to!SNMPv3(encoded)); };
+  etherType[0x814C] = delegate(ubyte[] encoded){ return (cast(Protocol)to!SNMPv3(encoded)); };
 }
 
 class Ethernet : Protocol {
