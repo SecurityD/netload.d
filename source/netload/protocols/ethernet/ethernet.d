@@ -3,21 +3,26 @@ module netload.protocols.ethernet.ethernet;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols;
+import netload.core.conversion.json_array;
 import std.conv;
-import vibe.data.json;
+import stdx.data.json;
 import std.bitmanip;
 
 private Protocol delegate(ubyte[])[ushort] etherType;
 
 static this() {
-  etherType[0x0800] = delegate(ubyte[] encoded){ return (cast(Protocol)to!IP(encoded)); };
-  etherType[0x0806] = delegate(ubyte[] encoded){ return (cast(Protocol)to!ARP(encoded)); };
-  etherType[0x8035] = delegate(ubyte[] encoded){ return (cast(Protocol)to!ARP(encoded)); };
+  etherType[0x0800] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!IP); };
+  etherType[0x0806] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!ARP); };
+  etherType[0x8035] = delegate(ubyte[] encoded){ return (cast(Protocol)encoded.to!ARP); };
   etherType[0x814C] = delegate(ubyte[] encoded){ return (cast(Protocol)to!SNMPv3(encoded)); };
 }
 
 class Ethernet : Protocol {
   public:
+    static Ethernet opCall(inout JSONValue val) {
+  		return new Ethernet(val);
+  	}
+
     this() {
 
     }
@@ -27,15 +32,14 @@ class Ethernet : Protocol {
       _destMacAddress = destMac;
     }
 
-    this(Json json) {
-      _prelude = deserializeJson!(ubyte[7])(json.prelude);
-      _srcMacAddress = stringToMac(json.src_mac_address.to!string);
-      _destMacAddress = stringToMac(json.dest_mac_address.to!string);
-      _protocolType = json.protocol_type.get!ushort;
-      _fcs = json.fcs.get!uint;
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    this(JSONValue json) {
+      _prelude = json["prelude"].toArrayOf!ubyte;
+      _srcMacAddress = stringToMac(json["src_mac_address"].get!string);
+      _destMacAddress = stringToMac(json["dest_mac_address"].get!string);
+      _protocolType = json["protocol_type"].to!ushort;
+      _fcs = json["fcs"].to!uint;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ubyte[] encoded) {
@@ -59,26 +63,27 @@ class Ethernet : Protocol {
     override @property void data(Protocol p) { _data = p; }
     override @property int osiLayer() const { return 2; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.prelude = serializeToJson(prelude);
-      json.src_mac_address = macToString(srcMacAddress);
-      json.dest_mac_address = macToString(destMacAddress);
-      json.protocol_type = protocolType;
-      json.fcs = fcs;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "prelude": (prelude.toJsonArray),
+        "src_mac_address": JSONValue(macToString(srcMacAddress)),
+        "dest_mac_address": JSONValue(macToString(destMacAddress)),
+        "protocol_type": JSONValue(protocolType),
+        "fcs": JSONValue(fcs),
+        "name": JSONValue(name)
+      ];
       if (_data is null)
-        json.data = null;
-      else
-        json.data = _data.toJson;
-      return json;
+  			json["data"] = JSONValue(null);
+  		else
+  			json["data"] = _data.toJson;
+  		return json;
     }
 
     unittest {
       Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
-      Json json = packet.toJson;
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
+      JSONValue json = packet.toJson;
+      assert(json["dest_mac_address"] == "00:00:00:00:00:00");
+      assert(json["src_mac_address"] == "ff:ff:ff:ff:ff:ff");
     }
 
     unittest {
@@ -91,17 +96,18 @@ class Ethernet : Protocol {
 
       packet.data.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "Ethernet");
+      assert(json["dest_mac_address"] == "00:00:00:00:00:00");
+      assert(json["src_mac_address"] == "ff:ff:ff:ff:ff:ff");
 
-      json = json.data;
-      assert(json.name == "UDP");
-      assert(json.src_port == 8000);
-      assert(json.dest_port == 7000);
+      json = json["data"];
+      assert(json["name"] == "UDP");
+      assert(json["src_port"] == 8000);
+      assert(json["dest_port"] == 7000);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -133,7 +139,7 @@ class Ethernet : Protocol {
       assert(packet.toBytes == [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property ref inout(ubyte[7]) prelude() inout { return _prelude; }
     @property ref inout(ubyte[6]) srcMacAddress() inout { return _srcMacAddress; }
@@ -153,12 +159,13 @@ class Ethernet : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
-  json.src_mac_address = macToString([255, 255, 255, 255, 255, 255]);
-  json.dest_mac_address = macToString([0, 0, 0, 0, 0, 0]);
-  json.protocol_type = 0x0800;
-  json.fcs = 0;
+  JSONValue json = [
+    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJsonArray),
+    "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "protocol_type": JSONValue(0x0800),
+    "fcs": JSONValue(0)
+  ];
   Ethernet packet = cast(Ethernet)to!Ethernet(json);
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);
   assert(packet.protocolType == 0x0800);
@@ -167,18 +174,19 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("Ethernet"),
+    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJsonArray),
+    "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "protocol_type": JSONValue(0x0800),
+    "fcs": JSONValue(0)
+  ];
 
-  json.name = "Ethernet";
-  json.prelude = serializeToJson([1, 0, 1, 0, 1, 0, 1]);
-  json.src_mac_address = macToString([255, 255, 255, 255, 255, 255]);
-  json.dest_mac_address = macToString([0, 0, 0, 0, 0, 0]);
-  json.protocol_type = 0x0800;
-  json.fcs = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   Ethernet packet = cast(Ethernet)to!Ethernet(json);
   assert(packet.srcMacAddress == [255, 255, 255, 255, 255, 255]);

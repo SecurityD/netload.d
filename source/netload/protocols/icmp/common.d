@@ -1,8 +1,10 @@
 module netload.protocols.icmp.common;
 
 import netload.core.protocol;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 enum ICMPType {
   ANY,
@@ -26,6 +28,10 @@ alias ICMP = ICMPBase!(ICMPType.ANY);
 
 class ICMPBase(ICMPType __type__) : Protocol {
   public:
+    static ICMPBase!(__type__) opCall(inout JSONValue val) {
+  		return new ICMPBase!(__type__)(val);
+  	}
+
     this() {}
 
     this(ubyte type, ubyte code) {
@@ -33,13 +39,18 @@ class ICMPBase(ICMPType __type__) : Protocol {
       _code = code;
     }
 
-    this(Json json) {
-      _type = json.packetType.to!ubyte;
-      _code = json.code.to!ubyte;
-      _checksum = json.checksum.to!ushort;
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    this(JSONValue json) {
+      _type = 0;
+      if ("packetType" in json)
+        _type = json["packetType"].to!ubyte;
+      _code = 0;
+      if ("code" in json)
+        _code = json["code"].to!ubyte;
+      _checksum = 0;
+      if ("checksum" in json)
+        _checksum = json["checksum"].to!ushort;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ref ubyte[] encodedPacket) {
@@ -53,28 +64,25 @@ class ICMPBase(ICMPType __type__) : Protocol {
     override @property void data(Protocol p) { _data = p; }
     override @property int osiLayer() const { return 3; }
 
-    void prepare() {
-
-    }
-
-    override Json toJson() const {
-      Json packet = Json.emptyObject;
-      packet.packetType = _type;
-      packet.code = _code;
-      packet.checksum = _checksum;
-      packet.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "packetType": JSONValue(_type),
+        "code": JSONValue(_code),
+        "checksum": JSONValue(_checksum),
+        "name": JSONValue(name)
+      ];
       if (_data is null)
-        packet.data = null;
-      else
-        packet.data = _data.toJson;
-      return packet;
+  			json["data"] = JSONValue(null);
+  		else
+  			json["data"] = _data.toJson;
+  		return json;
     }
 
     unittest {
       ICMP packet = new ICMP(3, 2);
-      assert(packet.toJson.packetType == 3);
-      assert(packet.toJson.code == 2);
-      assert(packet.toJson.checksum == 0);
+      assert(packet.toJson["packetType"] == 3);
+      assert(packet.toJson["code"] == 2);
+      assert(packet.toJson["checksum"] == 0);
     }
 
     unittest {
@@ -84,14 +92,14 @@ class ICMPBase(ICMPType __type__) : Protocol {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 3);
-      assert(json.code == 2);
-      assert(json.checksum == 0);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 3);
+      assert(json["code"] == 2);
+      assert(json["checksum"] == 0);
 
-      json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -119,7 +127,7 @@ class ICMPBase(ICMPType __type__) : Protocol {
       assert(packet.toBytes == [3, 2, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property {
       inout ushort checksum() { return _checksum; }
@@ -140,10 +148,11 @@ class ICMPBase(ICMPType __type__) : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
+  JSONValue json = [
+    "packetType": JSONValue(3),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
   ICMP packet = cast(ICMP)to!ICMP(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
@@ -153,16 +162,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(3),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMP packet = cast(ICMP)to!ICMP(json);
   assert(packet.type == 3);

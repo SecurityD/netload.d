@@ -2,8 +2,10 @@ module netload.protocols.dot11.dot11;
 
 import netload.core.addr;
 import netload.core.protocol;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 union Bitfields {
   ubyte[2] raw;
@@ -30,6 +32,10 @@ enum Dot11Type {
 
 class Dot11 : Protocol {
   public:
+    static Dot11 opCall(inout JSONValue val) {
+  		return new Dot11(val);
+  	}
+
     this() {
       _frameControl.raw[0] = 0;
       _frameControl.raw[1] = 0;
@@ -46,29 +52,28 @@ class Dot11 : Protocol {
       _addr[3] = addr4;
     }
 
-    this(Json json) {
+    this(JSONValue json) {
       this();
-      subtype = json.subtype.to!ubyte;
-      type = json.packet_type.to!ubyte;
-      vers = json.vers.to!ubyte;
-      rsvd = json.rsvd.to!bool;
-      wep = json.wep.to!bool;
-      moreData = json.more_data.to!bool;
-      power = json.power.to!bool;
-      retry = json.retry.to!bool;
-      moreFrag = json.more_frag.to!bool;
-      fromDS = json.from_DS.to!bool;
-      toDS = json.to_DS.to!bool;
-      _duration = json.duration.to!ushort;
-      addr1 = stringToMac(json.addr1.to!string);
-      addr2 = stringToMac(json.addr2.to!string);
-      addr3 = stringToMac(json.addr3.to!string);
-      addr4 = stringToMac(json.addr4.to!string);
-      _seq = json.seq.to!ushort;
-      _fcs = json.fcs.to!uint;
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+      subtype = json["subtype"].to!ubyte;
+      type = json["packet_type"].to!ubyte;
+      vers = json["vers"].to!ubyte;
+      rsvd = json["rsvd"].to!bool;
+      wep = json["wep"].to!bool;
+      moreData = json["more_data"].to!bool;
+      power = json["power"].to!bool;
+      retry = json["retry"].to!bool;
+      moreFrag = json["more_frag"].to!bool;
+      fromDS = json["from_DS"].to!bool;
+      toDS = json["to_DS"].to!bool;
+      _duration = json["duration"].to!ushort;
+      addr1 = stringToMac(json["addr1"].get!string);
+      addr2 = stringToMac(json["addr2"].get!string);
+      addr3 = stringToMac(json["addr3"].get!string);
+      addr4 = stringToMac(json["addr4"].get!string);
+      _seq = json["seq"].to!ushort;
+      _fcs = json["fcs"].to!uint;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ubyte[] encodedPacket) {
@@ -95,54 +100,55 @@ class Dot11 : Protocol {
     override @property int osiLayer() const { return 2; }
     override @property inout string name() { return "Dot11"; }
 
-    override Json toJson() const {
-      Json packet = Json.emptyObject;
-      packet.duration = _duration;
-      packet.seq = _seq;
-      packet.fcs = _fcs;
-      packet.addr1 = macToString(_addr[0]);
-      packet.addr2 = macToString(_addr[1]);
-      packet.addr3 = macToString(_addr[2]);
-      packet.addr4 = macToString(_addr[3]);
-      packet.subtype = _frameControl.subtype;
-      packet.packet_type = _frameControl.type;
-      packet.vers = _frameControl.vers;
-      packet.rsvd = _frameControl.rsvd;
-      packet.wep = _frameControl.wep;
-      packet.more_data = _frameControl.moreData;
-      packet.power = _frameControl.power;
-      packet.retry = _frameControl.retry;
-      packet.more_frag = _frameControl.moreFrag;
-      packet.from_DS = _frameControl.fromDS;
-      packet.to_DS = _frameControl.toDS;
-      packet.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "duration": JSONValue(_duration),
+        "seq": JSONValue(_seq),
+        "fcs": JSONValue(_fcs),
+        "addr1": JSONValue(macToString(_addr[0])),
+        "addr2": JSONValue(macToString(_addr[1])),
+        "addr3": JSONValue(macToString(_addr[2])),
+        "addr4": JSONValue(macToString(_addr[3])),
+        "subtype": JSONValue(_frameControl.subtype),
+        "packet_type": JSONValue(_frameControl.type),
+        "vers": JSONValue(_frameControl.vers),
+        "rsvd": JSONValue(_frameControl.rsvd),
+        "wep": JSONValue(_frameControl.wep),
+        "more_data": JSONValue(_frameControl.moreData),
+        "power": JSONValue(_frameControl.power),
+        "retry": JSONValue(_frameControl.retry),
+        "more_frag": JSONValue(_frameControl.moreFrag),
+        "from_DS": JSONValue(_frameControl.fromDS),
+        "to_DS": JSONValue(_frameControl.toDS),
+        "name": JSONValue(name)
+      ];
       if (_data is null)
-        packet.data = null;
-      else
-        packet.data = _data.toJson;
-      return packet;
+  			json["data"] = JSONValue(null);
+  		else
+  			json["data"] = _data.toJson;
+  		return json;
     }
 
     unittest {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
-      assert(packet.toJson.packet_type == 0);
-      assert(packet.toJson.subtype == 8);
-      assert(packet.toJson.addr1 == "ff:ff:ff:ff:ff:ff");
-      assert(packet.toJson.addr2 == "00:00:00:00:00:00");
-      assert(packet.toJson.addr3 == "01:02:03:04:05:06");
-      assert(packet.toJson.addr4 == "00:00:00:00:00:00");
-      assert(packet.toJson.duration == 0);
-      assert(packet.toJson.seq == 0);
-      assert(packet.toJson.fcs == 0);
-      assert(packet.toJson.vers == 0);
-      assert(packet.toJson.rsvd == false);
-      assert(packet.toJson.wep == false);
-      assert(packet.toJson.more_data == false);
-      assert(packet.toJson.power == false);
-      assert(packet.toJson.retry == false);
-      assert(packet.toJson.more_frag == false);
-      assert(packet.toJson.from_DS == false);
-      assert(packet.toJson.to_DS == false);
+      assert(packet.toJson["packet_type"] == 0);
+      assert(packet.toJson["subtype"] == 8);
+      assert(packet.toJson["addr1"] == "ff:ff:ff:ff:ff:ff");
+      assert(packet.toJson["addr2"] == "00:00:00:00:00:00");
+      assert(packet.toJson["addr3"] == "01:02:03:04:05:06");
+      assert(packet.toJson["addr4"] == "00:00:00:00:00:00");
+      assert(packet.toJson["duration"] == 0);
+      assert(packet.toJson["seq"] == 0);
+      assert(packet.toJson["fcs"] == 0);
+      assert(packet.toJson["vers"] == 0);
+      assert(packet.toJson["rsvd"] == false);
+      assert(packet.toJson["wep"] == false);
+      assert(packet.toJson["more_data"] == false);
+      assert(packet.toJson["power"] == false);
+      assert(packet.toJson["retry"] == false);
+      assert(packet.toJson["more_frag"] == false);
+      assert(packet.toJson["from_DS"] == false);
+      assert(packet.toJson["to_DS"] == false);
     }
 
     unittest {
@@ -155,33 +161,34 @@ class Dot11 : Protocol {
 
       packet.data.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "Dot11");
-      assert(json.packet_type == 0);
-      assert(json.subtype == 8);
-      assert(json.addr1 == "ff:ff:ff:ff:ff:ff");
-      assert(json.addr2 == "00:00:00:00:00:00");
-      assert(json.addr3 == "01:02:03:04:05:06");
-      assert(json.addr4 == "00:00:00:00:00:00");
-      assert(json.duration == 0);
-      assert(json.seq == 0);
-      assert(json.fcs == 0);
-      assert(json.vers == 0);
-      assert(json.rsvd == false);
-      assert(json.wep == false);
-      assert(json.more_data == false);
-      assert(json.power == false);
-      assert(json.retry == false);
-      assert(json.more_frag == false);
-      assert(json.from_DS == false);
-      assert(json.to_DS == false);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "Dot11");
+      assert(json["packet_type"] == 0);
+      assert(json["subtype"] == 8);
+      assert(json["addr1"] == "ff:ff:ff:ff:ff:ff");
+      assert(json["addr2"] == "00:00:00:00:00:00");
+      assert(json["addr3"] == "01:02:03:04:05:06");
+      assert(json["addr4"] == "00:00:00:00:00:00");
+      assert(json["duration"] == 0);
+      assert(json["seq"] == 0);
+      assert(json["fcs"] == 0);
+      assert(json["vers"] == 0);
+      assert(json["rsvd"] == false);
+      assert(json["wep"] == false);
+      assert(json["more_data"] == false);
+      assert(json["power"] == false);
+      assert(json["retry"] == false);
+      assert(json["more_frag"] == false);
+      assert(json["from_DS"] == false);
+      assert(json["to_DS"] == false);
 
-      json = json.data;
-      assert(json.name == "UDP");
-      assert(json.src_port == 8000);
-      assert(json.dest_port == 7000);
+      json = json["data"];
+      assert(json["name"] == "UDP");
+      assert(json["src_port"] == 8000);
+      assert(json["dest_port"] == 7000);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -218,7 +225,7 @@ class Dot11 : Protocol {
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const { return toJson().toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property ushort duration() const { return _duration; }
     @property void duration(ushort duration) { _duration = duration; }
@@ -268,26 +275,27 @@ class Dot11 : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.subtype = 8;
-  json.packet_type = 0;
-  json.vers = 0;
-  json.rsvd = 0;
-  json.wep = 0;
-  json.more_data = 0;
-  json.power = 0;
-  json.retry = 0;
-  json.more_frag = 0;
-  json.from_DS = 0;
-  json.to_DS = 0;
-  json.duration = 0;
-  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
-  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
-  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
-  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
-  json.seq = 0;
-  json.fcs = 0;
-  Dot11 packet = cast(Dot11)to!Dot11(json);
+  JSONValue json = [
+    "subtype": JSONValue(8),
+    "packet_type": JSONValue(0),
+    "vers": JSONValue(0),
+    "rsvd": JSONValue(0),
+    "wep": JSONValue(0),
+    "more_data": JSONValue(0),
+    "power": JSONValue(0),
+    "retry": JSONValue(0),
+    "more_frag": JSONValue(0),
+    "from_DS": JSONValue(0),
+    "to_DS": JSONValue(0),
+    "duration": JSONValue(0),
+    "addr1": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "addr2": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "addr3": JSONValue(macToString([1, 2, 3, 4, 5, 6])),
+    "addr4": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "seq": JSONValue(0),
+    "fcs": JSONValue(0)
+  ];
+  Dot11 packet = Dot11(json);
   assert(packet.type == 0);
   assert(packet.subtype == 8);
   assert(packet.addr1 == [255,255,255,255,255,255]);
@@ -311,31 +319,32 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("Dot11"),
+    "subtype": JSONValue(8),
+    "packet_type": JSONValue(0),
+    "vers": JSONValue(0),
+    "rsvd": JSONValue(0),
+    "wep": JSONValue(0),
+    "more_data": JSONValue(0),
+    "power": JSONValue(0),
+    "retry": JSONValue(0),
+    "more_frag": JSONValue(0),
+    "from_DS": JSONValue(0),
+    "to_DS": JSONValue(0),
+    "duration": JSONValue(0),
+    "addr1": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
+    "addr2": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "addr3": JSONValue(macToString([1, 2, 3, 4, 5, 6])),
+    "addr4": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
+    "seq": JSONValue(0),
+    "fcs": JSONValue(0)
+  ];
 
-  json.name = "Dot11";
-  json.subtype = 8;
-  json.packet_type = 0;
-  json.vers = 0;
-  json.rsvd = 0;
-  json.wep = 0;
-  json.more_data = 0;
-  json.power = 0;
-  json.retry = 0;
-  json.more_frag = 0;
-  json.from_DS = 0;
-  json.to_DS = 0;
-  json.duration = 0;
-  json.addr1 = macToString([255, 255, 255, 255, 255, 255]);
-  json.addr2 = macToString([0, 0, 0, 0, 0, 0]);
-  json.addr3 = macToString([1, 2, 3, 4, 5, 6]);
-  json.addr4 = macToString([0, 0, 0, 0, 0, 0]);
-  json.seq = 0;
-  json.fcs = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   Dot11 packet = cast(Dot11)to!Dot11(json);
   assert(packet.type == 0);

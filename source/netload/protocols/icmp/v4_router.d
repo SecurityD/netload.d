@@ -3,25 +3,30 @@ module netload.protocols.icmp.v4_router;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols.icmp.common;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 alias ICMPv4RouterAdvert = ICMPv4Router!(ICMPType.ADVERT);
 alias ICMPv4RouterSollicitation = ICMPv4Router!(ICMPType.SOLLICITATION);
 
 class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
+    static ICMPv4Router!(__type__) opCall(inout JSONValue val) {
+  		return new ICMPv4Router!(__type__)(val);
+  	}
+
     static if (__type__ == ICMPType.SOLLICITATION) {
       this() {
         super(10, 0);
       }
 
-      this(Json json) {
+      this(JSONValue json) {
         this();
-        checksum = json.checksum.to!ushort;
-        auto packetData = ("data" in json);
-        if (json.data.type != Json.Type.Null && packetData != null)
-          data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+        checksum = json["checksum"].to!ushort;
+        if ("data" in json && json["data"] != null)
+    			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
       }
 
       this(ubyte[] encodedPacket) {
@@ -44,26 +49,25 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
         _prefAddr = new ubyte[4][_numAddr];
       }
 
-      this(Json json) {
-        this(json.numAddr.to!ubyte, json.addrEntrySize.to!ubyte);
-        checksum = json.checksum.to!ushort;
-        life = json.life.to!ushort;
+      this(JSONValue json) {
+        this(json["numAddr"].to!ubyte, json["addrEntrySize"].to!ubyte);
+        checksum = json["checksum"].to!ushort;
+        life = json["life"].to!ushort;
         string[] buf;
         uint i = 0;
-        buf = deserializeJson!(string[])(json.routerAddr);
+        buf = json["routerAddr"].toArrayOf!string;
         foreach(member; buf) {
           _routerAddr[i] = stringToIp(member);
           i++;
         }
         i = 0;
-        buf = deserializeJson!(string[])(json.prefAddr);
+        buf = json["prefAddr"].toArrayOf!string;
         foreach(member; buf) {
           _prefAddr[i] = stringToIp(member);
           i++;
         }
-        auto packetData = ("data" in json);
-        if (json.data.type != Json.Type.Null && packetData != null)
-          data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+        if ("data" in json && json["data"] != null)
+    			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
       }
 
       this(ubyte[] encodedPacket) {
@@ -80,34 +84,34 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       }
     }
 
-    override Json toJson() const {
-      Json packet = super.toJson();
-      packet.numAddr = _numAddr;
-      packet.addrEntrySize = _addrEntrySize;
-      packet.life = _life;
+    override JSONValue toJson() const {
+      JSONValue packet = super.toJson();
+      packet["numAddr"] = JSONValue(_numAddr);
+      packet["addrEntrySize"] = JSONValue(_addrEntrySize);
+      packet["life"] = JSONValue(_life);
       string[] buf = [];
       foreach(member; _routerAddr) {
         buf ~= ipToString(member);
       }
-      packet.routerAddr = serializeToJson(buf);
+      packet["routerAddr"] = buf.toJsonArray;
       buf = [];
       foreach(member; _prefAddr) {
         buf ~= ipToString(member);
       }
-      packet.prefAddr = serializeToJson(buf);
+      packet["prefAddr"] = buf.toJsonArray;
       return packet;
     }
 
     unittest {
       ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
-      assert(packet.toJson.packetType == 9);
-      assert(packet.toJson.code == 0);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.numAddr == 3);
-      assert(packet.toJson.addrEntrySize == 2);
-      assert(packet.toJson.life == 2);
-      assert(deserializeJson!(string[])(packet.toJson.routerAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
-      assert(deserializeJson!(string[])(packet.toJson.prefAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      assert(packet.toJson["packetType"] == 9);
+      assert(packet.toJson["code"] == 0);
+      assert(packet.toJson["checksum"] == 0);
+      assert(packet.toJson["numAddr"] == 3);
+      assert(packet.toJson["addrEntrySize"] == 2);
+      assert(packet.toJson["life"] == 2);
+      assert(packet.toJson["routerAddr"].toArrayOf!string == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      assert(packet.toJson["prefAddr"].toArrayOf!string == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
     }
 
     unittest {
@@ -116,18 +120,19 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 9);
-      assert(json.code == 0);
-      assert(json.checksum == 0);
-      assert(json.numAddr == 3);
-      assert(json.addrEntrySize == 2);
-      assert(json.life == 2);
-      assert(deserializeJson!(string[])(json.routerAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
-      assert(deserializeJson!(string[])(json.prefAddr) == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 9);
+      assert(json["code"] == 0);
+      assert(json["checksum"] == 0);
+      assert(json["numAddr"] == 3);
+      assert(json["addrEntrySize"] == 2);
+      assert(json["life"] == 2);
+      assert(json["routerAddr"] == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
+      assert(json["prefAddr"] == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -200,13 +205,14 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.numAddr = 3;
-  json.addrEntrySize = 2;
-  json.life = 1;
-  json.routerAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
-  json.prefAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
+  JSONValue json = [
+    "checksum": JSONValue(0),
+    "numAddr": JSONValue(3),
+    "addrEntrySize": JSONValue(2),
+    "life": JSONValue(1),
+    "routerAddr": ["1.1.1.1", "2.2.2.2", "3.3.3.3"].toJsonArray,
+    "prefAddr": ["1.1.1.1", "2.2.2.2", "3.3.3.3"].toJsonArray
+  ];
   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)to!ICMPv4RouterAdvert(json);
   assert(packet.checksum == 0);
   assert(packet.life == 1);
@@ -219,19 +225,20 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0),
+    "numAddr": JSONValue(3),
+    "addrEntrySize": JSONValue(2),
+    "life": JSONValue(1),
+    "routerAddr": ["1.1.1.1", "2.2.2.2", "3.3.3.3"].toJsonArray,
+    "prefAddr": ["1.1.1.1", "2.2.2.2", "3.3.3.3"].toJsonArray
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-  json.numAddr = 3;
-  json.addrEntrySize = 2;
-  json.life = 1;
-  json.routerAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
-  json.prefAddr = serializeToJson(["1.1.1.1", "2.2.2.2", "3.3.3.3"]);
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)to!ICMPv4RouterAdvert(json);
   assert(packet.checksum == 0);
@@ -255,8 +262,9 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
+  JSONValue json = [
+    "checksum": JSONValue(0)
+  ];
   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)to!ICMPv4RouterSollicitation(json);
   assert(packet.checksum == 0);
 }
@@ -264,14 +272,15 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)to!ICMPv4RouterSollicitation(json);
   assert(packet.checksum == 0);

@@ -112,7 +112,7 @@ nothrow extern (C) {
 
 import std.string;
 
-T[] toArray(T)(T* ptr, uint size) {
+T[] toArrayOf(T)(T* ptr, uint size) {
   T[] array;
   for (uint i = 0; i < size; ++i) {
     array ~= ptr[i];
@@ -161,7 +161,7 @@ class PacketCapturer {
       if (bytes is null) {
         throw new Exception(cast(string)_cap.errbuf);
       }
-      return bytes.toArray(_header.caplen);
+      return bytes.toArrayOf(_header.caplen);
     }
 
   private:

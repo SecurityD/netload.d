@@ -2,24 +2,26 @@ module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
 import netload.protocols;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 private Protocol delegate(ubyte[])[ushort] tcpType;
 
 shared static this() {
-  tcpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)to!HTTP(encoded); };
-  tcpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)to!POP3(encoded); };
-  tcpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)to!POP3(encoded); };
-  tcpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)to!IMAP(encoded); };
-  tcpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)to!IMAP(encoded); };
-  tcpType[25] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
-  tcpType[2525] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
-  tcpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)to!SMTP(encoded); };
-  tcpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
-  tcpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)to!DHCP(encoded); };
-  tcpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)to!DNS(encoded); };
-  tcpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)to!NTPv4(encoded); };
+  tcpType[80] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!HTTP; };
+  tcpType[110] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  tcpType[995] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!POP3; };
+  tcpType[143] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  tcpType[993] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!IMAP; };
+  tcpType[25] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
+  tcpType[2525] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
+  tcpType[465] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!SMTP; };
+  tcpType[67] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
+  tcpType[68] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DHCP; };
+  tcpType[53] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!DNS; };
+  tcpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
 };
 
 union FlagsAndOffset {
@@ -38,6 +40,9 @@ union FlagsAndOffset {
 
 class TCP : Protocol {
   public:
+    static TCP opCall(inout JSONValue val) {
+  		return new TCP(val);
+  	}
 
     this() {
 
@@ -62,25 +67,24 @@ class TCP : Protocol {
         _data = tcpType[_destPort](encoded);
     }
 
-    this(Json json) {
-      _srcPort = json.src_port.get!ushort;
-      _destPort = json.dest_port.get!ushort;
-      _sequenceNumber = json.sequence_number.get!uint;
-      _ackNumber = json.ack_number.get!uint;
-      _flagsAndOffset.fin = json.fin.get!bool;
-      _flagsAndOffset.syn = json.syn.get!bool;
-      _flagsAndOffset.rst = json.rst.get!bool;
-      _flagsAndOffset.psh = json.psh.get!bool;
-      _flagsAndOffset.ack = json.ack.get!bool;
-      _flagsAndOffset.urg = json.urg.get!bool;
-      _flagsAndOffset.reserved = json.reserved.get!ubyte;
-      _flagsAndOffset.offset = json.offset.get!ubyte;
-      _window = json.window.get!ushort;
-      _checksum = json.checksum.get!ushort;
-      _urgPtr = json.urgent_ptr.get!ushort;
-      auto data = ("data" in json);
-      if (json.data.type != Json.Type.Null && data != null)
-        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(data.name)](*data);
+    this(JSONValue json) {
+      _srcPort = json["src_port"].to!ushort;
+      _destPort = json["dest_port"].to!ushort;
+      _sequenceNumber = json["sequence_number"].to!uint;
+      _ackNumber = json["ack_number"].to!uint;
+      _flagsAndOffset.fin = json["fin"].get!bool;
+      _flagsAndOffset.syn = json["syn"].get!bool;
+      _flagsAndOffset.rst = json["rst"].get!bool;
+      _flagsAndOffset.psh = json["psh"].get!bool;
+      _flagsAndOffset.ack = json["ack"].get!bool;
+      _flagsAndOffset.urg = json["urg"].get!bool;
+      _flagsAndOffset.reserved = json["reserved"].to!ubyte;
+      _flagsAndOffset.offset = json["offset"].to!ubyte;
+      _window = json["window"].to!ushort;
+      _checksum = json["checksum"].to!ushort;
+      _urgPtr = json["urgent_ptr"].to!ushort;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     override @property inout string name() { return "TCP"; };
@@ -88,35 +92,36 @@ class TCP : Protocol {
     override @property void data(Protocol p) { _data = p; }
     override @property int osiLayer() const { return 4; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.src_port = srcPort;
-      json.dest_port = destPort;
-      json.sequence_number = sequenceNumber;
-      json.ack_number = ackNumber;
-      json.fin = fin;
-      json.syn = syn;
-      json.rst = rst;
-      json.psh = psh;
-      json.ack = ack;
-      json.urg = urg;
-      json.reserved = reserved;
-      json.offset = offset;
-      json.window = window;
-      json.checksum = checksum;
-      json.urgent_ptr = urgPtr;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "src_port": JSONValue(srcPort),
+        "dest_port": JSONValue(destPort),
+        "sequence_number": JSONValue(sequenceNumber),
+        "ack_number": JSONValue(ackNumber),
+        "fin": JSONValue(fin),
+        "syn": JSONValue(syn),
+        "rst": JSONValue(rst),
+        "psh": JSONValue(psh),
+        "ack": JSONValue(ack),
+        "urg": JSONValue(urg),
+        "reserved": JSONValue(reserved),
+        "offset": JSONValue(offset),
+        "window": JSONValue(window),
+        "checksum": JSONValue(checksum),
+        "urgent_ptr": JSONValue(urgPtr),
+        "name": JSONValue(name)
+      ];
       if (_data is null)
-        json.data = null;
-      else
-        json.data = _data.toJson;
+  			json["data"] = JSONValue(null);
+  		else
+  			json["data"] = _data.toJson;
       return json;
     }
 
     unittest {
       TCP packet = new TCP(8000, 7000);
-      assert(packet.toJson().src_port == 8000);
-      assert(packet.toJson().dest_port == 7000);
+      assert(packet.toJson["src_port"] == 8000);
+      assert(packet.toJson["dest_port"] == 7000);
     }
 
     unittest {
@@ -125,13 +130,13 @@ class TCP : Protocol {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "TCP");
-      assert(json.src_port == 8000);
-      assert(json.dest_port == 7000);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "TCP");
+      assert(json["src_port"] == 8000);
+      assert(json["dest_port"] == 7000);
 
-      json = json.data;
-      assert(json.toString == `{"name":"Raw","bytes":[42,21,84]}`);
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -164,7 +169,7 @@ class TCP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const { return toJson().toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property ushort srcPort() const { return _srcPort; }
     @property void srcPort(ushort port) { _srcPort = port; }
@@ -229,55 +234,57 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.src_port = 8000;
-  json.dest_port = 7000;
-  json.sequence_number = 0;
-  json.ack_number = 0;
-  json.fin = false;
-  json.syn = true;
-  json.rst = false;
-  json.psh = false;
-  json.ack = true;
-  json.urg = false;
-  json.reserved = 0;
-  json.offset = 0;
-  json.window = 0;
-  json.checksum = 0;
-  json.urgent_ptr = 0;
+  JSONValue json = [
+    "src_port": JSONValue(8000),
+    "dest_port": JSONValue(7000),
+    "sequence_number": JSONValue(0),
+    "ack_number": JSONValue(0),
+    "fin": JSONValue(false),
+    "syn": JSONValue(true),
+    "rst": JSONValue(false),
+    "psh": JSONValue(false),
+    "ack": JSONValue(true),
+    "urg": JSONValue(false),
+    "reserved": JSONValue(0),
+    "offset": JSONValue(0),
+    "window": JSONValue(0),
+    "checksum": JSONValue(0),
+    "urgent_ptr": JSONValue(0)
+  ];
   TCP packet = cast(TCP)to!TCP(json);
-  assert(packet.srcPort == json.src_port.get!ushort);
-  assert(packet.destPort == json.dest_port.get!ushort);
+  assert(packet.srcPort == json["src_port"].to!ushort);
+  assert(packet.destPort == json["dest_port"].to!ushort);
 }
 
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("TCP"),
+    "src_port": JSONValue(8000),
+    "dest_port": JSONValue(7000),
+    "sequence_number": JSONValue(0),
+    "ack_number": JSONValue(0),
+    "fin": JSONValue(false),
+    "syn": JSONValue(true),
+    "rst": JSONValue(false),
+    "psh": JSONValue(false),
+    "ack": JSONValue(true),
+    "urg": JSONValue(false),
+    "reserved": JSONValue(0),
+    "offset": JSONValue(0),
+    "window": JSONValue(0),
+    "checksum": JSONValue(0),
+    "urgent_ptr": JSONValue(0)
+  ];
 
-  json.name = "TCP";
-  json.src_port = 8000;
-  json.dest_port = 7000;
-  json.sequence_number = 0;
-  json.ack_number = 0;
-  json.fin = false;
-  json.syn = true;
-  json.rst = false;
-  json.psh = false;
-  json.ack = true;
-  json.urg = false;
-  json.reserved = 0;
-  json.offset = 0;
-  json.window = 0;
-  json.checksum = 0;
-  json.urgent_ptr = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   TCP packet = cast(TCP)to!TCP(json);
-  assert(packet.srcPort == json.src_port.get!ushort);
-  assert(packet.destPort == json.dest_port.get!ushort);
+  assert(packet.srcPort == json["src_port"].to!ushort);
+  assert(packet.destPort == json["dest_port"].to!ushort);
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }

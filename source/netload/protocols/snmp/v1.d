@@ -1,23 +1,28 @@
 module netload.protocols.snmp.v1;
 
 import std.string;
+import std.conv;
 
-import vibe.data.json;
+import stdx.data.json;
 
 import netload.core.protocol;
 import netload.protocols.snmp.asn_1;
+import netload.core.conversion.json_array;
 
 class SNMPv1 : Protocol {
   public:
+    static SNMPv1 opCall(inout JSONValue val) {
+  		return new SNMPv1(val);
+  	}
+
     this() {}
 
-    this(Json json) {
-      ver = json.ver.to!int;
-      communityString = json.community_string.to!string;
-      pdu = deserializeJson!ASN1(json.pdu);
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    this(JSONValue json) {
+      ver = json["ver"].to!int;
+      communityString = json["community_string"].get!string;
+      pdu = json["pdu"].toASN1;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ubyte[] bytes) {
@@ -27,12 +32,13 @@ class SNMPv1 : Protocol {
       pdu = seq[2];
     }
 
-    override Json toJson() const {
-      auto json = Json.emptyObject;
-      json.ver = ver;
-      json.community_string = communityString;
-      json.pdu = serializeToJson(_pdu);
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "ver": JSONValue(ver),
+        "community_string": JSONValue(communityString),
+        "pdu": _pdu.toJSONValue,
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
@@ -60,10 +66,10 @@ class SNMPv1 : Protocol {
       ];
 
       auto json = snmp.toJson;
-      assert(json.ver.to!int == 1);
-      assert(json.community_string.to!string == "public");
-      assert(json.pdu["type"].get!ubyte == ASN1.Type.SET_REQUEST_PDU);
-      assert(deserializeJson!(ubyte[])(json.pdu.data) == [
+      assert(json["ver"].to!int == 1);
+      assert(json["community_string"].get!string == "public");
+      assert(json["pdu"]["type"].to!ubyte == ASN1.Type.SET_REQUEST_PDU);
+      assert(json["pdu"]["data"].toArrayOf!ubyte == [
         0x02, 0x01, 0x3a, 0x02, 0x01, 0x00, 0x02, 0x01,
         0x00, 0x30, 0x6d, 0x30, 0x13, 0x06, 0x0e, 0x2b,
         0x06, 0x01, 0x04, 0x01, 0x81, 0x7d, 0x08, 0x33,
@@ -145,7 +151,7 @@ class SNMPv1 : Protocol {
       ]);
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property {
       Protocol data() { return null; }
@@ -192,10 +198,11 @@ unittest {
     0x02, 0x01, 0x05, 0x01, 0x02, 0x02, 0x01, 0x2c
   ];
 
-  Json json = Json.emptyObject;
-  json.ver = 1;
-  json.community_string = "public";
-  json.pdu = serializeToJson(pdu);
+  JSONValue json = [
+    "ver": JSONValue(1),
+    "community_string": JSONValue("public"),
+    "pdu": pdu.toJSONValue
+  ];
 
   auto snmp = cast(SNMPv1)to!SNMPv1(json);
   assert(snmp.ver == 1);

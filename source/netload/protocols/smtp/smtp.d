@@ -1,10 +1,16 @@
 module netload.protocols.smtp.smtp;
 
-import vibe.data.json;
+import std.conv;
+import stdx.data.json;
 import netload.core.protocol;
+import netload.core.conversion.json_array;
 
 class SMTP : Protocol {
   public:
+    static SMTP opCall(inout JSONValue val) {
+  		return new SMTP(val);
+  	}
+
     this() {
 
     }
@@ -13,8 +19,8 @@ class SMTP : Protocol {
       _body = b;
     }
 
-    this(Json json) {
-      _body = json.body_.to!string;
+    this(JSONValue json) {
+      _body = json["body_"].get!string;
     }
 
     this(ubyte[] encoded) {
@@ -26,18 +32,20 @@ class SMTP : Protocol {
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.body_ = _body;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "body_": JSONValue(_body),
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
     unittest {
       SMTP packet = new SMTP("test");
-      auto json = Json.emptyObject;
-      json.name = "SMTP";
-      json.body_ = "test";
+      JSONValue json = [
+        "name": JSONValue("SMTP"),
+        "body_": JSONValue("test")
+      ];
       assert(packet.toJson == json);
     }
 
@@ -50,7 +58,7 @@ class SMTP : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property string str() const { return _body; }
     @property void str(string b) { _body = b; }
@@ -60,8 +68,9 @@ class SMTP : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.body_ = "test";
+  JSONValue json = [
+    "body_": JSONValue("test")
+  ];
   SMTP packet = cast(SMTP)to!SMTP(json);
   assert(packet.str == "test");
 }

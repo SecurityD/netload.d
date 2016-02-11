@@ -1,5 +1,5 @@
 module netload.core.protocol;
-import vibe.data.json;
+import stdx.data.json;
 import std.string;
 import std.file;
 import netload.protocols;
@@ -9,6 +9,8 @@ interface Protocol {
     @property Protocol data();
     @property void data(Protocol p);
     @property int osiLayer() const;
+    @property inout string name();
+
     final ProtocolType layer(ProtocolType : Protocol, this DerivedClass)() {
       if (name == typeid(ProtocolType).name.split(".")[$ - 1]) {
         return cast(ProtocolType)this;
@@ -52,18 +54,17 @@ interface Protocol {
       assert(packet.layer!HTTP);
     }
 
-    @property inout string name();
-    Json toJson() const;
-    ubyte[] toBytes() const;
     string toString() const;
+    JSONValue toJson() const;
+    ubyte[] toBytes() const;
 }
 
 void write(Protocol packet, string filename) {
-  std.file.write(filename, packet.toJson.toString);
+  std.file.write(filename, packet.toJson.toJSON);
 }
 
 Protocol read(string filename) {
   string data = cast(string)std.file.read(filename);
-  Json json = parseJsonString(data);
+  JSONValue json = toJSONValue(data);
   return toProtocol(json);
 }

@@ -1,20 +1,23 @@
 module netload.protocols.http.http;
 
-import vibe.data.json;
 import netload.core.protocol;
+import stdx.data.json;
+import std.conv;
 
 class HTTP : Protocol {
   public:
-    this() {
+    static HTTP opCall(inout JSONValue val) {
+  		return new HTTP(val);
+  	}
 
-    }
+    this() {}
 
     this(string b) {
       _body = b;
     }
 
-    this(Json json) {
-      _body = json.body_.to!string;
+    this(JSONValue json) {
+      _body = json["body_"].get!string;
     }
 
     this(ubyte[] encoded) {
@@ -26,18 +29,20 @@ class HTTP : Protocol {
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.body_ = _body;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "body_": JSONValue(_body),
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
     unittest {
       HTTP packet = new HTTP("test");
-      auto json = Json.emptyObject;
-      json.body_ = "test";
-      json.name = "HTTP";
+      JSONValue json = [
+        "body_": JSONValue("test"),
+        "name": JSONValue("HTTP")
+      ];
       assert(packet.toJson == json);
     }
 
@@ -50,7 +55,7 @@ class HTTP : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property string str() const { return _body; }
     @property void str(string b) { _body = b; }
@@ -60,8 +65,9 @@ class HTTP : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.body_ = "test";
+  JSONValue json = [
+    "body_": JSONValue("test")
+  ];
   HTTP packet = cast(HTTP)to!HTTP(json);
   assert(packet.str == "test");
 }

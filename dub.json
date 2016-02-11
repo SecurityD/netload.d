@@ -2,9 +2,9 @@
 	"name": "netload-d",
 	"description": "Packet manipulation framework for D Language",
 	"copyright": "Copyright © 2015, main",
-	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer"],
+	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer", "Victor Schubert"],
 	"dependencies": {
-		"vibe-d": ">=0.7.24-beta.1"
+		"std_data_json": "~>0.17.0"
 	},
 	"libs": [
 		"pcap"

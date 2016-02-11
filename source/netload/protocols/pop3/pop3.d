@@ -1,10 +1,16 @@
 module netload.protocols.pop3.pop3;
 
-import vibe.data.json;
+import stdx.data.json;
+import std.conv;
 import netload.core.protocol;
+import netload.core.conversion.json_array;
 
 class POP3 : Protocol {
   public:
+    static POP3 opCall(inout JSONValue val) {
+  		return new POP3(val);
+  	}
+
     this() {
 
     }
@@ -13,8 +19,8 @@ class POP3 : Protocol {
       _body = b;
     }
 
-    this(Json json) {
-      _body = json.body_.to!string;
+    this(JSONValue json) {
+      _body = json["body_"].get!string;
     }
 
     this(ubyte[] encoded) {
@@ -26,18 +32,20 @@ class POP3 : Protocol {
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.body_ = _body;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "body_": JSONValue(_body),
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
     unittest {
       POP3 packet = new POP3("test");
-      auto json = Json.emptyObject;
-      json.name = "POP3";
-      json.body_ = "test";
+      JSONValue json = [
+        "name": JSONValue("POP3"),
+        "body_": JSONValue("test")
+      ];
       assert(packet.toJson == json);
     }
 
@@ -50,7 +58,7 @@ class POP3 : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property string str() const { return _body; }
     @property void str(string b) { _body = b; }
@@ -60,8 +68,9 @@ class POP3 : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.body_ = "test";
+  JSONValue json = [
+    "body_": JSONValue("test")
+  ];
   POP3 packet = cast(POP3)to!POP3(json);
   assert(packet.str == "test");
 }

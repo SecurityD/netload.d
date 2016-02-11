@@ -3,8 +3,10 @@ module netload.protocols.icmp.v4_error;
 import netload.core.protocol;
 import netload.protocols.icmp.common;
 import netload.protocols.ip;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 alias ICMPv4Error = ICMPv4ErrorBase!(ICMPType.ANY);
 alias ICMPv4DestUnreach = ICMPv4ErrorBase!(ICMPType.DEST_UNREACH);
@@ -15,20 +17,23 @@ alias ICMPv4ParamProblem = ICMPv4ErrorBase!(ICMPType.PARAM_PROBLEM);
 
 class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
-    this(Json json) {
-        static if (__type__ == ICMPType.ANY)
-          _type = json.packetType.to!ubyte;
-        else
-          this();
-        _code = json.code.to!ubyte;
-        _checksum = json.checksum.to!ushort;
-        static if (__type__ == ICMPType.PARAM_PROBLEM)
-          _ptr = json.ptr.to!ubyte;
-        else static if (__type__ == ICMPType.REDIRECT)
-          _gateway = json.gateway.to!uint;
-        auto packetData = ("data" in json);
-        if (json.data.type != Json.Type.Null && packetData != null)
-          _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    static ICMPv4ErrorBase!(__type__) opCall(inout JSONValue val) {
+  		return new ICMPv4ErrorBase!(__type__)(val);
+  	}
+
+    this(JSONValue json) {
+      static if (__type__ == ICMPType.ANY)
+        _type = json["packetType"].to!ubyte;
+      else
+        this();
+      _code = json["code"].to!ubyte;
+      _checksum = json["checksum"].to!ushort;
+      static if (__type__ == ICMPType.PARAM_PROBLEM)
+        _ptr = json["ptr"].to!ubyte;
+      else static if (__type__ == ICMPType.REDIRECT)
+        _gateway = json["gateway"].to!uint;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ubyte[] encodedPacket) {
@@ -106,21 +111,21 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       }
     }
 
-    override Json toJson() const {
-      Json packet = super.toJson();
+    override JSONValue toJson() const {
+      JSONValue json = super.toJson;
       static if (__type__ == ICMPType.REDIRECT)
-        packet.gateway = _gateway;
+        json["gateway"] = JSONValue(_gateway);
       else static if (__type__ == ICMPType.PARAM_PROBLEM)
-        packet.ptr = _ptr;
-      return packet;
+        json["ptr"] = JSONValue(_ptr);
+      return json;
     }
 
     unittest {
       ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
-      assert(packet.toJson.packetType == 5);
-      assert(packet.toJson.code == 2);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.gateway == 42);
+      assert(packet.toJson["packetType"] == 5);
+      assert(packet.toJson["code"] == 2);
+      assert(packet.toJson["checksum"] == 0);
+      assert(packet.toJson["gateway"] == 42);
     }
 
     unittest {
@@ -129,22 +134,23 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 5);
-      assert(json.code == 2);
-      assert(json.checksum == 0);
-      assert(json.gateway == 42);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 5);
+      assert(json["code"] == 2);
+      assert(json["checksum"] == 0);
+      assert(json["gateway"] == 42);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     unittest {
       ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
-      assert(packet.toJson.packetType == 12);
-      assert(packet.toJson.code == 2);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.ptr == 1);
+      assert(packet.toJson["packetType"] == 12);
+      assert(packet.toJson["code"] == 2);
+      assert(packet.toJson["checksum"] == 0);
+      assert(packet.toJson["ptr"] == 1);
     }
 
     unittest {
@@ -157,19 +163,20 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       packet.data.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "Ethernet");
-      assert(json.dest_mac_address == "00:00:00:00:00:00");
-      assert(json.src_mac_address == "ff:ff:ff:ff:ff:ff");
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "Ethernet");
+      assert(json["dest_mac_address"] == "00:00:00:00:00:00");
+      assert(json["src_mac_address"] == "ff:ff:ff:ff:ff:ff");
 
-      json = json.data;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 12);
-      assert(json.code == 2);
-      assert(json.checksum == 0);
-      assert(json.ptr == 1);
+      json = json["data"];
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 12);
+      assert(json["code"] == 2);
+      assert(json["checksum"] == 0);
+      assert(json["ptr"] == 1);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -261,10 +268,11 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
+  JSONValue json = [
+    "packetType": JSONValue(3),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
   ICMPv4Error packet = cast(ICMPv4Error)to!ICMPv4Error(json);
   assert(packet.type == 3);
   assert(packet.code == 2);
@@ -274,16 +282,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(3),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 3;
-  json.code = 2;
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4Error packet = cast(ICMPv4Error)to!ICMPv4Error(json);
   assert(packet.type == 3);
@@ -301,9 +310,10 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
+  JSONValue json = [
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
   ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)to!ICMPv4DestUnreach(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -312,15 +322,16 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.code = 2;
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)to!ICMPv4DestUnreach(json);
   assert(packet.code == 2);
@@ -336,9 +347,10 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
+  JSONValue json = [
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)to!ICMPv4TimeExceed(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -347,15 +359,16 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.code = 2;
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)to!ICMPv4TimeExceed(json);
   assert(packet.code == 2);
@@ -371,10 +384,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  json.ptr = 1;
+  JSONValue json = [
+    "code": JSONValue(2),
+    "checksum": JSONValue(0),
+    "ptr": JSONValue(1)
+  ];
   ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)to!ICMPv4ParamProblem(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -384,16 +398,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0),
+    "ptr": JSONValue(1)
+  ];
 
-  json.name = "ICMP";
-  json.code = 2;
-  json.checksum = 0;
-  json.ptr = 1;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)to!ICMPv4ParamProblem(json);
   assert(packet.code == 2);
@@ -411,9 +426,10 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
+  JSONValue json = [
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)to!ICMPv4SourceQuench(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -422,15 +438,16 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0)
+  ];
 
-  json.name = "ICMP";
-  json.code = 2;
-  json.checksum = 0;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)to!ICMPv4SourceQuench(json);
   assert(packet.code == 2);
@@ -446,10 +463,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.code = 2;
-  json.checksum = 0;
-  json.gateway = 42;
+  JSONValue json = [
+    "code": JSONValue(2),
+    "checksum": JSONValue(0),
+    "gateway": JSONValue(42)
+  ];
   ICMPv4Redirect packet = cast(ICMPv4Redirect)to!ICMPv4Redirect(json);
   assert(packet.code == 2);
   assert(packet.checksum == 0);
@@ -459,16 +477,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "code": JSONValue(2),
+    "checksum": JSONValue(0),
+    "gateway": JSONValue(42)
+  ];
 
-  json.name = "ICMP";
-  json.code = 2;
-  json.checksum = 0;
-  json.gateway = 42;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4Redirect packet = cast(ICMPv4Redirect)to!ICMPv4Redirect(json);
   assert(packet.code == 2);

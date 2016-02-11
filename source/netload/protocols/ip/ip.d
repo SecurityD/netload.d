@@ -3,8 +3,10 @@ module netload.protocols.ip.ip;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 private Protocol delegate(ubyte[])[ubyte] ipType;
 
@@ -34,6 +36,10 @@ union FlagsAndOffset {
 
 class IP : Protocol {
     public:
+      static IP opCall(inout JSONValue val) {
+    		return new IP(val);
+    	}
+
       this() {
 
       }
@@ -43,24 +49,23 @@ class IP : Protocol {
         _destIpAddress = dest;
       }
 
-      this(Json json) {
-        _versionAndLength.ipVersion = json.ip_version.get!ubyte;
-        _versionAndLength.ihl = json.ihl.get!ubyte;
-        _tos = json.tos.get!ubyte;
-        _length = json.header_length.get!ushort;
-        _id = json.id.get!ushort;
-        _flagsAndOffset.offset = json.offset.get!ushort;
-        _flagsAndOffset.reserved = json.reserved.get!bool;
-        _flagsAndOffset.df = json.df.get!bool;
-        _flagsAndOffset.mf = json.mf.get!bool;
-        _ttl = json.ttl.get!ubyte;
-        _protocol = json.protocol.get!ubyte;
-        _checksum = json.checksum.get!ushort;
-        _srcIpAddress = stringToIp(json.src_ip_address.get!string);
-        _destIpAddress = stringToIp(json.dest_ip_address.get!string);
-        auto packetData = ("data" in json);
-        if (json.data.type != Json.Type.Null && packetData != null)
-          _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+      this(JSONValue json) {
+        _versionAndLength.ipVersion = json["ip_version"].to!ubyte;
+        _versionAndLength.ihl = json["ihl"].to!ubyte;
+        _tos = json["tos"].to!ubyte;
+        _length = json["header_length"].to!ushort;
+        _id = json["id"].to!ushort;
+        _flagsAndOffset.offset = json["offset"].to!ushort;
+        _flagsAndOffset.reserved = json["reserved"].to!bool;
+        _flagsAndOffset.df = json["df"].to!bool;
+        _flagsAndOffset.mf = json["mf"].to!bool;
+        _ttl = json["ttl"].to!ubyte;
+        _protocol = json["protocol"].to!ubyte;
+        _checksum = json["checksum"].to!ushort;
+        _srcIpAddress = stringToIp(json["src_ip_address"].get!string);
+        _destIpAddress = stringToIp(json["dest_ip_address"].get!string);
+        if ("data" in json && json["data"] != null)
+    			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
       }
 
       this(ubyte[] encoded) {
@@ -88,41 +93,50 @@ class IP : Protocol {
       override @property void data(Protocol p) { _data = p; }
       override @property int osiLayer() const { return 3; }
 
-      override Json toJson() const {
-        Json json = Json.emptyObject;
-        json.ip_version = ipVersion;
-        json.ihl = ihl;
-        json.tos = tos;
-        json.header_length = length;
-        json.id = id;
-        json.offset = offset;
-        json.reserved = reserved;
-        json.df = df;
-        json.mf = mf;
-        json.ttl = ttl;
-        json.protocol = protocol;
-        json.checksum = checksum;
-        json.src_ip_address = ipToString(srcIpAddress);
-        json.dest_ip_address = ipToString(destIpAddress);
-        json.name = name;
+      override JSONValue toJson() const {
+        JSONValue json = [
+          "ip_version": JSONValue(ipVersion),
+          "ihl": JSONValue(ihl),
+          "tos": JSONValue(tos),
+          "header_length": JSONValue(length),
+          "id": JSONValue(id),
+          "offset": JSONValue(offset),
+          "reserved": JSONValue(reserved),
+          "df": JSONValue(df),
+          "mf": JSONValue(mf),
+          "ttl": JSONValue(ttl),
+          "protocol": JSONValue(protocol),
+          "checksum": JSONValue(checksum),
+          "src_ip_address": JSONValue(ipToString(srcIpAddress)),
+          "dest_ip_address": JSONValue(ipToString(destIpAddress)),
+          "name": JSONValue(name)
+        ];
         if (_data is null)
-          json.data = null;
-        else
-          json.data = _data.toJson;
-        return json;
+    			json["data"] = JSONValue(null);
+    		else
+    			json["data"] = _data.toJson;
+    		return json;
       }
 
       unittest {
         IP packet = new IP();
-        assert(packet.toJson.checksum.get!ushort == 0);
+        packet.checksum = 42;
+        assert(packet.toJson["checksum"].to!ushort == 42);
       }
 
       unittest {
         import netload.protocols.raw;
 
         IP packet = new IP();
+        packet.checksum = 42;
 
         packet.data = new Raw([42, 21, 84]);
+
+        JSONValue json = packet.toJson;
+        assert(json["checksum"].to!ushort == 42);
+
+        json = json["data"];
+    		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
       }
 
       override ubyte[] toBytes() const {
@@ -156,7 +170,7 @@ class IP : Protocol {
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
       }
 
-      override string toString() const { return toJson.toPrettyString; }
+      override string toString() const { return toJson.toJSON; }
 
       @property ubyte ipVersion() const { return _versionAndLength.ipVersion; }
       @property void ipVersion(ubyte newVersion) { _versionAndLength.ipVersion = newVersion; }
@@ -202,49 +216,52 @@ class IP : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.ip_version = 0;
-  json.ihl = 0;
-  json.tos = 0;
-  json.header_length = 0;
-  json.id = 0;
-  json.offset = 0;
-  json.reserved = false;
-  json.df = false;
-  json.mf = false;
-  json.ttl = 0;
-  json.protocol = 0;
-  json.checksum = 0;
-  json.src_ip_address = ipToString([127, 0, 0, 1]);
-  json.dest_ip_address = ipToString([0, 0, 0, 0]);
+  JSONValue json = [
+    "ip_version": JSONValue(0),
+    "ihl": JSONValue(0),
+    "tos": JSONValue(0),
+    "header_length": JSONValue(0),
+    "id": JSONValue(0),
+    "offset": JSONValue(0),
+    "reserved": JSONValue(false),
+    "df": JSONValue(false),
+    "mf": JSONValue(true),
+    "ttl": JSONValue(0),
+    "protocol": JSONValue(0),
+    "checksum": JSONValue(0),
+    "src_ip_address": JSONValue(ipToString([127, 0, 0, 1])),
+    "dest_ip_address": JSONValue(ipToString([0, 0, 0, 0]))
+  ];
   IP packet = cast(IP)to!IP(json);
   assert(packet.srcIpAddress == [127, 0, 0, 1]);
+  assert(packet.mf == true);
 }
 
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("IP"),
+    "ip_version": JSONValue(0),
+    "ihl": JSONValue(0),
+    "tos": JSONValue(0),
+    "header_length": JSONValue(0),
+    "id": JSONValue(0),
+    "offset": JSONValue(0),
+    "reserved": JSONValue(false),
+    "df": JSONValue(false),
+    "mf": JSONValue(false),
+    "ttl": JSONValue(0),
+    "protocol": JSONValue(0),
+    "checksum": JSONValue(0),
+    "src_ip_address": JSONValue(ipToString([127, 0, 0, 1])),
+    "dest_ip_address": JSONValue(ipToString([0, 0, 0, 0]))
+  ];
 
-  json.name = "IP";
-  json.ip_version = 0;
-  json.ihl = 0;
-  json.tos = 0;
-  json.header_length = 0;
-  json.id = 0;
-  json.offset = 0;
-  json.reserved = false;
-  json.df = false;
-  json.mf = false;
-  json.ttl = 0;
-  json.protocol = 0;
-  json.checksum = 0;
-  json.src_ip_address = ipToString([127, 0, 0, 1]);
-  json.dest_ip_address = ipToString([0, 0, 0, 0]);
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   IP packet = cast(IP)to!IP(json);
   assert(packet.srcIpAddress == [127, 0, 0, 1]);

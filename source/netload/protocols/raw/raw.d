@@ -1,62 +1,74 @@
 module netload.protocols.raw.raw;
 
-import vibe.data.json;
 import netload.core.protocol;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.outbuffer;
+import std.conv;
 
 class Raw : Protocol {
   public:
-    this() {
+	this() {
 
-    }
+	}
 
-    this(ubyte[] array) {
-      _bytes = array;
-    }
+	this(ubyte[] array) {
+	  _bytes = array;
+	}
 
-    this(Json json) {
-      _bytes = deserializeJson!(ubyte[])(json.bytes);
-    }
+	this(JSONValue json) {
+    _bytes = json["bytes"].toArrayOf!ubyte;
+	}
 
-    override @property inout string name() { return "Raw"; };
-    override @property Protocol data() { return null; }
-    override @property void data(Protocol p) { }
-    override @property int osiLayer() const { return 7; }
+	override @property inout string name() { return "Raw"; };
+	override @property Protocol data() { return null; }
+	override @property void data(Protocol p) { }
+	override @property int osiLayer() const { return 7; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.bytes = serializeToJson(_bytes);
-      json.name = name;
-      return json;
-    }
+	override JSONValue toJson() const {
+	  JSONValue json = [
+      "bytes" : (_bytes.toJsonArray),
+      "name" : JSONValue(name)
+    ];
+    return json;
+	}
 
-    unittest {
-      Raw packet = new Raw([0, 1, 2]);
-    }
+	unittest {
+	  Raw packet = new Raw([0, 1, 2]);
+    JSONValue json = packet.toJson();
+    assert(json["bytes"] == [0, 1, 2]);
+    assert(json["name"] == "Raw");
+	}
 
-    override ubyte[] toBytes() const { return _bytes.dup; }
+	override ubyte[] toBytes() const { return _bytes.dup; }
 
-    override string toString() const {
-      OutBuffer b = new OutBuffer();
-      b.writef("%(\\x%02x %)", bytes);
-      return b.toString;
-    }
+	override string toString() const {
+	  OutBuffer b = new OutBuffer();
+	  b.writef("%(\\x%02x %)", bytes);
+	  return b.toString;
+	}
 
-    unittest {
-      Raw packet = new Raw([0, 1, 2]);
-      assert(packet.toString == "\\x00 \\x01 \\x02");
-    }
+	unittest {
+	  Raw packet = new Raw([0, 1, 2]);
+	  assert(packet.toString == "\\x00 \\x01 \\x02");
+	}
 
-    @property const(ubyte[]) bytes() const { return _bytes; }
-    @property void bytes(ubyte[] array) { _bytes = array; }
+	@property const(ubyte[]) bytes() const { return _bytes; }
+	@property void bytes(ubyte[] array) { _bytes = array; }
+  static Raw opCall(inout JSONValue val) {
+		return new Raw(val);
+	}
+
   private:
-    ubyte[] _bytes;
+	ubyte[] _bytes;
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.bytes = serializeToJson([0, 1, 2]);
-  Raw packet = cast(Raw)to!Raw(json);
+  ubyte[] bytes = [0, 1, 2];
+  JSONValue json = [
+    "bytes": (bytes.toJsonArray)
+  ];
+  Raw packet = Raw(json);
   assert(packet.bytes == [0, 1, 2]);
 }
 

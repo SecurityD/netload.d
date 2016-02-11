@@ -1,33 +1,38 @@
 module netload.protocols.ntp.v0;
 
 import std.bitmanip;
+import std.conv;
 
-import vibe.data.json;
+import stdx.data.json;
 
 import netload.core.protocol;
 import netload.protocols.ntp.common;
+import netload.core.conversion.json_array;
 
 class NTPv0 : NTPCommon, Protocol {
   public:
+    static NTPv0 opCall(inout JSONValue val) {
+  		return new NTPv0(val);
+  	}
+
     this() {
 
     }
 
-    this(Json json) {
-      _leapIndicator = json.leap_indicator.to!ubyte;
-      _status = json.status.to!ubyte;
-      _type = json.type_.to!ubyte;
-      _precision = json.precision.to!ushort;
-      _estimatedError = json.estimated_error.to!uint;
-      _estimatedDriftRate = json.estimated_drift_rate.to!uint;
-      referenceClockIdentifier = json.reference_clock_identifier.to!uint;
-      referenceTimestamp = json.reference_timestamp.to!ulong;
-      originateTimestamp = json.originate_timestamp.to!ulong;
-      receiveTimestamp = json.receive_timestamp.to!ulong;
-      transmitTimestamp = json.transmit_timestamp.to!ulong;
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        _data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    this(JSONValue json) {
+      _leapIndicator = json["leap_indicator"].to!ubyte;
+      _status = json["status"].to!ubyte;
+      _type = json["type_"].to!ubyte;
+      _precision = json["precision"].to!ushort;
+      _estimatedError = json["estimated_error"].to!uint;
+      _estimatedDriftRate = json["estimated_drift_rate"].to!uint;
+      referenceClockIdentifier = json["reference_clock_identifier"].to!uint;
+      referenceTimestamp = json["reference_timestamp"].to!ulong;
+      originateTimestamp = json["originate_timestamp"].to!ulong;
+      receiveTimestamp = json["receive_timestamp"].to!ulong;
+      transmitTimestamp = json["transmit_timestamp"].to!ulong;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
     this(ubyte[] encodedPacket) {
@@ -45,25 +50,26 @@ class NTPv0 : NTPCommon, Protocol {
       transmitTimestamp = encodedPacket.read!ulong;
     }
 
-    override Json toJson() const {
-      auto json = Json.emptyObject;
-      json.leap_indicator = leapIndicator;
-      json.status = status;
-      json.type_ = type;
-      json.precision = precision;
-      json.estimated_error = estimatedError;
-      json.estimated_drift_rate = estimatedDriftRate;
-      json.reference_clock_identifier = referenceClockIdentifier;
-      json.reference_timestamp = referenceTimestamp;
-      json.originate_timestamp = originateTimestamp;
-      json.receive_timestamp = receiveTimestamp;
-      json.transmit_timestamp = transmitTimestamp;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "leap_indicator": JSONValue(leapIndicator),
+        "status": JSONValue(status),
+        "type_": JSONValue(type),
+        "precision": JSONValue(precision),
+        "estimated_error": JSONValue(estimatedError),
+        "estimated_drift_rate": JSONValue(estimatedDriftRate),
+        "reference_clock_identifier": JSONValue(referenceClockIdentifier),
+        "reference_timestamp": JSONValue(referenceTimestamp),
+        "originate_timestamp": JSONValue(originateTimestamp),
+        "receive_timestamp": JSONValue(receiveTimestamp),
+        "transmit_timestamp": JSONValue(transmitTimestamp),
+        "name": JSONValue(name)
+      ];
       if (_data is null)
-        json.data = null;
-      else
-        json.data = _data.toJson;
-      return json;
+  			json["data"] = JSONValue(null);
+  		else
+  			json["data"] = _data.toJson;
+  		return json;
     }
 
     unittest {
@@ -80,20 +86,21 @@ class NTPv0 : NTPCommon, Protocol {
       ntp.receiveTimestamp = 400u;
       ntp.transmitTimestamp = 450u;
 
-      auto test = Json.emptyObject;
-      test.leap_indicator = 2u;
-      test.status = 4u;
-      test.type_ = 50u;
-      test.precision = 100u;
-      test.estimated_error = 150u;
-      test.estimated_drift_rate = 200u;
-      test.reference_clock_identifier = 250u;
-      test.reference_timestamp = 300u;
-      test.originate_timestamp = 350u;
-      test.receive_timestamp = 400u;
-      test.transmit_timestamp = 450u;
-      test.name = "NTPv0";
-      test.data = null;
+      JSONValue test = [
+        "leap_indicator": JSONValue(2u),
+        "status": JSONValue(4u),
+        "type_": JSONValue(50u),
+        "precision": JSONValue(100u),
+        "estimated_error": JSONValue(150u),
+        "estimated_drift_rate": JSONValue(200u),
+        "reference_clock_identifier": JSONValue(250u),
+        "reference_timestamp": JSONValue(300u),
+        "originate_timestamp": JSONValue(350u),
+        "receive_timestamp": JSONValue(400u),
+        "transmit_timestamp": JSONValue(450u),
+        "name": JSONValue("NTPv0"),
+        "data": JSONValue(null)
+      ];
 
       assert(ntp.toJson == test);
     }
@@ -116,21 +123,22 @@ class NTPv0 : NTPCommon, Protocol {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "NTPv0");
-      assert(json.leap_indicator == 2u);
-      assert(json.status == 4u);
-      assert(json.type_ == 50u);
-      assert(json.precision == 100u);
-      assert(json.estimated_error == 150u);
-      assert(json.estimated_drift_rate == 200u);
-      assert(json.reference_clock_identifier == 250u);
-      assert(json.reference_timestamp == 300u);
-      assert(json.originate_timestamp == 350u);
-      assert(json.receive_timestamp == 400u);
-      assert(json.transmit_timestamp == 450u);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "NTPv0");
+      assert(json["leap_indicator"] == 2u);
+      assert(json["status"] == 4u);
+      assert(json["type_"] == 50u);
+      assert(json["precision"] == 100u);
+      assert(json["estimated_error"] == 150u);
+      assert(json["estimated_drift_rate"] == 200u);
+      assert(json["reference_clock_identifier"] == 250u);
+      assert(json["reference_timestamp"] == 300u);
+      assert(json["originate_timestamp"] == 350u);
+      assert(json["receive_timestamp"] == 400u);
+      assert(json["transmit_timestamp"] == 450u);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -215,7 +223,7 @@ class NTPv0 : NTPCommon, Protocol {
 
     @property inout string name() { return "NTPv0"; }
     override @property int osiLayer() const { return 7; };
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property {
       override Protocol data() { return _data; }
@@ -254,18 +262,19 @@ class NTPv0 : NTPCommon, Protocol {
 }
 
 unittest {
-  auto json = Json.emptyObject;
-  json.leap_indicator = 2u;
-  json.status = 4u;
-  json.type_ = 50u;
-  json.precision = 100u;
-  json.estimated_error = 150u;
-  json.estimated_drift_rate = 200u;
-  json.reference_clock_identifier = 250u;
-  json.reference_timestamp = 300u;
-  json.originate_timestamp = 350u;
-  json.receive_timestamp = 400u;
-  json.transmit_timestamp = 450u;
+  JSONValue json = [
+    "leap_indicator": JSONValue(2u),
+    "status": JSONValue(4u),
+    "type_": JSONValue(50u),
+    "precision": JSONValue(100u),
+    "estimated_error": JSONValue(150u),
+    "estimated_drift_rate": JSONValue(200u),
+    "reference_clock_identifier": JSONValue(250u),
+    "reference_timestamp": JSONValue(300u),
+    "originate_timestamp": JSONValue(350u),
+    "receive_timestamp": JSONValue(400u),
+    "transmit_timestamp": JSONValue(450u)
+  ];
 
   auto packet = cast(NTPv0)to!NTPv0(json);
 
@@ -285,24 +294,25 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("NTPv0"),
+    "leap_indicator": JSONValue(2u),
+    "status": JSONValue(4u),
+    "type_": JSONValue(50u),
+    "precision": JSONValue(100u),
+    "estimated_error": JSONValue(150u),
+    "estimated_drift_rate": JSONValue(200u),
+    "reference_clock_identifier": JSONValue(250u),
+    "reference_timestamp": JSONValue(300u),
+    "originate_timestamp": JSONValue(350u),
+    "receive_timestamp": JSONValue(400u),
+    "transmit_timestamp": JSONValue(450u)
+  ];
 
-  json.name = "NTPv0";
-  json.leap_indicator = 2u;
-  json.status = 4u;
-  json.type_ = 50u;
-  json.precision = 100u;
-  json.estimated_error = 150u;
-  json.estimated_drift_rate = 200u;
-  json.reference_clock_identifier = 250u;
-  json.reference_timestamp = 300u;
-  json.originate_timestamp = 350u;
-  json.receive_timestamp = 400u;
-  json.transmit_timestamp = 450u;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   auto packet = cast(NTPv0)to!NTPv0(json);
   assert(packet.leapIndicator == 2u);

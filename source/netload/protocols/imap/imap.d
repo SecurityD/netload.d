@@ -1,10 +1,16 @@
 module netload.protocols.imap.imap;
 
-import vibe.data.json;
 import netload.core.protocol;
+import netload.core.conversion.json_array;
+import stdx.data.json;
+import std.conv;
 
 class IMAP : Protocol {
   public:
+    static IMAP opCall(inout JSONValue val) {
+  		return new IMAP(val);
+  	}
+
     this() {
 
     }
@@ -13,8 +19,8 @@ class IMAP : Protocol {
       _body = b;
     }
 
-    this(Json json) {
-      _body = json.body_.to!string;
+    this(JSONValue json) {
+      _body = json["body_"].get!string;
     }
 
     this(ubyte[] encoded) {
@@ -26,18 +32,20 @@ class IMAP : Protocol {
     override @property void data(Protocol p) { }
     override @property int osiLayer() const { return 7; }
 
-    override Json toJson() const {
-      Json json = Json.emptyObject;
-      json.body_ = _body;
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "body_": JSONValue(_body),
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
     unittest {
       IMAP packet = new IMAP("test");
-      auto json = Json.emptyObject;
-      json.body_ = "test";
-      json.name = "IMAP";
+      JSONValue json = [
+        "body_": JSONValue("test"),
+        "name": JSONValue("IMAP")
+      ];
       assert(packet.toJson == json);
     }
 
@@ -50,7 +58,7 @@ class IMAP : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property string str() const { return _body; }
     @property void str(string b) { _body = b; }
@@ -60,8 +68,9 @@ class IMAP : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.body_ = "test";
+  JSONValue json = [
+    "body_": JSONValue("test")
+  ];
   IMAP packet = cast(IMAP)to!IMAP(json);
   assert(packet.str == "test");
 }

@@ -2,14 +2,20 @@ module netload.protocols.snmp.v3;
 
 import std.string;
 import std.bitmanip;
+import std.conv;
 
-import vibe.data.json;
+import stdx.data.json;
 
 import netload.core.protocol;
 import netload.protocols.snmp.asn_1;
+import netload.core.conversion.json_array;
 
 class SNMPv3 : Protocol {
   public:
+    static SNMPv3 opCall(inout JSONValue val) {
+  		return new SNMPv3(val);
+  	}
+
     this() {}
 
     this(ubyte[] bytes) {
@@ -28,29 +34,29 @@ class SNMPv3 : Protocol {
       _pdu = seq[3];
     }
 
-    this(Json json) {
-      ver = json.ver.to!int;
-      _identifier = json.identifier.to!uint;
-      _maxSize = json.max_size.to!uint;
-      _flags = json.flags.to!ubyte;
-      _securityModel = json.security_model.to!uint;
-      _securityParameters = deserializeJson!ASN1(json.security_parameters);
-      _pdu = deserializeJson!ASN1(json.pdu);
-      auto packetData = ("data" in json);
-      if (json.data.type != Json.Type.Null && packetData != null)
-        data = netload.protocols.conversion.protocolConversion[deserializeJson!string(packetData.name)](*packetData);
+    this(JSONValue json) {
+      ver = json["ver"].to!int;
+      _identifier = json["identifier"].to!uint;
+      _maxSize = json["max_size"].to!uint;
+      _flags = json["flags"].to!ubyte;
+      _securityModel = json["security_model"].to!uint;
+      _securityParameters = json["security_parameters"].toASN1;
+      _pdu = json["pdu"].toASN1;
+      if ("data" in json && json["data"] != null)
+  			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
     }
 
-    override Json toJson() const {
-      auto json = Json.emptyObject;
-      json.ver = this.ver;
-      json.identifier = this.identifier;
-      json.max_size = this.maxSize;
-      json.flags = this.flags;
-      json.security_model = this.securityModel;
-      json.security_parameters = serializeToJson(_securityParameters);
-      json.pdu = serializeToJson(_pdu);
-      json.name = name;
+    override JSONValue toJson() const {
+      JSONValue json = [
+        "ver": JSONValue(ver),
+        "identifier": JSONValue(identifier),
+        "max_size": JSONValue(maxSize),
+        "flags": JSONValue(flags),
+        "security_model": JSONValue(securityModel),
+        "security_parameters": _securityParameters.toJSONValue,
+        "pdu": _pdu.toJSONValue,
+        "name": JSONValue(name)
+      ];
       return json;
     }
 
@@ -83,12 +89,12 @@ class SNMPv3 : Protocol {
       ];
       auto snmp = raw.to!SNMPv3;
 
-      Json json = snmp.toJson;
-      assert(json.ver == 3);
-      assert(json.identifier == 1169574667);
-      assert(json.max_size == 65507);
-      assert(json.flags == 5);
-      assert(json.security_model == 3);
+      JSONValue json = snmp.toJson;
+      assert(json["ver"] == 3);
+      assert(json["identifier"] == 1169574667);
+      assert(json["max_size"] == 65507);
+      assert(json["flags"] == 5);
+      assert(json["security_model"] == 3);
 
       ubyte[] rawSecurityParameters = [
         0x30, 0x2e, 0x04, 0x0d, 0x80, 0x00, 0x1f, 0x88,
@@ -99,7 +105,7 @@ class SNMPv3 : Protocol {
         0xb1, 0x6f, 0xcd, 0x6d, 0xba, 0x06, 0x04, 0x00
       ];
       auto securityParameters = rawSecurityParameters.toASN1;
-      assert(json.security_parameters == serializeToJson(securityParameters));
+      assert(json["security_parameters"] == securityParameters.toJSONValue);
 
       ASN1 pdu;
       pdu.type = ASN1.Type.SEQUENCE;
@@ -120,7 +126,7 @@ class SNMPv3 : Protocol {
         0x02, 0x01, 0x02, 0x02, 0x01, 0x12, 0x02, 0x05,
         0x00
       ];
-      assert(json.pdu == serializeToJson(pdu));
+      assert(json["pdu"] == pdu.toJSONValue);
     }
 
     override ubyte[] toBytes() const {
@@ -181,7 +187,7 @@ class SNMPv3 : Protocol {
       assert (snmp.toBytes == raw);
     }
 
-    override string toString() const { return toJson.toPrettyString; }
+    override string toString() const { return toJson.toJSON; }
 
     @property {
       Protocol data() { return null; }
@@ -224,12 +230,13 @@ class SNMPv3 : Protocol {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.ver = 3;
-  json.identifier = 1169574667;
-  json.max_size = 65507;
-  json.flags = 5;
-  json.security_model = 3;
+  JSONValue json = [
+    "ver": JSONValue(3),
+    "identifier": JSONValue(1169574667),
+    "max_size": JSONValue(65507),
+    "flags": JSONValue(5),
+    "security_model": JSONValue(3)
+  ];
 
   ubyte[] rawSecurityParameters = [
     0x30, 0x2e, 0x04, 0x0d, 0x80, 0x00, 0x1f, 0x88,
@@ -240,7 +247,7 @@ unittest {
     0xb1, 0x6f, 0xcd, 0x6d, 0xba, 0x06, 0x04, 0x00
   ];
   auto securityParameters = rawSecurityParameters.toASN1;
-  json.security_parameters = serializeToJson(securityParameters);
+  json["security_parameters"] = securityParameters.toJSONValue;
 
   ASN1 pdu;
   pdu.type = ASN1.Type.SEQUENCE;
@@ -261,7 +268,7 @@ unittest {
     0x02, 0x01, 0x02, 0x02, 0x01, 0x12, 0x02, 0x05,
     0x00
   ];
-  json.pdu = serializeToJson(pdu);
+  json["pdu"] = pdu.toJSONValue;
 
   auto snmp = cast(SNMPv3)to!SNMPv3(json);
   assert(snmp.ver == 3);

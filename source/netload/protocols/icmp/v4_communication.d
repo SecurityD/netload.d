@@ -2,8 +2,10 @@ module netload.protocols.icmp.v4_communication;
 
 import netload.core.protocol;
 import netload.protocols.icmp.common;
-import vibe.data.json;
+import netload.core.conversion.json_array;
+import stdx.data.json;
 import std.bitmanip;
+import std.conv;
 
 alias ICMPv4Communication = ICMPv4CommunicationBase!(ICMPType.ANY);
 alias ICMPv4EchoRequest = ICMPv4CommunicationBase!(ICMPType.ECHO_REQUEST);
@@ -16,6 +18,10 @@ alias ICMPv4TimestampReply = ICMPv4TimestampBase!(ICMPType.TIMESTAMP_REPLY);
 
 class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
+    static ICMPv4CommunicationBase!(__type__) opCall(inout JSONValue val) {
+  		return new ICMPv4CommunicationBase!(__type__)(val);
+  	}
+
     this(ubyte type) {
       super(type, 0);
     }
@@ -33,10 +39,10 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
         this(16);
     }
 
-    this(Json json) {
+    this(JSONValue json) {
       super(json);
-      _id = json.id.to!ushort;
-      _seq = json.seq.to!ushort;
+      _id = json["id"].to!ushort;
+      _seq = json["seq"].to!ushort;
     }
 
     this(ref ubyte[] encodedPacket) {
@@ -45,20 +51,20 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       _seq = encodedPacket.read!ushort();
     }
 
-    override Json toJson() const {
-      Json packet = super.toJson();
-      packet.id = _id;
-      packet.seq = _seq;
-      return packet;
+    override JSONValue toJson() const {
+      JSONValue json = super.toJson();
+      json["id"] = JSONValue(_id);
+      json["seq"] = JSONValue(_seq);
+      return json;
     }
 
     unittest {
       ICMPv4Communication packet = new ICMPv4Communication(8);
-      assert(packet.toJson.packetType == 8);
-      assert(packet.toJson.code == 0);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.id == 0);
-      assert(packet.toJson.seq == 0);
+      assert(packet.toJson["packetType"] == 8);
+      assert(packet.toJson["code"] == 0);
+      assert(packet.toJson["checksum"] == 0);
+      assert(packet.toJson["id"] == 0);
+      assert(packet.toJson["seq"] == 0);
     }
 
     unittest {
@@ -67,15 +73,16 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 8);
-      assert(json.code == 0);
-      assert(json.checksum == 0);
-      assert(json.id == 0);
-      assert(json.seq == 0);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 8);
+      assert(json["code"] == 0);
+      assert(json["checksum"] == 0);
+      assert(json["id"] == 0);
+      assert(json["seq"] == 0);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -126,11 +133,12 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 8;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
+  JSONValue json = [
+    "packetType": JSONValue(8),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
   ICMPv4Communication packet = cast(ICMPv4Communication)to!ICMPv4Communication(json);
   assert(packet.type == 8);
   assert(packet.checksum == 0);
@@ -141,17 +149,18 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(8),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 8;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4Communication packet = cast(ICMPv4Communication)to!ICMPv4Communication(json);
   assert(packet.type == 8);
@@ -171,10 +180,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
+  JSONValue json = [
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
   ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)to!ICMPv4EchoRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -184,16 +194,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)to!ICMPv4EchoRequest(json);
   assert(packet.checksum == 0);
@@ -211,10 +222,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
+  JSONValue json = [
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
   ICMPv4EchoReply packet = cast(ICMPv4EchoReply)to!ICMPv4EchoReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -224,16 +236,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4EchoReply packet = cast(ICMPv4EchoReply)to!ICMPv4EchoReply(json);
   assert(packet.checksum == 0);
@@ -252,6 +265,10 @@ unittest {
 
 class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType.NONE) {
   public:
+    static ICMPv4TimestampBase!(__type__) opCall(inout JSONValue val) {
+  		return new ICMPv4TimestampBase!(__type__)(val);
+  	}
+
     this() {
       super();
     }
@@ -268,11 +285,11 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       _transmitTime = transmitTime;
     }
 
-    this(Json json) {
+    this(JSONValue json) {
       super(json);
-      _originTime = json.originTime.to!uint;
-      _receiveTime = json.receiveTime.to!uint;
-      _transmitTime = json.transmitTime.to!uint;
+      _originTime = json["originTime"].to!uint;
+      _receiveTime = json["receiveTime"].to!uint;
+      _transmitTime = json["transmitTime"].to!uint;
     }
 
     this(ubyte[] encodedPacket) {
@@ -282,24 +299,24 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       _transmitTime = encodedPacket.read!uint();
     }
 
-    override Json toJson() const {
-      Json packet = super.toJson();
-      packet.originTime = _originTime;
-      packet.receiveTime = _receiveTime;
-      packet.transmitTime = _transmitTime;
-      return packet;
+    override JSONValue toJson() const {
+      JSONValue json = super.toJson();
+      json["originTime"] = JSONValue(_originTime);
+      json["receiveTime"] = JSONValue(_receiveTime);
+      json["transmitTime"] = JSONValue(_transmitTime);
+      return json;
     }
 
     unittest {
       ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
-      assert(packet.toJson.packetType == 14);
-      assert(packet.toJson.code == 0);
-      assert(packet.toJson.checksum == 0);
-      assert(packet.toJson.id == 0);
-      assert(packet.toJson.seq == 0);
-      assert(packet.toJson.originTime == 21);
-      assert(packet.toJson.receiveTime == 42);
-      assert(packet.toJson.transmitTime == 84);
+      assert(packet.toJson["packetType"] == 14);
+      assert(packet.toJson["code"] == 0);
+      assert(packet.toJson["checksum"] == 0);
+      assert(packet.toJson["id"] == 0);
+      assert(packet.toJson["seq"] == 0);
+      assert(packet.toJson["originTime"] == 21);
+      assert(packet.toJson["receiveTime"] == 42);
+      assert(packet.toJson["transmitTime"] == 84);
     }
 
     unittest {
@@ -308,18 +325,19 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
 
       packet.data = new Raw([42, 21, 84]);
 
-      Json json = packet.toJson;
-      assert(json.name == "ICMP");
-      assert(json.packetType == 14);
-      assert(json.code == 0);
-      assert(json.checksum == 0);
-      assert(json.id == 0);
-      assert(json.seq == 0);
-      assert(json.originTime == 21);
-      assert(json.receiveTime == 42);
-      assert(json.transmitTime == 84);
+      JSONValue json = packet.toJson;
+      assert(json["name"] == "ICMP");
+      assert(json["packetType"] == 14);
+      assert(json["code"] == 0);
+      assert(json["checksum"] == 0);
+      assert(json["id"] == 0);
+      assert(json["seq"] == 0);
+      assert(json["originTime"] == 21);
+      assert(json["receiveTime"] == 42);
+      assert(json["transmitTime"] == 84);
 
-      json = json.data;
+      json = json["data"];
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -376,13 +394,14 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
+  JSONValue json = [
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
   ICMPv4Timestamp packet = cast(ICMPv4Timestamp)to!ICMPv4Timestamp(json);
   assert(packet.type == 14);
   assert(packet.id == 1);
@@ -395,19 +414,20 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4Timestamp packet = cast(ICMPv4Timestamp)to!ICMPv4Timestamp(json);
   assert(packet.type == 14);
@@ -431,13 +451,14 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
+  JSONValue json = [
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
   ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)to!ICMPv4TimestampRequest(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -449,19 +470,20 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)to!ICMPv4TimestampRequest(json);
   assert(packet.id == 1);
@@ -483,13 +505,14 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
+  JSONValue json = [
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
   ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)to!ICMPv4TimestampReply(json);
   assert(packet.id == 1);
   assert(packet.seq == 2);
@@ -501,19 +524,20 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "packetType": JSONValue(14),
+    "id": JSONValue(1),
+    "seq": JSONValue(2),
+    "originTime": JSONValue(21),
+    "receiveTime": JSONValue(42),
+    "transmitTime": JSONValue(84)
+  ];
 
-  json.name = "ICMP";
-  json.packetType = 14;
-  json.id = 1;
-  json.seq = 2;
-  json.originTime = 21;
-  json.receiveTime = 42;
-  json.transmitTime = 84;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)to!ICMPv4TimestampReply(json);
   assert(packet.id == 1);
@@ -535,10 +559,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
+  JSONValue json = [
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
   ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)to!ICMPv4InformationRequest(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -548,16 +573,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)to!ICMPv4InformationRequest(json);
   assert(packet.checksum == 0);
@@ -575,10 +601,11 @@ unittest {
 }
 
 unittest {
-  Json json = Json.emptyObject;
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
+  JSONValue json = [
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
   ICMPv4InformationReply packet = cast(ICMPv4InformationReply)to!ICMPv4InformationReply(json);
   assert(packet.checksum == 0);
   assert(packet.id == 1);
@@ -588,16 +615,17 @@ unittest {
 unittest  {
   import netload.protocols.raw;
 
-  Json json = Json.emptyObject;
+  JSONValue json = [
+    "name": JSONValue("ICMP"),
+    "checksum": JSONValue(0),
+    "id": JSONValue(1),
+    "seq": JSONValue(2)
+  ];
 
-  json.name = "ICMP";
-  json.checksum = 0;
-  json.id = 1;
-  json.seq = 2;
-
-  json.data = Json.emptyObject;
-  json.data.name = "Raw";
-  json.data.bytes = serializeToJson([42,21,84]);
+  json["data"] = JSONValue([
+		"name": JSONValue("Raw"),
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
+	]);
 
   ICMPv4InformationReply packet = cast(ICMPv4InformationReply)to!ICMPv4InformationReply(json);
   assert(packet.checksum == 0);
