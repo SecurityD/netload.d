@@ -1,7 +1,7 @@
 module netload.protocols.dhcp.dhcp;
 
 import netload.core.protocol;
-import netload.core.conversion.array_conversion;
+import netload.core.conversion.json_array;
 import netload.core.addr;
 import stdx.data.json;
 import std.bitmanip;

@@ -3,7 +3,7 @@ module netload.protocols.ip.ip;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols;
-import netload.core.conversion.array_conversion;
+import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;

@@ -3,7 +3,7 @@ module netload.protocols.icmp.v4_error;
 import netload.core.protocol;
 import netload.protocols.icmp.common;
 import netload.protocols.ip;
-import netload.core.conversion.array_conversion;
+import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;

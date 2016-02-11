@@ -1,4 +1,4 @@
-module netload.core.conversion.array_conversion;
+module netload.core.conversion.json_array;
 
 import std.conv;
 import stdx.data.json;

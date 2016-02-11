@@ -2,7 +2,7 @@ module netload.protocols.udp.udp;
 
 import netload.core.protocol;
 import netload.protocols;
-import netload.core.conversion.array_conversion;
+import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;

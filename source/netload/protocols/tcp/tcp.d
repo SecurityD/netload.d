@@ -2,7 +2,7 @@ module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
 import netload.protocols;
-import netload.core.conversion.array_conversion;
+import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
