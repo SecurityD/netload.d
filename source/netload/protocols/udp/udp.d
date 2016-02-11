@@ -2,7 +2,7 @@ module netload.protocols.udp.udp;
 
 import netload.core.protocol;
 import netload.protocols;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;
@@ -92,7 +92,7 @@ class UDP : Protocol {
       assert(json["dest_port"] == 7000);
 
       json = json["data"];
-  		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -169,7 +169,7 @@ unittest  {
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   UDP packet = cast(UDP)to!UDP(json);

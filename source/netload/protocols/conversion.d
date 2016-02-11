@@ -4,7 +4,7 @@ import stdx.data.json;
 import std.conv;
 import netload.core.protocol;
 import netload.core.addr;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 
 import netload.protocols.arp;
 import netload.protocols.dhcp;
@@ -84,10 +84,10 @@ unittest {
     "hwAddrLen": JSONValue(6),
     "protocolAddrLen": JSONValue(4),
     "opcode": JSONValue(0),
-    "senderHwAddr": JSONValue([128, 128, 128, 128, 128, 128].toJson),
-    "targetHwAddr": JSONValue([0, 0, 0, 0, 0, 0].toJson),
-    "senderProtocolAddr": JSONValue([127, 0, 0, 1].toJson),
-    "targetProtocolAddr": JSONValue([10, 14, 255, 255].toJson)
+    "senderHwAddr": [128, 128, 128, 128, 128, 128].toJsonArray,
+    "targetHwAddr": [0, 0, 0, 0, 0, 0].toJsonArray,
+    "senderProtocolAddr": [127, 0, 0, 1].toJsonArray,
+    "targetProtocolAddr": [10, 14, 255, 255].toJsonArray
   ];
   ARP packet = cast(ARP)(protocolConversion["ARP"](json));
   assert(packet.hwType == 1);
@@ -265,7 +265,7 @@ unittest {
 
 unittest {
   JSONValue json = [
-    "bytes": JSONValue([0, 1, 2].toJson)
+    "bytes": [0, 1, 2].toJsonArray
   ];
   Raw packet = cast(Raw)(protocolConversion["Raw"](json));
   assert(packet.bytes == [0, 1, 2]);
@@ -602,7 +602,7 @@ unittest {
 
 unittest {
   JSONValue json = [
-    "prelude": JSONValue(([1, 0, 1, 0, 1, 0, 1]).toJson),
+    "prelude": (([1, 0, 1, 0, 1, 0, 1]).toJsonArray),
     "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
     "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
     "protocol_type": JSONValue(0x0800),
@@ -669,10 +669,10 @@ unittest {
     "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
     "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
     "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
-    "chaddr": JSONValue((new ubyte[16]).toJson),
-    "sname": JSONValue((new ubyte[64]).toJson),
-    "file": JSONValue((new ubyte[128]).toJson),
-    "options": JSONValue((options).toJson)
+    "chaddr": ((new ubyte[16]).toJsonArray),
+    "sname": ((new ubyte[64]).toJsonArray),
+    "file": ((new ubyte[128]).toJsonArray),
+    "options": ((options).toJsonArray)
   ];
   DHCP packet = cast(DHCP)(protocolConversion["DHCP"](json));
   assert(packet.op == 2);

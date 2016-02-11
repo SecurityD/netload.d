@@ -3,7 +3,7 @@ module netload.protocols.ethernet.ethernet;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import std.conv;
 import stdx.data.json;
 import std.bitmanip;
@@ -33,7 +33,7 @@ class Ethernet : Protocol {
     }
 
     this(JSONValue json) {
-      _prelude = json["prelude"].toUbyteArray;
+      _prelude = json["prelude"].toArrayOf!ubyte;
       _srcMacAddress = stringToMac(json["src_mac_address"].get!string);
       _destMacAddress = stringToMac(json["dest_mac_address"].get!string);
       _protocolType = json["protocol_type"].to!ushort;
@@ -65,7 +65,7 @@ class Ethernet : Protocol {
 
     override JSONValue toJson() const {
       JSONValue json = [
-        "prelude": JSONValue(prelude.toJson),
+        "prelude": (prelude.toJsonArray),
         "src_mac_address": JSONValue(macToString(srcMacAddress)),
         "dest_mac_address": JSONValue(macToString(destMacAddress)),
         "protocol_type": JSONValue(protocolType),
@@ -107,7 +107,7 @@ class Ethernet : Protocol {
       assert(json["dest_port"] == 7000);
 
       json = json["data"];
-  		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -160,7 +160,7 @@ class Ethernet : Protocol {
 
 unittest {
   JSONValue json = [
-    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJson),
+    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJsonArray),
     "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
     "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
     "protocol_type": JSONValue(0x0800),
@@ -176,7 +176,7 @@ unittest  {
 
   JSONValue json = [
     "name": JSONValue("Ethernet"),
-    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJson),
+    "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJsonArray),
     "src_mac_address": JSONValue(macToString([255, 255, 255, 255, 255, 255])),
     "dest_mac_address": JSONValue(macToString([0, 0, 0, 0, 0, 0])),
     "protocol_type": JSONValue(0x0800),
@@ -185,7 +185,7 @@ unittest  {
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   Ethernet packet = cast(Ethernet)to!Ethernet(json);

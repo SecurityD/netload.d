@@ -1,26 +1,29 @@
-module netload.core.conversion.ubyte_conversion;
+module netload.core.conversion.array_conversion;
 
 import std.conv;
 import stdx.data.json;
 
-JSONValue toJson(inout ubyte[] arg) {
+JSONValue toJsonArray(T)(inout T[] arg) {
 	JSONValue[] ret = [];
 
 	if (arg is null)
 		return JSONValue(null);
 
-	foreach(int i, ubyte b ; arg) {
+	foreach(int i, T b ; arg) {
 		ret ~= JSONValue(b);
 	}
 
 	return JSONValue(ret);
 }
 
-ubyte[] toUbyteArray(inout JSONValue json) {
-	ubyte[] ret = [];
+T[] toArrayOf(T)(inout JSONValue json) {
+	T[] ret = [];
 
 	foreach (int i, JSONValue val ; json.to!(JSONValue[])) {
-		ubyte c = val.to!ubyte;
+		static if (is(T == string))
+			T c = val.get!T;
+		else
+			T c = val.to!T;
 		ret ~= c;
 	}
 

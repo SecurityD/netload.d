@@ -3,7 +3,7 @@ module netload.protocols.dns.dns;
 import netload.core.protocol;
 import netload.protocols;
 import netload.core.addr;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;
@@ -325,7 +325,7 @@ unittest  {
   ubyte[] bytes = [42,21,84];
   json["data"] = [
     "name": JSONValue("Raw"),
-    "bytes": JSONValue(bytes.toJson)
+    "bytes": (bytes.toJsonArray)
   ];
 
   DNS packet = DNS(json);
@@ -413,7 +413,7 @@ unittest  {
   ubyte[] bytes = [42,21,84];
   json["data"] = [
     "name": JSONValue("Raw"),
-    "bytes": JSONValue(bytes.toJson)
+    "bytes": (bytes.toJsonArray)
   ];
 
   DNSQuery packet = DNSQuery(json);
@@ -492,7 +492,7 @@ unittest  {
   ubyte[] bytes = [42,21,84];
   json["data"] = [
     "name": JSONValue("Raw"),
-    "bytes": JSONValue(bytes.toJson)
+    "bytes": (bytes.toJsonArray)
   ];
 
   DNSResource packet = DNSResource(json);
@@ -714,7 +714,7 @@ class DNSQR : Protocol {
 	  assert(json["qclass"] == 1);
 
 	  json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -787,7 +787,7 @@ unittest  {
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   DNSQR packet = cast(DNSQR)to!DNSQR(json);
@@ -880,7 +880,7 @@ class DNSRR : Protocol {
 	  assert(json["rdlength"] == 0);
 
 	  json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -965,7 +965,7 @@ unittest  {
 
   json["data"] = JSONValue([
     "name": JSONValue("Raw"),
-    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+    "bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
   ]);
 
   DNSRR packet = cast(DNSRR)to!DNSRR(json);
@@ -1078,7 +1078,7 @@ class DNSSOAResource  : Protocol {
 	  assert(json["minTtl"] == 0);
 
     json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1177,7 +1177,7 @@ unittest  {
 
   json["data"] = JSONValue([
     "name": JSONValue("Raw"),
-    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
   ]);
 
   DNSSOAResource packet = cast(DNSSOAResource)to!DNSSOAResource(json);
@@ -1264,7 +1264,7 @@ class DNSMXResource : Protocol {
 	  assert(json["pref"] == 2);
 
     json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1326,7 +1326,7 @@ unittest  {
 
   json["data"] = JSONValue([
     "name": JSONValue("Raw"),
-    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+    "bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
   ]);
 
   DNSMXResource packet = cast(DNSMXResource)to!DNSMXResource(json);
@@ -1397,7 +1397,7 @@ class DNSAResource : Protocol {
 	  assert(json["ip"] == "127.0.0.1");
 
     json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1451,7 +1451,7 @@ unittest  {
 
   json["data"] = JSONValue([
     "name": JSONValue("Raw"),
-    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+    "bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
   ]);
 
   DNSAResource packet = cast(DNSAResource)to!DNSAResource(json);
@@ -1520,7 +1520,7 @@ class DNSPTRResource : Protocol {
 	  assert(json["ptrname"] == "google.fr");
 
     json = json["data"];
-    assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -1575,7 +1575,7 @@ unittest  {
 
   json["data"] = JSONValue([
     "name": JSONValue("Raw"),
-    "bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+    "bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
   ]);
 
   DNSPTRResource packet = cast(DNSPTRResource)to!DNSPTRResource(json);

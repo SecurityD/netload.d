@@ -3,7 +3,7 @@ module netload.protocols.ip.ip;
 import netload.core.protocol;
 import netload.core.addr;
 import netload.protocols;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
@@ -11,7 +11,7 @@ import std.conv;
 private Protocol delegate(ubyte[])[ubyte] ipType;
 
 static this() {
-//  ipType[0x01] = delegate(ubyte[]encoded){ return cast(Protocol)to!ICMP(encoded); };
+  ipType[0x01] = delegate(ubyte[]encoded){ return cast(Protocol)to!ICMP(encoded); };
   ipType[0x06] = delegate(ubyte[]encoded){ return cast(Protocol)to!TCP(encoded); };
   ipType[0x11] = delegate(ubyte[]encoded){ return cast(Protocol)to!UDP(encoded); };
 }
@@ -136,7 +136,7 @@ class IP : Protocol {
         assert(json["checksum"].to!ushort == 42);
 
         json = json["data"];
-    		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+    		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
       }
 
       override ubyte[] toBytes() const {
@@ -260,7 +260,7 @@ unittest  {
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   IP packet = cast(IP)to!IP(json);

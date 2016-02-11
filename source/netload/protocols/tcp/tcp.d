@@ -2,7 +2,7 @@ module netload.protocols.tcp.tcp;
 
 import netload.core.protocol;
 import netload.protocols;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
@@ -136,7 +136,7 @@ class TCP : Protocol {
       assert(json["dest_port"] == 7000);
 
       json = json["data"];
-  		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+  		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
     override ubyte[] toBytes() const {
@@ -280,7 +280,7 @@ unittest  {
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": ((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   TCP packet = cast(TCP)to!TCP(json);

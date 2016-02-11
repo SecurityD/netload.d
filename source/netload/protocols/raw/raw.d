@@ -1,7 +1,7 @@
 module netload.protocols.raw.raw;
 
 import netload.core.protocol;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import stdx.data.json;
 import std.outbuffer;
 import std.conv;
@@ -17,7 +17,7 @@ class Raw : Protocol {
 	}
 
 	this(JSONValue json) {
-    _bytes = json["bytes"].toUbyteArray;
+    _bytes = json["bytes"].toArrayOf!ubyte;
 	}
 
 	override @property inout string name() { return "Raw"; };
@@ -27,7 +27,7 @@ class Raw : Protocol {
 
 	override JSONValue toJson() const {
 	  JSONValue json = [
-      "bytes" : JSONValue(_bytes.toJson),
+      "bytes" : (_bytes.toJsonArray),
       "name" : JSONValue(name)
     ];
     return json;
@@ -66,7 +66,7 @@ class Raw : Protocol {
 unittest {
   ubyte[] bytes = [0, 1, 2];
   JSONValue json = [
-    "bytes": JSONValue(bytes.toJson)
+    "bytes": (bytes.toJsonArray)
   ];
   Raw packet = Raw(json);
   assert(packet.bytes == [0, 1, 2]);

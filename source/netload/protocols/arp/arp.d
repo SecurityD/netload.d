@@ -1,13 +1,17 @@
 module netload.protocols.arp.arp;
 
 import netload.core.protocol;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import std.conv;
 import stdx.data.json;
 import std.bitmanip;
 
 class ARP : Protocol {
 public:
+	static ARP opCall(inout JSONValue val) {
+		return new ARP(val);
+	}
+
 	this() {}
 
 	this(ushort hwType, ushort protocolType, ubyte hwAddrLen, ubyte protocolAddrLen, ushort opcode = 0) {
@@ -24,10 +28,10 @@ public:
 
 	this(JSONValue json) {
 		this(json["hwType"].to!ushort, json["protocolType"].to!ushort, json["hwAddrLen"].to!ubyte, json["protocolAddrLen"].to!ubyte, json["opcode"].to!ushort);
-		senderHwAddr = json["senderHwAddr"].toUbyteArray;
-		targetHwAddr = json["targetHwAddr"].toUbyteArray;
-		senderProtocolAddr = json["senderProtocolAddr"].toUbyteArray;
-		targetProtocolAddr = json["targetProtocolAddr"].toUbyteArray;
+		senderHwAddr = json["senderHwAddr"].toArrayOf!ubyte;
+		targetHwAddr = json["targetHwAddr"].toArrayOf!ubyte;
+		senderProtocolAddr = json["senderProtocolAddr"].toArrayOf!ubyte;
+		targetProtocolAddr = json["targetProtocolAddr"].toArrayOf!ubyte;
 		if ("data" in json && json["data"] != null)
 			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
@@ -56,10 +60,10 @@ public:
 			"hwAddrLen": JSONValue(_hwAddrLen),
 			"protocolAddrLen": JSONValue(_protocolAddrLen),
 			"opcode": JSONValue(_opcode),
-			"senderHwAddr": JSONValue(_senderHwAddr.toJson),
-			"targetHwAddr": JSONValue(_targetHwAddr.toJson),
-			"senderProtocolAddr": JSONValue(_senderProtocolAddr.toJson),
-			"targetProtocolAddr": JSONValue(_targetProtocolAddr.toJson),
+			"senderHwAddr": JSONValue(_senderHwAddr.toJsonArray),
+			"targetHwAddr": JSONValue(_targetHwAddr.toJsonArray),
+			"senderProtocolAddr": JSONValue(_senderProtocolAddr.toJsonArray),
+			"targetProtocolAddr": JSONValue(_targetProtocolAddr.toJsonArray),
 			"name": JSONValue(name)
 		];
 		if (_data is null)
@@ -81,10 +85,10 @@ public:
 		assert(packet.toJson["hwAddrLen"] == 6);
 		assert(packet.toJson["protocolAddrLen"] == 4);
 		assert(packet.toJson["opcode"] == 0);
-		assert(packet.toJson["senderHwAddr"].toUbyteArray == [128, 128, 128, 128, 128, 128]);
-		assert(packet.toJson["targetHwAddr"].toUbyteArray == [0, 0, 0, 0, 0, 0]);
-		assert(packet.toJson["senderProtocolAddr"].toUbyteArray == [127, 0, 0, 1]);
-		assert(packet.toJson["targetProtocolAddr"].toUbyteArray == [10, 14, 255, 255]);
+		assert(packet.toJson["senderHwAddr"].toArrayOf!ubyte == [128, 128, 128, 128, 128, 128]);
+		assert(packet.toJson["targetHwAddr"].toArrayOf!ubyte == [0, 0, 0, 0, 0, 0]);
+		assert(packet.toJson["senderProtocolAddr"].toArrayOf!ubyte == [127, 0, 0, 1]);
+		assert(packet.toJson["targetProtocolAddr"].toArrayOf!ubyte == [10, 14, 255, 255]);
 	}
 
 	unittest {
@@ -105,13 +109,13 @@ public:
 		assert(json["hwAddrLen"] == 6);
 		assert(json["protocolAddrLen"] == 4);
 		assert(json["opcode"] == 0);
-		assert(json["senderHwAddr"].toUbyteArray == [128, 128, 128, 128, 128, 128]);
-		assert(json["targetHwAddr"].toUbyteArray == [0, 0, 0, 0, 0, 0]);
-		assert(json["senderProtocolAddr"].toUbyteArray == [127, 0, 0, 1]);
-		assert(json["targetProtocolAddr"].toUbyteArray == [10, 14, 255, 255]);
+		assert(json["senderHwAddr"].toArrayOf!ubyte == [128, 128, 128, 128, 128, 128]);
+		assert(json["targetHwAddr"].toArrayOf!ubyte == [0, 0, 0, 0, 0, 0]);
+		assert(json["senderProtocolAddr"].toArrayOf!ubyte == [127, 0, 0, 1]);
+		assert(json["targetProtocolAddr"].toArrayOf!ubyte == [10, 14, 255, 255]);
 
 		json = json["data"];
-		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -174,10 +178,6 @@ public:
 	@property const(ubyte[]) targetProtocolAddr() const { return _targetProtocolAddr; }
 	@property void targetProtocolAddr(ubyte[] targetProtocolAddr) { _targetProtocolAddr = targetProtocolAddr; }
 
-	static ARP opCall(inout JSONValue val) {
-		return new ARP(val);
-	}
-
 private:
 	Protocol _data = null;
 	ushort _hwType = 0;
@@ -198,10 +198,10 @@ unittest {
 		"hwAddrLen": JSONValue(6),
 		"protocolAddrLen": JSONValue(4),
 		"opcode": JSONValue(0),
-		"senderHwAddr": JSONValue((cast(ubyte[])([128, 128, 128, 128, 128, 128])).toJson),
-		"targetHwAddr": JSONValue((cast(ubyte[])([0, 0, 0, 0, 0, 0])).toJson),
-		"senderProtocolAddr": JSONValue((cast(ubyte[])([127, 0, 0, 1])).toJson),
-		"targetProtocolAddr": JSONValue((cast(ubyte[])([10, 14, 255, 255])).toJson)
+		"senderHwAddr": JSONValue((cast(ubyte[])([128, 128, 128, 128, 128, 128])).toJsonArray),
+		"targetHwAddr": JSONValue((cast(ubyte[])([0, 0, 0, 0, 0, 0])).toJsonArray),
+		"senderProtocolAddr": JSONValue((cast(ubyte[])([127, 0, 0, 1])).toJsonArray),
+		"targetProtocolAddr": JSONValue((cast(ubyte[])([10, 14, 255, 255])).toJsonArray)
 	];
 
 	ARP packet = ARP(json);
@@ -226,15 +226,15 @@ unittest  {
 		"hwAddrLen": JSONValue(6),
 		"protocolAddrLen": JSONValue(4),
 		"opcode": JSONValue(0),
-		"senderHwAddr": JSONValue((cast(ubyte[])([128, 128, 128, 128, 128, 128])).toJson),
-		"targetHwAddr": JSONValue((cast(ubyte[])([0, 0, 0, 0, 0, 0])).toJson),
-		"senderProtocolAddr": JSONValue((cast(ubyte[])([127, 0, 0, 1])).toJson),
-		"targetProtocolAddr": JSONValue((cast(ubyte[])([10, 14, 255, 255])).toJson)
+		"senderHwAddr": JSONValue((cast(ubyte[])([128, 128, 128, 128, 128, 128])).toJsonArray),
+		"targetHwAddr": JSONValue((cast(ubyte[])([0, 0, 0, 0, 0, 0])).toJsonArray),
+		"senderProtocolAddr": JSONValue((cast(ubyte[])([127, 0, 0, 1])).toJsonArray),
+		"targetProtocolAddr": JSONValue((cast(ubyte[])([10, 14, 255, 255])).toJsonArray)
 	];
 
 	json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
 	ARP packet = ARP(json);

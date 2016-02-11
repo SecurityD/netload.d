@@ -1,7 +1,7 @@
 module netload.protocols.dhcp.dhcp;
 
 import netload.core.protocol;
-import netload.core.conversion.ubyte_conversion;
+import netload.core.conversion.array_conversion;
 import netload.core.addr;
 import stdx.data.json;
 import std.bitmanip;
@@ -53,10 +53,10 @@ class DHCP : Protocol {
 	  _yiaddr = stringToIp(json["yiaddr"].get!string);
 	  _siaddr = stringToIp(json["siaddr"].get!string);
 	  _giaddr = stringToIp(json["giaddr"].get!string);
-	  _chaddr = json["chaddr"].toUbyteArray;
-	  _sname = json["sname"].toUbyteArray;
-	  _file = json["file"].toUbyteArray;
-	  _options = json["options"].toUbyteArray;
+	  _chaddr = json["chaddr"].toArrayOf!ubyte;
+	  _sname = json["sname"].toArrayOf!ubyte;
+	  _file = json["file"].toArrayOf!ubyte;
+	  _options = json["options"].toArrayOf!ubyte;
     if ("data" in json && json["data"] != null)
 			data = netload.protocols.conversion.protocolConversion[json["data"]["name"].get!string](json["data"]);
 	}
@@ -97,10 +97,10 @@ class DHCP : Protocol {
 	    "yiaddr": JSONValue(ipToString(_yiaddr)),
 	    "siaddr": JSONValue(ipToString(_siaddr)),
 	    "giaddr": JSONValue(ipToString(_giaddr)),
-	    "chaddr": JSONValue(_chaddr.toJson),
-	    "sname": JSONValue(_sname.toJson),
-	    "file": JSONValue(_file.toJson),
-	    "options": JSONValue(_options.toJson),
+	    "chaddr": JSONValue(_chaddr.toJsonArray),
+	    "sname": JSONValue(_sname.toJsonArray),
+	    "file": JSONValue(_file.toJsonArray),
+	    "options": JSONValue(_options.toJsonArray),
 	    "name": JSONValue(name)
     ];
     if (_data is null)
@@ -146,7 +146,7 @@ class DHCP : Protocol {
 	  assert(json["giaddr"] == "10.14.59.255");
 
     json = json["data"];
-		assert(json["bytes"].toUbyteArray == [42, 21, 84]);
+		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
 	}
 
 	override ubyte[] toBytes() const {
@@ -247,10 +247,10 @@ unittest {
     "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
     "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
     "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
-    "chaddr": JSONValue((new ubyte[16]).toJson),
-    "sname": JSONValue((new ubyte[64]).toJson),
-    "file": JSONValue((new ubyte[128]).toJson),
-    "options": JSONValue((options).toJson)
+    "chaddr": JSONValue((new ubyte[16]).toJsonArray),
+    "sname": JSONValue((new ubyte[64]).toJsonArray),
+    "file": JSONValue((new ubyte[128]).toJsonArray),
+    "options": JSONValue((options).toJsonArray)
   ];
   DHCP packet = cast(DHCP)to!DHCP(json);
   assert(packet.toJson["op"] == 2);
@@ -283,15 +283,15 @@ unittest  {
     "yiaddr": JSONValue(ipToString([127, 0, 1, 1])),
     "siaddr": JSONValue(ipToString([10, 14, 19, 42])),
     "giaddr": JSONValue(ipToString([10, 14, 59, 255])),
-    "chaddr": JSONValue((new ubyte[16]).toJson),
-    "sname": JSONValue((new ubyte[64]).toJson),
-    "file": JSONValue((new ubyte[128]).toJson),
-    "options": JSONValue((options).toJson)
+    "chaddr": JSONValue((new ubyte[16]).toJsonArray),
+    "sname": JSONValue((new ubyte[64]).toJsonArray),
+    "file": JSONValue((new ubyte[128]).toJsonArray),
+    "options": JSONValue((options).toJsonArray)
   ];
 
   json["data"] = JSONValue([
 		"name": JSONValue("Raw"),
-		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJson)
+		"bytes": JSONValue((cast(ubyte[])([42,21,84])).toJsonArray)
 	]);
 
   DHCP packet = cast(DHCP)to!DHCP(json);
