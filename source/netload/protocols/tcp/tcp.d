@@ -24,7 +24,7 @@ shared static this() {
   tcpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
 };
 
-union FlagsAndOffset {
+private union FlagsAndOffset {
   mixin(bitfields!(
     bool, "fin", 1,
     bool, "syn", 1,
