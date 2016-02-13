@@ -16,7 +16,7 @@ static this() {
   ipType[0x11] = delegate(ubyte[]encoded){ return cast(Protocol)to!UDP(encoded); };
 }
 
-union VersionAndLength {
+private union VersionAndLength {
   mixin(bitfields!(
     ubyte, "ihl", 4,
     ubyte, "ipVersion", 4,
@@ -24,7 +24,7 @@ union VersionAndLength {
   ubyte versionAndLength;
 }
 
-union FlagsAndOffset {
+private union FlagsAndOffset {
   mixin(bitfields!(
     ushort, "offset", 13,
     bool, "reserved", 1,
@@ -34,6 +34,12 @@ union FlagsAndOffset {
   ushort flagsAndOffset;
 }
 
+/++
+ + The Internet Protocol (IP) is the principal communications protocol in the
+ + Internet protocol suite for relaying datagrams across network boundaries.
+ + Its routing function enables internetworking, and essentially establishes
+ + the Internet.
+ +/
 class IP : Protocol {
     public:
       static IP opCall(inout JSONValue val) {
@@ -118,12 +124,14 @@ class IP : Protocol {
     		return json;
       }
 
+      ///
       unittest {
         IP packet = new IP();
         packet.checksum = 42;
         assert(packet.toJson["checksum"].to!ushort == 42);
       }
 
+      ///
       unittest {
         import netload.protocols.raw;
 
@@ -155,11 +163,13 @@ class IP : Protocol {
         return encoded;
       }
 
+      ///
       unittest {
         IP packet = new IP();
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
 
+      ///
       unittest {
         import netload.protocols.raw;
 
@@ -172,33 +182,100 @@ class IP : Protocol {
 
       override string toString() const { return toJson.toJSON; }
 
+      /++
+       + The Version field indicates the format of the internet header.
+       +/
       @property ubyte ipVersion() const { return _versionAndLength.ipVersion; }
+      ///ditto
       @property void ipVersion(ubyte newVersion) { _versionAndLength.ipVersion = newVersion; }
+      /++
+       + nternet Header Length is the length of the internet header in 32 bit
+       + words, and thus points to the beginning of the data. Note that the
+       + minimum value for a correct header is 5.
+       +/
       @property ubyte ihl() const { return _versionAndLength.ihl; }
+      ///ditto
       @property void ihl(ubyte newIhl) { _versionAndLength.ihl = newIhl; }
+      /++
+       + The Type of Service provides an indication of the abstract parameters
+       + of the quality of service desired.
+       +/
       @property ubyte tos() const { return _tos; }
+      ///ditto
       @property void tos(ubyte typeOfService) { _tos = typeOfService; }
+      /++
+       + Total Length is the length of the datagram, measured in octets,
+       + including internet header and data.
+       +/
       @property ushort length() const { return _length; }
+      ///ditto
       @property void length(ushort totalLength) { _length = totalLength; }
+      /++
+       + An identifying value assigned by the sender to aid in assembling
+       + the fragments of a datagram.
+       +/
       @property ushort id() const { return _id; }
+      ///ditto
       @property void id(ushort newId) { _id = newId; }
+      /++
+       + This field indicates where in the datagram this fragment belongs.
+       + The fragment offset is measured in units of 8 octets (64 bits).
+       + The first fragment has offset zero.
+       +/
       @property ushort offset() const { return _flagsAndOffset.offset; }
+      ///ditto
       @property void offset(ushort index) { _flagsAndOffset.offset = index; }
+      /++
+       + Reserved field.
+       +/
       @property bool reserved() const { return _flagsAndOffset.reserved; }
+      ///ditto
       @property void reserved(bool value) { _flagsAndOffset.reserved = value; }
+      /++
+       + (DF) 0 = May Fragment, 1 = Don't Fragment.
+       +/
       @property bool df() const { return _flagsAndOffset.df; }
+      ///ditto
       @property void df(bool value) { _flagsAndOffset.df = value; }
+      /++
+       + (MF) 0 = Last Fragment, 1 = More Fragments.
+       +/
       @property bool mf() const { return _flagsAndOffset.mf; }
+      ///ditto
       @property void mf(bool value) { _flagsAndOffset.mf = value; }
+      /++
+       + This field indicates the maximum time the datagram is allowed to
+       + remain in the internet system.
+       +/
       @property ubyte ttl() const { return _ttl; }
+      ///ditto
       @property void ttl(ubyte timeToLive) { _ttl = timeToLive; }
+      /++
+       + This field indicates the next level protocol used in the data portion
+       + of the internet datagram.
+       +/
       @property ubyte protocol() const { return _protocol; }
+      ///ditto
       @property void protocol(ubyte proto) { _protocol = proto; }
+      /++
+       + A checksum on the header only. Since some header fields change (e.g.,
+       + time to live), this is recomputed and verified at each point that the
+       + internet header is processed.
+       +/
       @property ushort checksum() const { return _checksum; }
+      ///ditto
       @property void checksum(ushort hash) { _checksum = hash; }
+      /++
+       + The source address.
+       +/
       @property ubyte[4] srcIpAddress() const { return _srcIpAddress; }
+      ///ditto
       @property void srcIpAddress(ubyte[4] address) { _srcIpAddress = address; }
+      /++
+       + The destination address.
+       +/
       @property ubyte[4] destIpAddress() const { return _destIpAddress; }
+      ///ditto
       @property void destIpAddress(ubyte[4] address) { _destIpAddress = address; }
 
     private:
@@ -215,6 +292,7 @@ class IP : Protocol {
       ubyte[4] _destIpAddress = [0, 0, 0, 0];
 }
 
+///
 unittest {
   JSONValue json = [
     "ip_version": JSONValue(0),
@@ -237,6 +315,7 @@ unittest {
   assert(packet.mf == true);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -268,12 +347,14 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
  ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
  IP packet = cast(IP)encoded.to!IP;
  assert(packet.destIpAddress == [0, 0, 0, 1]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
   IP packet = cast(IP)encoded.to!IP;
