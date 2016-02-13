@@ -108,6 +108,10 @@ nothrow extern (C) {
                           int to_ms,
                           char* errbuf);
   ubyte* pcap_next(pcap_t* p, pcap_pkthdr* h);
+
+  int pcap_inject(pcap_t*, const ubyte*, size_t);
+
+  void pcap_perror(pcap_t*, const char*);
 }
 
 import std.string;
@@ -164,6 +168,12 @@ class PacketCapturer {
       return bytes.toArrayOf(_header.caplen);
     }
 
+    void inject(ubyte[] packet) {
+      if (pcap_inject(_cap, packet.ptr, packet.length) == -1) {
+        pcap_perror(_cap, "pcap error:".toStringz);
+      }
+    }
+
   private:
     bool _promisc = false;
     string _dev;
@@ -174,6 +184,10 @@ class PacketCapturer {
 
 unittest {
   PacketCapturer pc = new PacketCapturer();
+  //                                                                   EtherType
+  //                     <--source MAC-->  <--dest MAC---->  <802.1TAG>  <"">  <--payload--->  <-----CRC32---->
+  ubyte[] etherPacket = [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 7, 0, 0, 0, 0, 0, 8, 42, 42, 42, 42, 43, 145, 141, 23 ];
   pc.initialize;
+  pc.inject(etherPacket);
   ubyte[] p1 = pc.nextPacket;
 }
