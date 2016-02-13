@@ -13,6 +13,7 @@ alias DNS = DNSBase!(DNSType.ANY);
 alias DNSQuery = DNSBase!(DNSType.QUERY);
 alias DNSResource = DNSBase!(DNSType.RESOURCE);
 
+///Type of query the message
 enum OpCode {
   QUERY = 0,
   IQUERY = 1,
@@ -21,6 +22,7 @@ enum OpCode {
   UPDATE = 5
 };
 
+///Response Code
 enum RCode {
   NO_ERROR = 0,
   FORMAT_ERROR = 1,
@@ -35,7 +37,7 @@ enum RCode {
   NOT_ZONE = 10
 };
 
-union BitFields {
+private union BitFields {
   ubyte[2] raw;
   mixin(bitfields!(
 	bool, "rd", 1,
@@ -47,14 +49,28 @@ union BitFields {
 	ubyte, "z", 3,
 	bool, "ra", 1
 	));
-  };
+};
 
+/++
+ + Basic types of DNS protocol.
+ +/
 enum DNSType {
   ANY,
   QUERY,
   RESOURCE
 };
 
+/++
+ + The Domain Name System (DNS) is a hierarchical distributed naming system for
+ + computers, services, or any resource connected to the Internet or a private
+ + network. It associates various information with domain names assigned to
+ + each of the participating entities. Most prominently, it translates domain
+ + names, which can be easily memorized by humans, to the numerical IP addresses
+ + needed for the purpose of computer services and devices worldwide.
+ + The Domain Name System is an essential component of the functionality
+ + of most Internet services because it is the Internet's primary
+ + directory service.
+ +/
 class DNSBase(DNSType __type__) : Protocol {
   public:
     static DNSBase!(__type__) opCall(inout JSONValue json) {
@@ -158,12 +174,14 @@ class DNSBase(DNSType __type__) : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNS packet = new DNS(10, true);
 	  assert(packet.toJson["id"] == 10);
 	  assert(packet.toJson["truncation"] == true);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNS packet = new DNS(10, true);
@@ -195,6 +213,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  auto packet = new DNS(10, 1);
 	  packet.rd = 1;
@@ -208,6 +227,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	  assert(bytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -227,36 +247,88 @@ class DNSBase(DNSType __type__) : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+  /++
+   + Identifier
+   +/
 	@property ushort id() { return _id; }
+  ///ditto
 	@property void id(ushort id) { _id = id; }
+  /++
+   + Question Count
+   +/
 	@property ushort qdcount() { return _qdcount; }
+  ///ditto
 	@property void qdcount(ushort qdcount) { _qdcount = qdcount; }
+  /++
+   + Answer Record Count
+   +/
 	@property ushort ancount() { return _ancount; }
+  ///ditto
 	@property void ancount(ushort port) { _ancount = ancount; }
+  /++
+   + Authority Record Count
+   +/
 	@property ushort nscount() { return _nscount; }
+  ///ditto
 	@property void nscount(ushort nscount) { _nscount = nscount; }
+  /++
+   + Additional Record Count
+   +/
 	@property ushort arcount() { return _arcount; }
+  ///ditto
 	@property void arcount(ushort arcount) { _arcount = arcount; }
 
+  /++
+   + Truncation Flag
+   +/
 	@property bool tc() { return _bits.tc; }
+  ///ditto
 	@property void tc(bool tc) { _bits.tc = tc; }
+  /++
+   + Zero
+   +/
 	@property ubyte z() { return _bits.z; }
+  ///ditto
 	@property void z(ubyte z) { _bits.z = z; }
 
 	static if (__type__ != DNSType.RESOURCE) {
+    /++
+     + Operation Code
+     +/
 	  @property ubyte opcode() { return _bits.opcode; }
+    ///ditto
 	  @property void opcode(ubyte opcode) { _bits.opcode = opcode; }
+    /++
+     + Recursion Desired
+     +/
 	  @property bool rd() { return _bits.rd; }
+    ///ditto
 	  @property void rd(bool rd) { _bits.rd = rd; }
 	}
 	static if (__type__ != DNSType.QUERY) {
+    /++
+     + Query/Response Flag
+     +/
 	  @property bool qr() { return _bits.qr; }
+    ///ditto
 	  @property void qr(bool qr) { _bits.qr = qr; }
+    /++
+     + Authoritative Answer Flag
+     +/
 	  @property bool aa() { return _bits.aa; }
+    ///ditto
 	  @property void aa(bool aa) { _bits.aa = aa; }
+    /++
+     + Recursion Available
+     +/
 	  @property bool ra() { return _bits.ra; }
+    ///ditto
 	  @property void ra(bool ra) { _bits.ra = ra; }
+    /++
+     + Response Code
+     +/
 	  @property ubyte rcode() { return _bits.rcode; }
+    ///ditto
 	  @property void rcode(ubyte rcode) { _bits.rcode = rcode; }
 	}
 
@@ -270,6 +342,7 @@ class DNSBase(DNSType __type__) : Protocol {
 	ushort _arcount = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -302,6 +375,7 @@ unittest {
   assert(packet.rcode == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -345,6 +419,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNS packet = cast(DNS)encoded.to!DNS;
@@ -363,6 +438,7 @@ unittest {
   assert(packet.rcode == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -390,6 +466,7 @@ unittest {
   assert(packet.tc == false);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -428,6 +505,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNSQuery packet = cast(DNSQuery)encoded.to!DNSQuery;
@@ -441,6 +519,7 @@ unittest {
   assert(packet.tc == true);
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -469,6 +548,7 @@ unittest {
   assert(packet.rcode == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -508,6 +588,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0];
   DNSResource packet = cast(DNSResource)encoded.to!DNSResource;
@@ -522,6 +603,7 @@ unittest {
   assert(packet.rcode == 2);
 }
 
+/// Appears in the question part of a query
 enum QType {
   A	= 1,
   NS = 2,
@@ -607,6 +689,7 @@ enum QType {
   DLV = 32769
 }
 
+/// Appears in the question section of a query
 enum QClass {
   IN = 1,
   CH = 3,
@@ -649,6 +732,9 @@ private string readLabels(ref ubyte[] encodedPacket) {
   return (cast(string)buffer);
 }
 
+/++
+ + The DNS Question (Question Section)
+ +/
 class DNSQR : Protocol {
   public:
   static DNSQR opCall(inout JSONValue json) {
@@ -694,6 +780,7 @@ class DNSQR : Protocol {
 		return json;
 	}
 
+  ///
 	unittest {
 	  DNSQR packet = new DNSQR("google.fr", QType.A, QClass.IN);
 	  assert(packet.toJson["qname"] == "google.fr");
@@ -701,6 +788,7 @@ class DNSQR : Protocol {
 	  assert(packet.toJson["qclass"] == 1);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSQR packet = new DNSQR("google.fr", QType.A, QClass.IN);
@@ -729,12 +817,14 @@ class DNSQR : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  auto packet = new DNSQR("google.fr", QType.A, QClass.IN);
 	  auto bytes = packet.toBytes;
 	  assert(bytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -749,11 +839,23 @@ class DNSQR : Protocol {
 	  return toJson.toJSON;
 	}
 
+  /++
+   + The domain name being queried.
+   +/
 	@property string qname() const { return _qname; }
+  ///ditto
 	@property void qname(string qname) { _qname = qname; }
+  /++
+   + The resource records being requested.
+   +/
 	@property ushort qtype() const { return _qtype; }
+  ///ditto
 	@property void qtype(ushort qtype) { _qtype = qtype; }
+  /++
+   + The Resource Record(s) class being requested e.g. internet, chaos etc.
+   +/
 	@property ushort qclass() const { return _qclass; }
+  ///ditto
 	@property void qclass(ushort qclass) { _qclass = qclass; }
 
   private:
@@ -763,6 +865,7 @@ class DNSQR : Protocol {
 	ushort _qclass = 1;
 }
 
+///
 unittest {
   JSONValue json = [
     "qname": JSONValue("google.fr"),
@@ -775,6 +878,7 @@ unittest {
   assert(packet.qclass == QClass.IN);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -797,6 +901,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] arr = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 00, 1];
   DNSQR packet = cast(DNSQR)arr.to!DNSQR;
@@ -805,6 +910,9 @@ unittest {
   assert(packet.qclass == 1);
 }
 
+/++
+ + The DNS Answer (Answer Section)
+ +/
 class DNSRR : Protocol {
   public:
   static DNSRR opCall(inout JSONValue json) {
@@ -856,6 +964,7 @@ class DNSRR : Protocol {
 	  return json;
 	}
 
+  ///
 	unittest {
 	  DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
 	  assert(packet.toJson["rname"] == "google.fr");
@@ -865,6 +974,7 @@ class DNSRR : Protocol {
 	  assert(packet.toJson["rdlength"] == 0);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
@@ -896,11 +1006,13 @@ class DNSRR : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNSRR packet = new DNSRR("google.fr", QType.A, QClass.IN, 2500);
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1, 0, 0, 9, 196, 0, 0]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -915,15 +1027,37 @@ class DNSRR : Protocol {
 	  return toJson.toJSON;
 	}
 
+  /++
+   + The name being returned e.g. www or ns1.example.net
+   + If the name is in the same domain as the question then typically only
+   + the host part (label) is returned, if not then a FQDN is returned.
+   +/
 	@property string rname() { return _rname; }
+  ///ditto
 	@property void rname(string rname) { _rname = rname; }
+  /++
+   + The RR type, for example, SOA or AAAA.
+   +/
 	@property ushort rtype() { return _rtype; }
+  ///ditto
 	@property void rtype(ushort rtype) { _rtype = rtype; }
+  /++
+   + The RR class, for instance, Internet, Chaos etc.
+   +/
 	@property ushort rclass() const { return _rclass; }
+  ///ditto
 	@property void rclass(ushort rclass) { _rclass = rclass; }
+  /++
+   + The TTL in seconds of the RR, say, 2800
+   +/
 	@property uint ttl() const { return _ttl; }
+  ///ditto
 	@property void ttl(uint ttl) { _ttl = ttl; }
+  /++
+   + The length of RR specific data in octets, for example, 27
+   +/
 	@property ushort rdlength() const { return _rdlength; }
+  ///ditto
 	@property void rdlength(ushort rdlength) { _rdlength = rdlength; }
 
   private:
@@ -935,6 +1069,7 @@ class DNSRR : Protocol {
 	ushort _rdlength = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "rname": JSONValue("google.fr"),
@@ -951,6 +1086,7 @@ unittest {
   assert(packet.rdlength == 10);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -977,6 +1113,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1, 0, 0, 9, 196, 0, 0];
   DNSRR packet = cast(DNSRR)encodedPacket.to!DNSRR;
@@ -987,6 +1124,9 @@ unittest {
   assert(packet.rdlength == 0);
 }
 
+/++
+ + Marks the start of a zone of authority
+ +/
 class DNSSOAResource  : Protocol {
   public:
   static DNSSOAResource opCall(inout JSONValue json) {
@@ -1050,6 +1190,7 @@ class DNSSOAResource  : Protocol {
 	  return json;
 	}
 
+  ///
 	unittest {
 	  DNSSOAResource packet = new DNSSOAResource();
 	  assert(packet.toJson["primary"] == ".");
@@ -1061,6 +1202,7 @@ class DNSSOAResource  : Protocol {
 	  assert(packet.toJson["minTtl"] == 0);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSSOAResource packet = new DNSSOAResource();
@@ -1098,11 +1240,13 @@ class DNSSOAResource  : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNSSOAResource packet = new DNSSOAResource("ch1mgt0101dc120.prdmgt01.prod.exchangelabs", "msnhst.microsoft", 1500, 600, 600, 3500, 86420);
 	  assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -1115,19 +1259,54 @@ class DNSSOAResource  : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+  /++
+   + The <domain-name> of the name server that was the original or primary
+   + source of data for this zone.
+   +/
 	@property string primary() const { return _primary; }
+  ///ditto
 	@property void primary(string primary) { _primary = primary; }
+  /++
+   + A <domain-name> which specifies the mailbox of the person responsible
+   + for this zone.
+   +/
 	@property string admin() const { return _admin; }
+  ///ditto
 	@property void admin(string admin) { _admin = admin; }
+  /++
+   + The unsigned 32 bit version number of the original copy of the zone.
+   + Zone transfers preserve this value. This value wraps and should be
+   + compared using sequence space arithmetic.
+   +/
 	@property uint serial() const { return _serial; }
+  ///ditto
 	@property void serial(uint serial) { _serial = serial; }
+  /++
+   + A 32 bit time interval before the zone should be refreshed.
+   +/
 	@property uint refresh() const { return _refresh; }
+  ///ditto
 	@property void refresh(uint refresh) { _refresh = refresh; }
+  /++
+   + A 32 bit time interval that should elapse before a failed refresh should
+   + be retried.
+   +/
 	@property uint retry() const { return _retry; }
+  ///ditto
 	@property void retry(uint retry) { _retry = retry; }
+  /++
+   + A 32 bit time value that specifies the upper limit on the time interval
+   + that can elapse before the zone is no longer authoritative.
+   +/
 	@property uint expirationLimit() const { return _expirationLimit; }
+  ///ditto
 	@property void expirationLimit(uint expirationLimit) { _expirationLimit = expirationLimit; }
+  /++
+   + The unsigned 32 bit minimum TTL field that should be exported with any
+   + RR from this zone.
+   +/
 	@property uint minTtl() const { return _minTtl; }
+  ///ditto
 	@property void minTtl(uint minTtl) { _minTtl = minTtl; }
 
   private:
@@ -1141,6 +1320,7 @@ class DNSSOAResource  : Protocol {
 	uint _minTtl = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "primary": JSONValue("google.fr"),
@@ -1161,6 +1341,7 @@ unittest {
   assert(packet.minTtl == 10);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -1191,6 +1372,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148];
   DNSSOAResource packet = cast(DNSSOAResource)encodedPacket.to!DNSSOAResource;
@@ -1203,6 +1385,9 @@ unittest {
   assert(packet.minTtl == 86420);
 }
 
+/++
+ + Mail exchange
+ +/
 class DNSMXResource : Protocol {
   public:
   static DNSMXResource opCall(inout JSONValue json) {
@@ -1246,12 +1431,14 @@ class DNSMXResource : Protocol {
 	  return json;
 	}
 
+  ///
 	unittest {
 	  DNSMXResource packet = new DNSMXResource(2, "google.fr");
 	  assert(packet.toJson["mxname"] == "google.fr");
 	  assert(packet.toJson["pref"] == 2);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSMXResource packet = new DNSMXResource(2, "google.fr");
@@ -1277,11 +1464,13 @@ class DNSMXResource : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNSMXResource packet = new DNSMXResource(2, "google.fr");
 	  assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -1294,9 +1483,19 @@ class DNSMXResource : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+  /++
+   + A 16 bit integer which specifies the preference given to this RR among
+   + others at the same owner. Lower values are preferred.
+   +/
 	@property ushort pref() const { return _pref; }
+  ///ditto
 	@property void pref(ushort pref) { _pref = pref; }
+  /++
+   + A <domain-name> which specifies a host willing to act as a mail exchange
+   + for the owner name.
+   +/
 	@property string mxname() { return _mxname; }
+  ///ditto
 	@property void mxname(string mxname) { _mxname = mxname; }
 
   private:
@@ -1305,6 +1504,7 @@ class DNSMXResource : Protocol {
 	string _mxname = ".";
 }
 
+///
 unittest {
   JSONValue json = [
     "pref": JSONValue(1),
@@ -1315,6 +1515,7 @@ unittest {
   assert(packet.mxname == "google.fr");
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -1335,6 +1536,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0];
   DNSMXResource packet = cast(DNSMXResource)encodedPacket.to!DNSMXResource;
@@ -1342,6 +1544,9 @@ unittest {
   assert(packet.mxname == "google.fr");
 }
 
+/++
+ + IPv4 Address Record (A)
+ +/
 class DNSAResource : Protocol {
   public:
   static DNSAResource opCall(inout JSONValue json) {
@@ -1381,11 +1586,13 @@ class DNSAResource : Protocol {
 	  return json;
 	}
 
+  ///
 	unittest {
 	  DNSAResource packet = new DNSAResource();
 	  assert(packet.toJson["ip"] == "127.0.0.1");
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSAResource packet = new DNSAResource();
@@ -1408,11 +1615,13 @@ class DNSAResource : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNSAResource packet = new DNSAResource();
 	  assert(packet.toBytes == [127, 0, 0, 1]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -1425,7 +1634,11 @@ class DNSAResource : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+  /++
+   + Unsigned 32-bit value representing the IP address.
+   +/
 	@property ubyte[4] ip() const { return _ip; }
+  ///ditto
 	@property void ip(ubyte[4] ip) { _ip = ip; }
 
   private:
@@ -1433,6 +1646,7 @@ class DNSAResource : Protocol {
 	ubyte[4] _ip = [127, 0, 0, 1];
 }
 
+///
 unittest {
   JSONValue json = [
     "ip": JSONValue(ipToString([127, 0, 0, 1]))
@@ -1441,6 +1655,7 @@ unittest {
   assert(packet.ip == [127, 0, 0, 1]);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -1459,12 +1674,16 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [127, 0, 0, 1];
   DNSAResource packet = cast(DNSAResource)encodedPacket.to!DNSAResource;
   assert(packet.ip == [127, 0, 0, 1]);
 }
 
+/++
+ + Pointer records (PTR) are the opposite of A and AAAA RRs.
+ +/
 class DNSPTRResource : Protocol {
   public:
   static DNSPTRResource opCall(inout JSONValue json) {
@@ -1504,11 +1723,13 @@ class DNSPTRResource : Protocol {
 	  return json;
 	}
 
+  ///
 	unittest {
 	  DNSPTRResource packet = new DNSPTRResource("google.fr");
 	  assert(packet.toJson["ptrname"] == "google.fr");
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 	  DNSPTRResource packet = new DNSPTRResource("google.fr");
@@ -1532,11 +1753,13 @@ class DNSPTRResource : Protocol {
 	  return packet;
 	}
 
+  ///
 	unittest {
 	  DNSPTRResource packet = new DNSPTRResource("google.fr");
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0]);
 	}
 
+  ///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -1549,7 +1772,12 @@ class DNSPTRResource : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+  /++
+   + The host name that represents the supplied IP address.
+   + May be a label, pointer or any combination.
+   +/
 	@property string ptrname() { return _ptrname; }
+  ///ditto
 	@property void ptrname(string ptrname) { _ptrname = ptrname; }
 
   private:
@@ -1557,6 +1785,7 @@ class DNSPTRResource : Protocol {
 	string _ptrname;
 }
 
+///
 unittest {
   JSONValue json = [
     "ptrname": JSONValue("google.fr")
@@ -1565,6 +1794,7 @@ unittest {
   assert(packet.ptrname == "google.fr");
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -1583,6 +1813,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0];
   DNSPTRResource packet = cast(DNSPTRResource)encodedPacket.to!DNSPTRResource;
