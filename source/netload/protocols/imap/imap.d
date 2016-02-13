@@ -71,8 +71,8 @@ class IMAP : Protocol {
     override string toString() const { return toJson.toJSON; }
 
 	/++
-	+ The body as plain text.
-	+/
+	 + The body as plain text.
+	 +/
     @property string str() const { return _body; }
 	///ditto
     @property void str(string b) { _body = b; }
