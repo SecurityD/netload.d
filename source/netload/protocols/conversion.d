@@ -30,7 +30,7 @@ import netload.protocols.udp;
  + and, of course, all the data that are necessary in its conversion.
  +/
 Protocol toProtocol(JSONValue json) {
-  if ("name" in json && json["name"] !is null)
+  if ("name" in json && json["name"] != cast(JSONValue)(null))
     return protocolConversion[json["name"].get!string](json);
   throw new Exception("Invalid Json.");
 }
