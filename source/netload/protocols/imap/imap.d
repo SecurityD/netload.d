@@ -5,6 +5,14 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.conv;
 
+/++
+ + The Internet Message Access Protocol, Version 4rev1 (IMAP4rev1)
+ + allows a client to access and manipulate electronic mail messages on
+ + a server.  IMAP4rev1 permits manipulation of mailboxes (remote
+ + message folders) in a way that is functionally equivalent to local
+ + folders.  IMAP4rev1 also provides the capability for an offline
+ + client to resynchronize with the server.
+ +/
 class IMAP : Protocol {
   public:
     static IMAP opCall(inout JSONValue val) {
@@ -40,6 +48,7 @@ class IMAP : Protocol {
       return json;
     }
 
+	///
     unittest {
       IMAP packet = new IMAP("test");
       JSONValue json = [
@@ -53,6 +62,7 @@ class IMAP : Protocol {
       return cast(ubyte[])(_body.dup);
     }
 
+	///
     unittest {
       IMAP packet = new IMAP("test");
       assert(packet.toBytes == cast(ubyte[])("test"));
@@ -60,13 +70,18 @@ class IMAP : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+	/++
+	+ The body as plain text.
+	+/
     @property string str() const { return _body; }
+	///ditto
     @property void str(string b) { _body = b; }
 
   private:
     string _body;
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -75,6 +90,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
   IMAP packet = cast(IMAP)encoded.to!IMAP();
