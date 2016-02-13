@@ -15,6 +15,9 @@ alias ICMPv4SourceQuench = ICMPv4ErrorBase!(ICMPType.SOURCE_QUENCH);
 alias ICMPv4Redirect = ICMPv4ErrorBase!(ICMPType.REDIRECT);
 alias ICMPv4ParamProblem = ICMPv4ErrorBase!(ICMPType.PARAM_PROBLEM);
 
+/++
+ + Used to handle easily some defined ICMPv4 Error types
+ +/
 class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
     static ICMPv4ErrorBase!(__type__) opCall(inout JSONValue val) {
@@ -120,6 +123,7 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return json;
     }
 
+    ///
     unittest {
       ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
       assert(packet.toJson["packetType"] == 5);
@@ -128,6 +132,7 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toJson["gateway"] == 42);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
@@ -145,6 +150,7 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   		assert(json["bytes"].toArrayOf!ubyte == [42, 21, 84]);
     }
 
+    ///
     unittest {
       ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
       assert(packet.toJson["packetType"] == 12);
@@ -153,6 +159,7 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toJson["ptr"] == 1);
     }
 
+    ///
     unittest {
       import netload.protocols.ethernet;
       import netload.protocols.raw;
@@ -193,11 +200,13 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return packet;
     }
 
+    ///
     unittest {
       ICMPv4Error packet = new ICMPv4Error(3, 1, null);
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -208,11 +217,13 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toBytes == [3, 1, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
+    ///
     unittest {
       ICMPv4Redirect packet = new ICMPv4Redirect(2, 42, null);
       assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -223,11 +234,13 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toBytes == [5, 2, 0, 0, 0, 0, 0, 42] ~ [42, 21, 84]);
     }
 
+    ///
     unittest {
       ICMPv4ParamProblem packet = new ICMPv4ParamProblem(2, 1, null);
       assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -239,10 +252,18 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 
     @property {
+      /++
+       + It indicates what problem happened.
+       +/
       inout ubyte code() { return _code; }
+      ///ditto
       void code(ubyte code) { _code = code; }
       static if (__type__ == ICMPType.ANY) {
+        /++
+         + Indicates the type of the packet.
+         +/
         inout ubyte type() { return _type; }
+        ///ditto
         void type(ubyte type) { _type = type; }
       }
     }
@@ -267,6 +288,7 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(3),
@@ -279,6 +301,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -301,6 +324,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
   ICMPv4Error packet = cast(ICMPv4Error)encodedPacket.to!ICMPv4Error;
@@ -309,6 +333,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -319,6 +344,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -339,6 +365,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
   ICMPv4DestUnreach packet = cast(ICMPv4DestUnreach)encodedPacket.to!ICMPv4DestUnreach;
@@ -346,6 +373,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -356,6 +384,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -376,6 +405,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
   ICMPv4TimeExceed packet = cast(ICMPv4TimeExceed)encodedPacket.to!ICMPv4TimeExceed;
@@ -383,6 +413,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -395,6 +426,7 @@ unittest {
   assert(packet.ptr == 1);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -417,6 +449,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 1, 0, 0, 0];
   ICMPv4ParamProblem packet = cast(ICMPv4ParamProblem)encodedPacket.to!ICMPv4ParamProblem;
@@ -425,6 +458,7 @@ unittest {
   assert(packet.ptr == 1);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -435,6 +469,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -455,6 +490,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 0];
   ICMPv4SourceQuench packet = cast(ICMPv4SourceQuench)encodedPacket.to!ICMPv4SourceQuench;
@@ -462,6 +498,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -474,6 +511,7 @@ unittest {
   assert(packet.gateway == 42);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -496,6 +534,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0, 0, 0, 0, 42];
   ICMPv4Redirect packet = cast(ICMPv4Redirect)encodedPacket.to!ICMPv4Redirect;

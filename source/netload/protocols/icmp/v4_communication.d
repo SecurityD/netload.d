@@ -16,6 +16,9 @@ alias ICMPv4Timestamp = ICMPv4TimestampBase!(ICMPType.ANY);
 alias ICMPv4TimestampRequest = ICMPv4TimestampBase!(ICMPType.TIMESTAMP_REQUEST);
 alias ICMPv4TimestampReply = ICMPv4TimestampBase!(ICMPType.TIMESTAMP_REPLY);
 
+/++
+ + Used to handle easily some defined ICMPv4 Communication types
+ +/
 class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
     static ICMPv4CommunicationBase!(__type__) opCall(inout JSONValue val) {
@@ -58,6 +61,7 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return json;
     }
 
+    ///
     unittest {
       ICMPv4Communication packet = new ICMPv4Communication(8);
       assert(packet.toJson["packetType"] == 8);
@@ -67,6 +71,7 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toJson["seq"] == 0);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       ICMPv4Communication packet = new ICMPv4Communication(8);
@@ -97,6 +102,7 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return packet;
     }
 
+    ///
     unittest {
       ICMPv4Communication packet = new ICMPv4Communication(8);
       packet.id = 1;
@@ -104,6 +110,7 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toBytes == [8, 0, 0, 0, 0, 1, 0, 2]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -117,12 +124,26 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 
     @property {
+      /++
+       + If code = 0, an identifier to aid in matching echos and replies,
+       + may be zero.
+       +/
       inout ushort id() { return _id; }
+      ///ditto
       void id(ushort id) { _id = id; }
+       /++
+        + If code = 0, a sequence number to aid in matching echos and
+        + replies, may be zero.
+        +/
       inout ushort seq() { return _seq; }
+      ///ditto
       void seq(ushort seq) { _seq = seq; }
       static if (__type__ == ICMPType.ANY) {
+        /++
+         + Indicates the type of the packet.
+         +/
         inout ubyte type() { return _type; }
+        ///ditto
         void type(ubyte type) { _type = type; }
       }
     }
@@ -132,6 +153,7 @@ class ICMPv4CommunicationBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     ushort _seq = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(8),
@@ -146,6 +168,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -170,6 +193,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
   ICMPv4Communication packet = cast(ICMPv4Communication)encodedPacket.to!ICMPv4Communication;
@@ -179,6 +203,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -191,6 +216,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -213,6 +239,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
   ICMPv4EchoRequest packet = cast(ICMPv4EchoRequest)encodedPacket.to!ICMPv4EchoRequest;
@@ -221,6 +248,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -233,6 +261,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -255,6 +284,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
   ICMPv4EchoReply packet = cast(ICMPv4EchoReply)encodedPacket.to!ICMPv4EchoReply;
@@ -263,6 +293,9 @@ unittest {
   assert(packet.seq == 2);
 }
 
+/++
+ + Used to handle easily some defined ICMPv4 Timestamp types
+ +/
 class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType.NONE) {
   public:
     static ICMPv4TimestampBase!(__type__) opCall(inout JSONValue val) {
@@ -307,6 +340,7 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       return json;
     }
 
+    ///
     unittest {
       ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
       assert(packet.toJson["packetType"] == 14);
@@ -319,6 +353,7 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       assert(packet.toJson["transmitTime"] == 84);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
@@ -355,6 +390,7 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       return packet;
     }
 
+    ///
     unittest {
       ICMPv4Timestamp packet = new ICMPv4Timestamp(14, 21, 42, 84);
       packet.id = 1;
@@ -362,6 +398,7 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
       assert(packet.toBytes == [14, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -375,14 +412,33 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
     }
 
     @property {
+      /++
+       + The Originate Timestamp is the time the sender last touched the
+       + message before sending it.
+       +/
       inout uint originTime() { return _originTime; }
+      ///ditto
       void originTime(uint originTime) { _originTime = originTime; }
+      /++
+       + The Receive Timestamp is the time the echoer first touched it on
+       + receipt.
+       +/
       inout uint receiveTime() { return _receiveTime; }
+      ///ditto
       void receiveTime(uint receiveTime) { _receiveTime = receiveTime; }
+      /++
+       + The Transmit Timestamp is the time the echoer last touched the message
+       + on sending it.
+       +/
       inout uint transmitTime() { return _transmitTime; }
+      ///ditto
       void transmitTime(uint transmitTime) { _transmitTime = transmitTime; }
       static if (__type__ == ICMPType.ANY) {
+        /++
+         + Indicates the type of the packet.
+         +/
         inout ubyte type() { return _type; }
+        ///ditto
         void type(ubyte type) { _type = type; }
       }
     }
@@ -393,6 +449,7 @@ class ICMPv4TimestampBase(ICMPType __type__) : ICMPv4CommunicationBase!(ICMPType
     uint _transmitTime = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -411,6 +468,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -439,6 +497,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
   ICMPv4Timestamp packet = cast(ICMPv4Timestamp)encodedPacket.to!ICMPv4Timestamp;
@@ -450,6 +509,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -467,6 +527,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -494,6 +555,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
   ICMPv4TimestampRequest packet = cast(ICMPv4TimestampRequest)encodedPacket.to!ICMPv4TimestampRequest;
@@ -504,6 +566,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -521,6 +584,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -548,6 +612,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 21, 0, 0, 0, 42, 0, 0, 0, 84];
   ICMPv4TimestampReply packet = cast(ICMPv4TimestampReply)encodedPacket.to!ICMPv4TimestampReply;
@@ -558,6 +623,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -570,6 +636,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -592,6 +659,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
   ICMPv4InformationRequest packet = cast(ICMPv4InformationRequest)encodedPacket.to!ICMPv4InformationRequest;
@@ -600,6 +668,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -612,6 +681,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -634,6 +704,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 0, 1, 0, 2];
   ICMPv4InformationReply packet = cast(ICMPv4InformationReply)encodedPacket.to!ICMPv4InformationReply;

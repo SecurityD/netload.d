@@ -26,6 +26,18 @@ enum ICMPType {
 
 alias ICMP = ICMPBase!(ICMPType.ANY);
 
+/++
+ + The Internet Control Message Protocol (ICMP) is one of the main protocols
+ + of the Internet Protocol Suite. It is used by network devices, like routers,
+ + to send error messages indicating, for example, that a requested service is
+ + not available or that a host or router could not be reached.
+ + ICMP can also be used to relay query messages.
+ + It is assigned protocol number 1. ICMP differs from transport protocols
+ + such as TCP and UDP in that it is not typically used to exchange data
+ + between systems, nor is it regularly employed by end-user network
+ + applications (with the exception of some diagnostic tools like ping
+ + and traceroute).
+ +/
 class ICMPBase(ICMPType __type__) : Protocol {
   public:
     static ICMPBase!(__type__) opCall(inout JSONValue val) {
@@ -78,6 +90,7 @@ class ICMPBase(ICMPType __type__) : Protocol {
   		return json;
     }
 
+    ///
     unittest {
       ICMP packet = new ICMP(3, 2);
       assert(packet.toJson["packetType"] == 3);
@@ -85,6 +98,7 @@ class ICMPBase(ICMPType __type__) : Protocol {
       assert(packet.toJson["checksum"] == 0);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -112,11 +126,13 @@ class ICMPBase(ICMPType __type__) : Protocol {
       return packet;
     }
 
+    ///
     unittest {
       ICMP packet = new ICMP(3, 2);
       assert(packet.toBytes == [3, 2, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -130,12 +146,24 @@ class ICMPBase(ICMPType __type__) : Protocol {
     override string toString() const { return toJson.toJSON; }
 
     @property {
+      /++
+       + Indicates the type of the packet.
+       +/
       inout ushort checksum() { return _checksum; }
+      ///ditto
       void checksum(ushort checksum) { _checksum = checksum; }
       static if (__type__ == ICMPType.ANY) {
+        /++
+         + Indicates the type of the packet.
+         +/
         inout ubyte type() { return _type; }
+        ///ditto
         void type(ubyte type) { _type = type; }
+        /++
+         + In case of an error, it indicates what problem happened.
+         +/
         inout ubyte code() { return _code; }
+        ///ditto
         void code(ubyte code) { _code = code; }
       }
     }
@@ -147,6 +175,7 @@ class ICMPBase(ICMPType __type__) : Protocol {
     ushort _checksum = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(3),
@@ -159,6 +188,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -181,6 +211,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [3, 2, 0, 0];
   ICMP packet = cast(ICMP)encodedPacket.to!ICMP;
