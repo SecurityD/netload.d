@@ -24,12 +24,22 @@ import netload.protocols.snmp;
 import netload.protocols.tcp;
 import netload.protocols.udp;
 
+/++
+ + Converts the given `JSONValue` to the right `Protocol`.
+ + The json must have a "name" field that contains the name of the protocol
+ + and, of course, all the data that are necessary in its conversion.
+ +/
 Protocol toProtocol(JSONValue json) {
-  if (json["name"] != null)
-    return protocolConversion[json["name"].to!string](json);
+  if ("name" in json && json["name"] !is null)
+    return protocolConversion[json["name"].get!string](json);
   throw new Exception("Invalid Json.");
 }
 
+/++
+ + Map taking a string of the protocol name as key and a delegate as value
+ + taking a `JSONValue` as parameter and that converts it
+ + to the right `Protocol`.
+ +/
 Protocol delegate(JSONValue)[string] protocolConversion;
 
 shared static this() {
@@ -77,6 +87,7 @@ shared static this() {
   protocolConversion["DNSPTRResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSPTRResource(json)); };
 }
 
+///
 unittest {
   JSONValue json = [
     "hwType": JSONValue(1),
@@ -101,6 +112,7 @@ unittest {
   assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
+///
 unittest {
   JSONValue json = [
     "src_port": JSONValue(8000),
@@ -115,6 +127,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "src_port": JSONValue(8000),
@@ -138,6 +151,7 @@ unittest {
   assert(packet.destPort == json["dest_port"].to!ushort);
 }
 
+///
 unittest {
   ASN1 pdu;
   pdu.type = ASN1.Type.SET_REQUEST_PDU;
@@ -189,6 +203,7 @@ unittest {
   ]);
 }
 
+///
 unittest {
   JSONValue json = [
     "ver": JSONValue(3),
@@ -258,6 +273,7 @@ unittest {
   ]);
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -266,6 +282,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   JSONValue json = [
     "bytes": [0, 1, 2].toJsonArray
@@ -274,6 +291,7 @@ unittest {
   assert(packet.bytes == [0, 1, 2]);
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -282,6 +300,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   JSONValue json = [
     "leap_indicator": JSONValue(2u),
@@ -312,6 +331,7 @@ unittest {
   assert(packet.transmitTimestamp == 450u);
 }
 
+///
 unittest {
   JSONValue json = [
     "leap_indicator": JSONValue(0x00),
@@ -331,6 +351,7 @@ unittest {
   auto packet = cast(NTPv4)(protocolConversion["NTPv4"](json));
 }
 
+///
 unittest {
   JSONValue json = [
     "leap_indicator": JSONValue(0x00),
@@ -372,6 +393,7 @@ unittest {
   assert(packet.transmitTimestamp == 0xd9_39_0d_b3_58_3e_91_e8);
 }
 
+///
 unittest {
   JSONValue json = [
     "ip_version": JSONValue(0),
@@ -393,6 +415,7 @@ unittest {
   assert(packet.srcIpAddress == [127, 0, 0, 1]);
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -401,6 +424,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(3),
@@ -413,6 +437,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(8),
@@ -427,6 +452,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -439,6 +465,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -451,6 +478,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -469,6 +497,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -486,6 +515,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(14),
@@ -503,6 +533,7 @@ unittest {
   assert(packet.transmitTime == 84);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -515,6 +546,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -527,6 +559,7 @@ unittest {
   assert(packet.seq == 2);
 }
 
+///
 unittest {
   JSONValue json = [
     "packetType": JSONValue(3),
@@ -539,6 +572,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -549,6 +583,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -559,6 +594,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -571,6 +607,7 @@ unittest {
   assert(packet.ptr == 1);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -581,6 +618,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "code": JSONValue(2),
@@ -593,6 +631,7 @@ unittest {
   assert(packet.gateway == 42);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -611,6 +650,7 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0)
@@ -619,6 +659,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -627,6 +668,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   JSONValue json = [
     "prelude": (([1, 0, 1, 0, 1, 0, 1]).toJsonArray),
@@ -640,6 +682,7 @@ unittest {
   assert(packet.protocolType == 0x0800);
 }
 
+///
 unittest {
   JSONValue json = [
     "subtype": JSONValue(8),
@@ -682,6 +725,7 @@ unittest {
   assert(packet.toDS == 0);
 }
 
+///
 unittest {
   ubyte[] options;
   JSONValue json = [
@@ -715,6 +759,7 @@ unittest {
   assert(packet.giaddr == [10, 14, 59, 255]);
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -747,6 +792,7 @@ unittest {
   assert(packet.rcode == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -774,6 +820,7 @@ unittest {
   assert(packet.tc == false);
 }
 
+///
 unittest {
   JSONValue json = [
     "qdcount": JSONValue(0),
@@ -802,6 +849,7 @@ unittest {
   assert(packet.rcode == 0);
 }
 
+///
 unittest {
   JSONValue json = [
     "qname": JSONValue("google.fr"),
@@ -814,6 +862,7 @@ unittest {
   assert(packet.qclass == 1);
 }
 
+///
 unittest {
   JSONValue json = [
     "rname": JSONValue("google.fr"),
@@ -830,6 +879,7 @@ unittest {
   assert(packet.rdlength == 10);
 }
 
+///
 unittest {
   JSONValue json = [
     "primary": JSONValue("google.fr"),
@@ -850,6 +900,7 @@ unittest {
   assert(packet.minTtl == 10);
 }
 
+///
 unittest {
   JSONValue json = [
     "pref": JSONValue(1),
@@ -860,6 +911,7 @@ unittest {
   assert(packet.mxname == "google.fr");
 }
 
+///
 unittest {
   JSONValue json = [
     "ip": JSONValue(ipToString([127, 0, 0, 1]))
@@ -868,6 +920,7 @@ unittest {
   assert(packet.ip == [127, 0, 0, 1]);
 }
 
+///
 unittest {
   JSONValue json = [
     "ptrname": JSONValue("google.fr")
