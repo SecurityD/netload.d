@@ -38,6 +38,10 @@ union FlagsAndOffset {
   ushort flagsAndOffset;
 }
 
+/++
+ + The Transmision Control Protocol (TCP) of transport layer is used to have
+ + a synchronized connection without any packet loss.
+ +/
 class TCP : Protocol {
   public:
     static TCP opCall(inout JSONValue val) {
@@ -118,12 +122,14 @@ class TCP : Protocol {
       return json;
     }
 
+    ///
     unittest {
       TCP packet = new TCP(8000, 7000);
       assert(packet.toJson["src_port"] == 8000);
       assert(packet.toJson["dest_port"] == 7000);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       TCP packet = new TCP(8000, 7000);
@@ -154,11 +160,13 @@ class TCP : Protocol {
       return packet;
     }
 
+    ///
     unittest {
       TCP packet = new TCP(8000, 7000);
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -171,37 +179,97 @@ class TCP : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+    /++
+     + Source Port Number
+     +/
     @property ushort srcPort() const { return _srcPort; }
+    ///ditto
     @property void srcPort(ushort port) { _srcPort = port; }
+    /++
+     + Destination Port Number
+     +/
     @property ushort destPort() const { return _destPort; }
+    ///ditto
     @property void destPort(ushort port) { _destPort = port; }
+    /++
+     + Sequence Number of first segment's byte
+     +/
     @property uint sequenceNumber() const { return _sequenceNumber; }
+    ///ditto
     @property void sequenceNumber(uint number) { _sequenceNumber = number; }
+    /++
+     + Sequence Number of next waited segment
+     +/
     @property uint ackNumber() const { return _ackNumber; }
+    ///ditto
     @property void ackNumber(uint number) { _ackNumber = number; }
 
+    /++
+     + Indicates a end of connection request
+     +/
     @property bool fin() const { return _flagsAndOffset.fin; }
+    ///ditto
     @property void fin(bool value) { _flagsAndOffset.fin = value; }
+    /++
+     + Indicates a synchronization request
+     +/
     @property bool syn() const { return _flagsAndOffset.syn; }
+    ///ditto
     @property void syn(bool value) { _flagsAndOffset.syn = value; }
+    /++
+     + Indicates abnormal reset of connection
+     +/
     @property bool rst() const { return _flagsAndOffset.rst; }
+    ///ditto
     @property void rst(bool value) { _flagsAndOffset.rst = value; }
+    /++
+     + Indicates data that must be sent immediatly
+     +/
     @property bool psh() const { return _flagsAndOffset.psh; }
+    ///ditto
     @property void psh(bool value) { _flagsAndOffset.psh = value; }
+    /++
+     + Indicates packet is an acknowledgment
+     +/
     @property bool ack() const { return _flagsAndOffset.ack; }
+    ///ditto
     @property void ack(bool value) { _flagsAndOffset.ack = value; }
+    /++
+     + Indicates urgent data
+     +/
     @property bool urg() const { return _flagsAndOffset.urg; }
+    ///ditto
     @property void urg(bool value) { _flagsAndOffset.urg = value; }
+    /++
+     + Reserved field
+     +/
     @property ubyte reserved() const { return _flagsAndOffset.reserved; }
+    ///ditto
     @property void reserved(ubyte value) { _flagsAndOffset.reserved = value; }
+    /++
+     + Header size in 32 bits words
+     +/
     @property ubyte offset() const { return _flagsAndOffset.offset; }
+    ///ditto
     @property void offset(ubyte off) { _flagsAndOffset.offset = off; }
 
+    /++
+     + Size in byte the recepter request
+     +/
     @property ushort window() const { return _window; }
+    ///ditto
     @property void window(ushort size) { _window = size; }
+    /++
+     + Checksum of TCP header, data, and part of IP
+     +/
     @property ushort checksum() const { return _checksum; }
+    ///ditto
     @property void checksum(ushort hash) { _checksum = hash; }
+    /++
+     + Relative position of last urgent data
+     +/
     @property ushort urgPtr() const { return _urgPtr; }
+    ///ditto
     @property void urgPtr(ushort ptr) { _urgPtr = ptr; }
 
   private:
@@ -216,6 +284,7 @@ class TCP : Protocol {
     ushort _urgPtr = 0;
 }
 
+///
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0];
   TCP packet = cast(TCP)encoded.to!TCP;
@@ -224,6 +293,7 @@ unittest {
   assert(packet.window == 8192);
 }
 
+///
 unittest {
   ubyte[] encoded = cast(ubyte[])[0, 80, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ cast(ubyte[])"HTTP 1.1";
   TCP packet = cast(TCP)encoded.to!TCP;
@@ -233,6 +303,7 @@ unittest {
   assert((cast(HTTP)packet.data).str == "HTTP 1.1");
 }
 
+///
 unittest {
   JSONValue json = [
     "src_port": JSONValue(8000),
@@ -256,6 +327,7 @@ unittest {
   assert(packet.destPort == json["dest_port"].to!ushort);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
