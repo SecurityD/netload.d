@@ -11,6 +11,9 @@ import std.conv;
 alias ICMPv4RouterAdvert = ICMPv4Router!(ICMPType.ADVERT);
 alias ICMPv4RouterSollicitation = ICMPv4Router!(ICMPType.SOLLICITATION);
 
+/++
+ + In case of an error, it indicates what problem happened.
+ +/
 class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
   public:
     static ICMPv4Router!(__type__) opCall(inout JSONValue val) {
@@ -102,6 +105,7 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return packet;
     }
 
+    ///
     unittest {
       ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
       assert(packet.toJson["packetType"] == 9);
@@ -114,6 +118,7 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toJson["prefAddr"].toArrayOf!string == ["0.0.0.0", "0.0.0.0", "0.0.0.0"]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
@@ -153,11 +158,13 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       return packet;
     }
 
+    ///
     unittest {
       ICMPv4RouterAdvert packet = new ICMPv4RouterAdvert(3, 2);
       assert(packet.toBytes == [9, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -168,11 +175,13 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       assert(packet.toBytes == [9, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
+    ///
     unittest {
       ICMPv4RouterSollicitation packet = new ICMPv4RouterSollicitation();
       assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -184,15 +193,40 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     }
 
     @property {
+      /++
+       + The number of router addresses advertised in this message.
+       +/
       inout ubyte numAddr() { return _numAddr; }
+      ///ditto
       void numAddr(ubyte numAddr) { _numAddr = numAddr; }
+      /++
+       + The number of 32-bit words of information per each router address
+       + (2, in the version of the protocol described here).
+       +/
       inout ubyte addrEntrySize() { return _addrEntrySize; }
+      ///ditto
       void addrEntrySize(ubyte addrEntrySize) { _addrEntrySize = addrEntrySize; }
+      /++
+       + The maximum number of seconds that the router addresses may be
+       + considered valid.
+       +/
       inout ushort life() { return _life; }
+      ///ditto
       void life(ushort life) { _life = life; }
+      /++
+       + The sending router's IP address(es) on the interface
+       + from which this message is sent.
+       +/
       ubyte[4][] routerAddr() { return _routerAddr; }
+      ///ditto
       void routerAddr(ubyte[4][] routerAddr) { _routerAddr = routerAddr; }
+      /++
+       + The preferability of each Router Address[i] as a default router
+       + address, relative to other router addresses on the same subnet.
+       + A signed, twos-complement value; higher values mean more preferable.
+       +/
       ubyte[4][] prefAddr() { return _prefAddr; }
+      ///ditto
       void prefAddr(ubyte[4][] prefAddr) { _prefAddr = prefAddr; }
     }
 
@@ -204,6 +238,7 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
     ubyte[4][] _prefAddr;
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0),
@@ -222,6 +257,7 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -250,6 +286,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [9, 0, 0, 0, 3, 2, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3];
   ICMPv4RouterAdvert packet = cast(ICMPv4RouterAdvert)encodedPacket.to!ICMPv4RouterAdvert;
@@ -261,6 +298,7 @@ unittest {
   assert(packet.prefAddr == [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]);
 }
 
+///
 unittest {
   JSONValue json = [
     "checksum": JSONValue(0)
@@ -269,6 +307,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -287,6 +326,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [10, 0, 0, 0, 0, 0, 0, 0];
   ICMPv4RouterSollicitation packet = cast(ICMPv4RouterSollicitation)encodedPacket.to!ICMPv4RouterSollicitation;

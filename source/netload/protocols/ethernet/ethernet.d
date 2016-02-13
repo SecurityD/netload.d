@@ -17,6 +17,9 @@ static this() {
   etherType[0x814C] = delegate(ubyte[] encoded){ return (cast(Protocol)to!SNMPv3(encoded)); };
 }
 
+/++
+ + Layer 2 Protocol to transmit data between two linked computers.
+ +/
 class Ethernet : Protocol {
   public:
     static Ethernet opCall(inout JSONValue val) {
@@ -79,6 +82,7 @@ class Ethernet : Protocol {
   		return json;
     }
 
+    ///
     unittest {
       Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
       JSONValue json = packet.toJson;
@@ -86,6 +90,7 @@ class Ethernet : Protocol {
       assert(json["src_mac_address"] == "ff:ff:ff:ff:ff:ff");
     }
 
+    ///
     unittest {
       import netload.protocols.udp;
       import netload.protocols.raw;
@@ -124,11 +129,13 @@ class Ethernet : Protocol {
       return encoded;
     }
 
+    ///
     unittest {
       Ethernet packet = new Ethernet([255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0]);
       assert(packet.toBytes == [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -141,12 +148,29 @@ class Ethernet : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+    /++
+     + Prelude, Sequence to synchronize clocks : 0b1010101
+     +/
     @property ref inout(ubyte[7]) prelude() inout { return _prelude; }
+    /++
+     + Destination Mac Address
+     +/
     @property ref inout(ubyte[6]) srcMacAddress() inout { return _srcMacAddress; }
+    /++
+     + Source Mac Address
+     +/
     @property ref inout(ubyte[6]) destMacAddress() inout { return _destMacAddress; }
+    /++
+     + Protocol type, Encapsulated Protocol type
+     +/
     @property ushort protocolType() const { return _protocolType; }
+    ///ditto
     @property void protocolType(ushort value) { _protocolType = value; }
+    /++
+     + FCS, Frame Check Sequence, calculated with crc
+     +/
     @property uint fcs() const { return _fcs; }
+    ///ditto
     @property void fcs(uint value) { _fcs = value; }
 
   private:
@@ -158,6 +182,7 @@ class Ethernet : Protocol {
     uint _fcs = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "prelude": JSONValue([1, 0, 1, 0, 1, 0, 1].toJsonArray),
@@ -171,6 +196,7 @@ unittest {
   assert(packet.protocolType == 0x0800);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -194,6 +220,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0, 0, 0, 0, 0];
   Ethernet packet = cast(Ethernet)encoded.to!Ethernet();
@@ -201,6 +228,7 @@ unittest {
   assert(packet.destMacAddress == [0, 0, 0, 0, 0, 0]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1] ~ [0, 0, 0, 0];
   Ethernet packet = cast(Ethernet)encoded.to!Ethernet();
