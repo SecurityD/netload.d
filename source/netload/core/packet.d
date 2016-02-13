@@ -14,7 +14,7 @@ import std.datetime;
  + This also define some tools to create the packet: you can
  + use the `create` templated function to create a full packet.
  +
- + Example :
+ + Examples:
  + ---
  + import netload.core;
  + import netload.protocols;
