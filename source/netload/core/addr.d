@@ -5,9 +5,9 @@ import std.conv;
 import std.bitmanip;
 
 /++
-	Converts an IPv4 address expressed in an array of four bytes
-	into a string with format XX.XX.XX.XX.
-+/
+ + Converts an IPv4 address expressed in an array of four bytes
+ + into a string with format XX.XX.XX.XX.
+ +/
 string ipToString(ubyte[4] ip) {
   return format("%s.%s.%s.%s", ip[0], ip[1], ip[2], ip[3]);
 }
@@ -18,9 +18,9 @@ unittest {
 }
 
 /++
-	Converts an IPv4 address from a string with format XX.XX.XX.XX
-	into an array of four bytes.
-+/
+ + Converts an IPv4 address from a string with format XX.XX.XX.XX
+ + into an array of four bytes.
+ +/
 ubyte[4] stringToIp(string ip) {
   string[] arr = ip.split(".");
   if (arr.length != 4)
@@ -40,9 +40,9 @@ unittest {
 }
 
 /++
-	Converts a MAC address expressed in an array of six bytes
-	into a string with format XX:XX:XX:XX:XX:XX.
-+/
+ + Converts a MAC address expressed in an array of six bytes
+ + into a string with format XX:XX:XX:XX:XX:XX.
+ +/
 string macToString(ubyte[6] mac) {
   return format("%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
@@ -53,9 +53,9 @@ unittest {
 }
 
 /++
-	Converts a MAC address from a string with format XX:XX:XX:XX:XX:XX
-	into an array of six bytes.
-+/
+ + Converts a MAC address from a string with format XX:XX:XX:XX:XX:XX
+ + into an array of six bytes.
+ +/
 ubyte[6] stringToMac(string mac) {
   string[] arr = mac.split(":");
   if (arr.length != 6)

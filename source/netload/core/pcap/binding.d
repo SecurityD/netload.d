@@ -1,3 +1,6 @@
+/++
+ + Refer to the PCAP documentation.
+ +/
 module netload.core.pcap.binding;
 
 import core.stdc.config;
