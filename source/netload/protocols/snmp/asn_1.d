@@ -22,6 +22,9 @@ struct ASN1 {
   @property ushort length() const { return cast(ushort)(data.length); }
 }
 
+/++
+ + Parse an array of bytes as ASN1.
+ +/
 ASN1 toASN1(ref ubyte[] bytes) {
   ASN1 asn;
   asn.type = cast(ASN1.Type)(bytes[0]);
@@ -38,6 +41,7 @@ ASN1 toASN1(ref ubyte[] bytes) {
   return asn;
 }
 
+///
 unittest {
   ubyte[] raw = [
     0x30, 0x81, 0x85, 0x02, 0x01, 0x00, 0x04, 0x06,
@@ -83,11 +87,15 @@ unittest {
   assert(raw.length == 0);
 }
 
+/++
+ + Parse a JSON input as ASN1.
+ +/
 ASN1 toASN1(JSONValue json) {
   ASN1 asn = {type: cast(ASN1.Type)(json["type"].to!(ubyte)), data: json["data"].toArrayOf!ubyte};
   return asn;
 }
 
+///
 unittest {
   JSONValue json = [
     "type": JSONValue(0x30),
@@ -135,12 +143,16 @@ unittest {
   ]);
 }
 
+/++
+ + Converts an array of bytes into an array of ASN1.
+ +/
 ASN1[] toASN1Seq(ref ubyte[] bytes) {
   ASN1[] sequence;
   while (bytes.length) { sequence ~= bytes.toASN1; }
   return sequence;
 }
 
+///
 unittest {
   ubyte[] raw = [
     0x02, 0x01, 0x00, 0x04, 0x06, 0x70, 0x75, 0x62,
@@ -193,6 +205,9 @@ unittest {
   ]);
 }
 
+/++
+ + Converts an ASN1 into bytes.
+ +/
 ubyte[] toBytes(const ASN1 asn) {
   ubyte[] bytes;
   bytes ~= asn.type;
@@ -206,6 +221,7 @@ ubyte[] toBytes(const ASN1 asn) {
   return bytes;
 }
 
+///
 unittest {
   ASN1 asn;
   asn.type = ASN1.Type.OCTET_STRING;
@@ -213,6 +229,7 @@ unittest {
   assert(asn.toBytes == [ 0x04, 0x06, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63 ]);
 }
 
+///
 unittest {
   ASN1 asn;
   asn.type = ASN1.Type.SEQUENCE;
@@ -257,6 +274,9 @@ unittest {
   ]);
 }
 
+/++
+ + Converts an ASN1 into JSON.
+ +/
 JSONValue toJSONValue(const ASN1 asn) {
   JSONValue json = [
     "type": JSONValue(asn.type),
@@ -265,6 +285,7 @@ JSONValue toJSONValue(const ASN1 asn) {
   return json;
 }
 
+///
 unittest {
   ASN1 asn;
   asn.type = ASN1.Type.OCTET_STRING;
@@ -274,6 +295,7 @@ unittest {
   assert(json["data"].toArrayOf!ubyte == [ 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63 ]);
 }
 
+///
 unittest {
   ASN1 asn;
   asn.type = ASN1.Type.SEQUENCE;
