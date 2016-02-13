@@ -24,12 +24,22 @@ import netload.protocols.snmp;
 import netload.protocols.tcp;
 import netload.protocols.udp;
 
+/++
+ + Converts the given `JSONValue` to the right `Protocol`.
+ + The json must have a "name" field that contains the name of the protocol
+ + and, of course, all the data that are necessary in its conversion.
+ +/
 Protocol toProtocol(JSONValue json) {
-  if (json["name"] != null)
-    return protocolConversion[json["name"].to!string](json);
+  if ("name" in json && json["name"] !is null)
+    return protocolConversion[json["name"].get!string](json);
   throw new Exception("Invalid Json.");
 }
 
+/++
+ + Map taking a string of the protocol name as key and a delegate as value
+ + taking a `JSONValue` as parameter and that converts it
+ + to the right `Protocol`.
+ +/
 Protocol delegate(JSONValue)[string] protocolConversion;
 
 shared static this() {
@@ -77,6 +87,7 @@ shared static this() {
   protocolConversion["DNSPTRResource"] = delegate(JSONValue json){ return (cast(Protocol)to!DNSPTRResource(json)); };
 }
 
+///
 unittest {
   JSONValue json = [
     "hwType": JSONValue(1),
@@ -101,6 +112,7 @@ unittest {
   assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
+///
 unittest {
   JSONValue json = [
     "src_port": JSONValue(8000),
