@@ -30,6 +30,10 @@ enum Dot11Type {
   DATA = 2
 };
 
+/++
+ + IEEE 802.11 This protocol implements wireless local area 
+ + network (WLAN) computer communication.
+ +/
 class Dot11 : Protocol {
   public:
     static Dot11 opCall(inout JSONValue val) {
@@ -129,6 +133,7 @@ class Dot11 : Protocol {
   		return json;
     }
 
+	///
     unittest {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
       assert(packet.toJson["packet_type"] == 0);
@@ -151,6 +156,7 @@ class Dot11 : Protocol {
       assert(packet.toJson["to_DS"] == false);
     }
 
+	///
     unittest {
       import netload.protocols.udp;
       import netload.protocols.raw;
@@ -210,11 +216,13 @@ class Dot11 : Protocol {
       return packet;
     }
 
+	///
     unittest {
       Dot11 packet = new Dot11(0, 8, [255, 255, 255, 255, 255, 255], [0, 0, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6]);
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     }
 
+	///
     unittest {
       import netload.protocols.raw;
 
@@ -227,42 +235,152 @@ class Dot11 : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+	/++
+	 + Duration ID : 3 different purposes :
+	 +  - Virtual carrier-sense
+	 +  - Legacy power management
+	 +  - Contention-free period
+	 + In case of virtual carrier-sense, it represents the time, in 
+	 + microseconds, required to transmit the SIFS interval + ACK frame.
+	 +/
     @property ushort duration() const { return _duration; }
+	///ditto
     @property void duration(ushort duration) { _duration = duration; }
+
+	/++
+	 + MAC Layer addressing : The 802.11 frame can carry 4 different MAC 
+	 + addresses with 5 different meanings :
+	 +  - Source Address(SA) : MAC address of the original sending frame. 
+	 +    Source an either be wired or wireless
+	 +  - Destination Address(DA) : Final destination of the frame. Could 
+	 +    be wired or wireless
+	 +  - Transmitter address(TA) : MAC address of the 802.11 radio that 
+	 +    is transmitting the frame onto the 802.11 medium
+	 +  - Receiver address(RA) : The MAC address of the 802.11 radio that 
+	 +    receives the incoming transmission from the transmitting station
+	 +  - Basic service set ID (BSSID) :
+	 +     - The MAC address that is the L2 identification of the BSS
+	 +     - It could either be just the MAC address of the AP, or a dynamically 
+	 +       generated MAC address in the case where there are multiple BSSs 
+	 +       in an AP.
+	 + 
+	 + Based on the TO_DS and FROM_DS fields, the meanings change
+	 +/
     @property ubyte[6] addr1() const { return _addr[0]; }
+	///ditto
     @property void addr1(ubyte[6] addr1) { _addr[0] = addr1; }
+	///ditto
     @property ubyte[6] addr2() const { return _addr[1]; }
+	///ditto
     @property void addr2(ubyte[6] addr2) { _addr[1] = addr2; }
+	///ditto
     @property ubyte[6] addr3() const { return _addr[2]; }
+	///ditto
     @property void addr3(ubyte[6] addr3) { _addr[2] = addr3; }
+	///ditto
     @property ubyte[6] addr4() const { return _addr[3]; }
+	///ditto
     @property void addr4(ubyte[6] addr4) { _addr[3] = addr4; }
+
+	/++
+	 + Sequence Control : The sequence number is constant in all tranmissions 
+	 + and re transmissions of a frame. Also it's constant in all fragments 
+	 + of a frame.
+	 +/
     @property ushort seq() const { return _seq; }
+	///ditto
     @property void seq(ushort seq) { _seq = seq; }
+
+	/++
+	 + FCS is calculated over all the fields of the MAC header and the frame 
+	 + body fields.
+	 +/
     @property uint fcs() const { return _fcs; }
+	///ditto
     @property void fcs(uint fcs) { _fcs = fcs; }
 
+	/++
+	 + Frame Subtype: Identifies the function of the frame with Frame Type(TYPE).
+	 +/
     @property ubyte subtype() const { return _frameControl.subtype; }
+	///ditto
     @property void subtype(ubyte subtype) { _frameControl.subtype = subtype; }
+
+	/++
+	 + Frame Type:
+	 + - Data
+	 + - Management
+	 + - Control
+	 +/
     @property ubyte type() const { return _frameControl.type; }
+	///ditto
     @property void type(ubyte type) { _frameControl.type = type; }
+
+	/++
+	 + Protocol Version: Zero for 802.11 standard
+	 +/
     @property ubyte vers() const { return _frameControl.vers; }
+	///ditto
     @property void vers(ubyte vers) { _frameControl.vers = vers; }
+
+	/++
+	 + Order : Indicates restrictions for transmission.
+	 +/
     @property bool rsvd() const { return _frameControl.rsvd; }
+	///ditto
     @property void rsvd(bool rsvd) { _frameControl.rsvd = rsvd; }
+
+	/++
+	 + WEP : Indicates that WEP protection is activated.
+	 +/
     @property bool wep() const { return _frameControl.wep; }
+	///ditto
     @property void wep(bool wep) { _frameControl.wep = wep; }
+
+	/++
+	 + More Data :When the client receives a frame with the more 
+	 + data field when it's awake,it knows that it cannot go to 
+	 + sleep and it sends out a PS-POLL message for getting that 
+	 + data.
+	 +/
     @property bool moreData() const { return _frameControl.moreData; }
+	///ditto
     @property void moreData(bool moreData) { _frameControl.moreData = moreData; }
+
+	/++
+	 + Power Management : Set when station go Power Safe mode.
+	 +/
     @property bool power() const { return _frameControl.power; }
+	///ditto
     @property void power(bool power) { _frameControl.power = power; }
+
+	/++
+	 + Retry : Set in case of retransmission frame.
+	 +/
     @property bool retry() const { return _frameControl.retry; }
+	///ditto
     @property void retry(bool retry) { _frameControl.retry = retry; }
+
+	/++
+	 + More Frag : Set when frame is followed by other fragment. 
+	 + Present in data or management frame.
+	 +/
     @property bool moreFrag() const { return _frameControl.moreFrag; }
+	///ditto
     @property void moreFrag(bool moreFrag) { _frameControl.moreFrag = moreFrag; }
+
+	/++
+	 + FromDS : Indicates that frame is coming from Distribution System.
+	 +/
     @property bool fromDS() const { return _frameControl.fromDS; }
+	///ditto
     @property void fromDS(bool fromDS) { _frameControl.fromDS = fromDS; }
+
+	/++
+	 + ToDS : Indicates that destination frame is for Distribution System.
+	 +/
     @property bool toDS() const { return _frameControl.toDS; }
+	///ditto
     @property void toDS(bool toDS) { _frameControl.toDS = toDS; }
 
   private:
@@ -274,6 +392,7 @@ class Dot11 : Protocol {
       uint _fcs = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "subtype": JSONValue(8),
@@ -316,6 +435,7 @@ unittest {
   assert(packet.toDS == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -368,6 +488,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   Dot11 packet = cast(Dot11)encodedPacket.to!Dot11;
