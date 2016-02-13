@@ -3,6 +3,7 @@ module netload.core.pcap.binding;
 import core.stdc.config;
 import core.stdc.stdlib;
 import core.stdc.stdio;
+import std.conv;
 
 nothrow extern(C) {
   alias time_t = c_long;
@@ -112,6 +113,7 @@ nothrow extern (C) {
   int pcap_inject(pcap_t*, const ubyte*, size_t);
 
   void pcap_perror(pcap_t*, const char*);
+  char* pcap_geterr(pcap_t*);
 }
 
 import std.string;
@@ -124,57 +126,96 @@ T[] toArrayOf(T)(T* ptr, uint size) {
   return array;
 }
 
+/++
+ + The PacketCaptureException represents an exception caused by the (mis)use of
+ + the libpcap library.
+ +/
+class PacketCaptureException : Exception {
+  public:
+    this(string message, string file = __FILE__, size_t line = __LINE__, Throwable next = null) {
+      super(message, file, line, next);
+    }
+}
+
+/++
+ + The PacketCapturer class represents a device open for capturing.
+ + Its construction shall fail if no device was found.
+ +/
 class PacketCapturer {
   public:
+    /++
+     + Constructs a PacketCapturer with the default capturing interface.
+     +
+     + Throws: PacketCaptureException if the default device is unavailable or non-existent.
+     +/
     this() {
       lookupDevice();
     }
 
+    /++
+     + Constructs a PacketCapturer with the default capturing interface and promiscuous mode enabled if the argument is `true`.
+     +/
     this(bool enablePromisc) {
       _promisc = enablePromisc;
       lookupDevice();
     }
 
-    this(string deviceName) {
-      _dev = deviceName;
-    }
-
-    this(string deviceName, bool enablePromisc) {
+    /++
+     + Constructs a PacketCapturer with the interface named `deviceName` and promiscuous mode enabled if the second argument is `true`. Promiscuous mode defaults to `false`.
+     +/
+    this(string deviceName, bool enablePromisc = false) {
       _dev = deviceName;
       _promisc = enablePromisc;
     }
 
-    void lookupDevice() {
-      char* dev = pcap_lookupdev(null);
-      if (dev == null) {
-        throw new Exception("Cannot find any device : " ~ (cast(string)fromStringz(cast(char *)_errbuf)));
-      }
-      _dev = cast(string)fromStringz(dev);
-    }
-
+    /++
+     + Opens the device for capture.
+     +
+     + Throws: PacketCaptureException on failure.
+     +/
     void initialize() {
       _header = new pcap_pkthdr;
       _cap = pcap_open_live(_dev.toStringz, 1518, _promisc, 0, cast(char*)_errbuf);
       if (_cap == null) {
-        throw new Exception(cast(string)fromStringz(_errbuf.toStringz));
+        throw new PacketCaptureException(cast(string)fromStringz(_errbuf.toStringz));
       }
     }
 
+    /++
+     + Obtains the next captured packet for this interface, using `pcap_next`. However the required copy of the
+     + packet data is handled by this function. This function may block if no packet has been captured yet.
+     +
+     + Throws: PacketCaptureException on failure.
+     +/
     ubyte[] nextPacket() {
       ubyte* bytes = pcap_next(_cap, _header);
       if (bytes is null) {
-        throw new Exception(cast(string)_cap.errbuf);
+        throw new PacketCaptureException(cast(string)_cap.errbuf);
       }
       return bytes.toArrayOf(_header.caplen);
     }
 
+    /++
+     + Injects an arbitrary packet into the capture device.
+     +
+     + Throws: PacketCaptureException on failure.
+     +/
     void inject(ubyte[] packet) {
       if (pcap_inject(_cap, packet.ptr, packet.length) == -1) {
-        pcap_perror(_cap, "pcap error:".toStringz);
+        string error = to!string(pcap_geterr(_cap));
+        throw new PacketCaptureException(error);
       }
     }
 
   private:
+    void lookupDevice() {
+      char* dev = pcap_lookupdev(null);
+      if (dev == null) {
+        throw new PacketCaptureException("Cannot find any device : " ~ (cast(string)fromStringz(cast(char *)_errbuf)));
+      }
+      _dev = cast(string)fromStringz(dev);
+    }
+
     bool _promisc = false;
     string _dev;
     pcap_t *_cap;
