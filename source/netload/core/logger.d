@@ -4,14 +4,13 @@ import netload.core.packet;
 import std.algorithm.mutation;
 import std.stdio;
 
-Packet[] oldLoggedPackets = null;
-Packet[] loggedPackets = new Packet[10];
-uint packetNbr = 10;
-uint packetIdx = 0;
+private Packet[] oldLoggedPackets = null;
+private Packet[] loggedPackets = new Packet[10];
+private uint packetNbr = 10;
+private uint packetIdx = 0;
 
 /++
- + Adds the given `Packet` to the `loggedPackets` working like a stack
- + with a length of `packetNbr`.
+ + Adds the given `Packet` to the logged packets working like a stack.
  +/
 void log(Packet packet) {
   if (packetIdx == (packetNbr - 1)) {
