@@ -6,6 +6,9 @@ import stdx.data.json;
 import std.outbuffer;
 import std.conv;
 
+/++
+ + A raw data protocol.
+ +/
 class Raw : Protocol {
   public:
 	this() {
@@ -33,6 +36,7 @@ class Raw : Protocol {
     return json;
 	}
 
+	///
 	unittest {
 	  Raw packet = new Raw([0, 1, 2]);
     JSONValue json = packet.toJson();
@@ -53,7 +57,11 @@ class Raw : Protocol {
 	  assert(packet.toString == "\\x00 \\x01 \\x02");
 	}
 
+	/++
+	 + The data bytes.
+	 +/
 	@property const(ubyte[]) bytes() const { return _bytes; }
+	///ditto
 	@property void bytes(ubyte[] array) { _bytes = array; }
   static Raw opCall(inout JSONValue val) {
 		return new Raw(val);
@@ -63,6 +71,7 @@ class Raw : Protocol {
 	ubyte[] _bytes;
 }
 
+///
 unittest {
   ubyte[] bytes = [0, 1, 2];
   JSONValue json = [
@@ -72,6 +81,7 @@ unittest {
   assert(packet.bytes == [0, 1, 2]);
 }
 
+///
 unittest {
   ubyte[] encoded = [0, 1, 2];
   Raw packet = cast(Raw)encoded.to!Raw();

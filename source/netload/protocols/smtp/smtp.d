@@ -5,6 +5,29 @@ import stdx.data.json;
 import netload.core.protocol;
 import netload.core.conversion.json_array;
 
+/+
+ + The objective of Simple Mail Transfer Protocol (SMTP) is to transfer
+ + mail reliably and efficiently.
+ +
+ + SMTP is independent of the particular transmission subsystem and
+ + requires only a reliable ordered data stream channel.  Appendices A,
+ + B, C, and D describe the use of SMTP with various transport services.
+ + A Glossary provides the definitions of terms as used in this
+ + document.
+ +
+ + An important feature of SMTP is its capability to relay mail across
+ + transport service environments.  A transport service provides an
+ + interprocess communication environment (IPCE).  An IPCE may cover one
+ + network, several networks, or a subset of a network.  It is important
+ + to realize that transport systems (or IPCEs) are not one-to-one with
+ + networks.  A process can communicate directly with another process
+ + through any mutually known IPCE.  Mail is an application or use of
+ + interprocess communication.  Mail can be communicated between
+ + processes in different IPCEs by relaying through a process connected
+ + to two (or more) IPCEs.  More specifically, mail can be relayed
+ + between hosts on different transport systems by a host on both
+ + transport systems.
+ +/
 class SMTP : Protocol {
   public:
     static SMTP opCall(inout JSONValue val) {
@@ -40,6 +63,7 @@ class SMTP : Protocol {
       return json;
     }
 
+	///
     unittest {
       SMTP packet = new SMTP("test");
       JSONValue json = [
@@ -53,6 +77,7 @@ class SMTP : Protocol {
       return cast(ubyte[])(_body.dup);
     }
 
+	///
     unittest {
       SMTP packet = new SMTP("test");
       assert(packet.toBytes == cast(ubyte[])("test"));
@@ -60,13 +85,18 @@ class SMTP : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+	/++
+	 + The body as plain text.
+	 +/
     @property string str() const { return _body; }
+	///ditto
     @property void str(string b) { _body = b; }
 
   private:
     string _body;
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -75,6 +105,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
   SMTP packet = cast(SMTP)encoded.to!SMTP();

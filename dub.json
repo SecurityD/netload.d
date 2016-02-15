@@ -11,5 +11,14 @@
 	],
 	"versions" : ["VibeCustomMain"],
 	"targetType": "library",
-	"targetName": "netload.d"
+	"targetName": "netload.d",
+    "dflags": [
+        "./doc/tpl/bootdoc.ddoc",
+        "./doc/tpl/settings.ddoc",
+        "./doc/tpl/local_settings.ddoc",
+        "./doc/tpl/modules.ddoc",
+		"-c",
+        "-Dddoc",
+		"-op"
+    ]
 }

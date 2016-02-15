@@ -8,7 +8,7 @@ import std.bitmanip;
 import std.exception;
 import std.conv;
 
-union Bitfields {
+private union Bitfields {
   ushort raw;
   mixin(bitfields!(
 	ubyte, "", 15,
@@ -16,9 +16,17 @@ union Bitfields {
 	));
 };
 
+/++
+ + The Dynamic Host Configuration Protocol (DHCP) is a standardized network 
+ + protocol used on Internet Protocol (IP) networks for dynamically distributing 
+ + network configuration parameters, such as IP addresses for interfaces and 
+ + services. With DHCP, computers request IP addresses and networking parameters 
+ + automatically from a DHCP server, reducing the need for a network administrator 
+ + or a user to configure these settings manually.
+ +/
 class DHCP : Protocol {
-  public:
-  static DHCP opCall(inout JSONValue val) {
+public:
+    static DHCP opCall(inout JSONValue val) {
 		return new DHCP(val);
 	}
 
@@ -110,6 +118,7 @@ class DHCP : Protocol {
 	  return json;
 	}
 
+	///
 	unittest {
 	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
 	  assert(packet.toJson["op"] == 2);
@@ -125,6 +134,7 @@ class DHCP : Protocol {
 	  assert(packet.toJson["giaddr"] == "10.14.59.255");
 	}
 
+	///
 	unittest {
 	  import netload.protocols.raw;
 	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
@@ -164,11 +174,13 @@ class DHCP : Protocol {
 	  return packet;
 	}
 
+	///
 	unittest {
 	  DHCP packet = new DHCP(2, 42, [127, 0, 0, 1], [127, 0, 1, 1], [10, 14, 19, 42], [10, 14, 59, 255]);
 	  assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 	}
 
+	///
 	unittest {
 	  import netload.protocols.raw;
 
@@ -181,40 +193,121 @@ class DHCP : Protocol {
 
 	override string toString() const { return toJson.toJSON; }
 
+	/++
+	 + Message op code / message type. 1 = BOOTREQUEST, 2 = BOOTREPLY
+	 +/
 	@property ubyte op() const { return _op; };
+	///ditto
 	@property void op(ubyte op) { _op = op; };
+
+	/++
+	 + Hardware address type, see ARP section in "Assigned Numbers" RFC; 
+	 + e.g., '1' = 10mb ethernet.
+	 +/
 	@property ubyte htype() const { return _htype; };
+	///ditto
 	@property void htype(ubyte htype) { _htype = htype; };
+
+	/++
+	 + Hardware address length (e.g. '6' for 10mb ethernet).
+	 +/
 	@property ubyte hlen() const { return _hlen; };
+	///ditto
 	@property void hlen(ubyte hlen) { _hlen = hlen; };
+
+	/++
+	 + Client sets to zero, optionally used by relay agents when booting 
+	 + via a relay agent.
+	 +/
 	@property ubyte hops() const { return _hops; };
+	///ditto
 	@property void hops(ubyte hops) { _hops = hops; };
+
+	/++
+	 + Transaction ID, a random number chosen by the client, used by the 
+	 + client and server to associate messages and responses between a client
+	 + and a server.
+	 +/
 	@property uint xid() const { return _xid; };
+	///ditto
 	@property void xid(uint xid) { _xid = xid; };
+
+	/++
+	 + Filled in by client, seconds elapsed since client began address 
+	 + acquisition or renewal process.
+	 +/
 	@property ushort secs() const { return _secs; };
+	///ditto
 	@property void secs(ushort secs) { _secs = secs; };
 
+	/++
+	 + Broadcast flag
+	 +/
 	@property bool broadcast() const { return _flags.broadcast; };
+	///ditto
 	@property void broadcast(bool broadcast) { _flags.broadcast = broadcast; };
 
+	/++
+	 + Client IP address; only filled in if client is in BOUND, 
+	 + RENEW or REBINDING state and can respond to ARP requests.
+	 +/
 	@property const(ubyte[4]) ciaddr() const { return _ciaddr; };
+	///ditto
 	@property void ciaddr(ubyte[4] ciaddr) { _ciaddr = ciaddr; };
+
+	/++
+	 + 'your' (client) IP address.
+	 +/
 	@property const(ubyte[4]) yiaddr() const { return _yiaddr; };
+	///ditto
 	@property void yiaddr(ubyte[4] yiaddr) { _yiaddr = yiaddr; };
+
+	/++
+	 + IP address of next server to use in bootstrap; returned in 
+	 + DHCPOFFER, DHCPACK by server.
+	 +/
 	@property const(ubyte[4]) siaddr() const { return _siaddr; };
+	///ditto
 	@property void siaddr(ubyte[4] siaddr) { _siaddr = siaddr; };
+
+	/++
+	 + Relay agent IP address, used in booting via a relay agent.
+	 +/
 	@property const(ubyte[4]) giaddr() const { return _giaddr; };
+	///ditto
 	@property void giaddr(ubyte[4] giaddr) { _giaddr = giaddr; };
+
+	/++
+	 + Client hardware address.
+	 +/
 	@property const(ubyte[16]) chaddr() const { return _chaddr; };
+	///ditto
 	@property void chaddr(ubyte[16] chaddr) { _chaddr = chaddr; };
+
+	/++
+	 + Optional server host name, null terminated string.
+	 +/
 	@property const(ubyte[64]) sname() const { return _sname; };
+	///ditto
 	@property void sname(ubyte[64] sname) { _sname = sname; };
+
+	/++
+	 + Boot file name, null terminated string; "generic" name or null in 
+	 + DHCPDISCOVER, fully qualified directory-path name in DHCPOFFER.
+	 +/
 	@property const(ubyte[128]) file() const { return _file; };
+	///ditto
 	@property void file(ubyte[128] file) { _file = file; };
+
+	/++
+	 + Optional parameters field. See the options documents for a list of 
+	 + defined options.
+	 +/
 	@property const(ubyte[]) options() const { return _options; };
+	///ditto
 	@property void options(ubyte[] options) { _options = options; };
 
-  private:
+private:
 	Protocol _data = null;
 	ubyte _op = 1;
 	ubyte _htype = 1;
@@ -233,6 +326,7 @@ class DHCP : Protocol {
 	ubyte[] _options;
 }
 
+///
 unittest {
   ubyte[] options;
   JSONValue json = [
@@ -266,6 +360,7 @@ unittest {
   assert(packet.toJson["giaddr"] == "10.14.59.255");
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -309,6 +404,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
   DHCP packet = cast(DHCP)encodedPacket.to!DHCP;

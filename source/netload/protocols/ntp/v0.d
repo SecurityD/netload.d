@@ -9,6 +9,10 @@ import netload.core.protocol;
 import netload.protocols.ntp.common;
 import netload.core.conversion.json_array;
 
+/++
+ + The Network Time Protocol (NTP) is a protocol for synchronizing a set of 
+ + network clocks using a set of distributed clients and servers.
+ +/
 class NTPv0 : NTPCommon, Protocol {
   public:
     static NTPv0 opCall(inout JSONValue val) {
@@ -72,6 +76,7 @@ class NTPv0 : NTPCommon, Protocol {
   		return json;
     }
 
+	///
     unittest {
       auto ntp = new NTPv0;
       ntp.leapIndicator = 2u;
@@ -105,6 +110,7 @@ class NTPv0 : NTPCommon, Protocol {
       assert(ntp.toJson == test);
     }
 
+	///
     unittest {
       import netload.protocols.raw;
 
@@ -158,6 +164,7 @@ class NTPv0 : NTPCommon, Protocol {
       return packet;
     }
 
+	///
     unittest {
       auto ntp = new NTPv0;
       ntp.leapIndicator = 2u;
@@ -187,6 +194,7 @@ class NTPv0 : NTPCommon, Protocol {
       ]);
     }
 
+	///
     unittest {
       import netload.protocols.raw;
 
@@ -229,21 +237,72 @@ class NTPv0 : NTPCommon, Protocol {
       override Protocol data() { return _data; }
       override @property void data(Protocol p) { _data = p; }
 
+	  /++
+	   + Code warning of impending leap-second to be inserted at the end of the 
+	   + last day of the current month. Bits are coded as follows:
+	   + <table>
+	   +    <tr><td><b>Value</b></td><td><b>Meaning</b></td></tr>
+	   +    <tr><td>00</td><td>no warning</td></tr>
+	   +    <tr><td>01</td><td>+1 second (following minute has 61 seconds)</td></tr>
+	   +    <tr><td>10</td><td>-1 second (following minute has 59 seconds)</td></tr>
+	   +    <tr><td>11</td><td>reserved for future use</td></tr>
+	   + </table>
+	   +/
       ubyte leapIndicator() const { return _leapIndicator; }
+	  ///ditto
       void leapIndicator(ubyte data) { _leapIndicator = data; }
 
+	  /++
+	   + Code indicating status of local clock. Values are defined as follows:
+	   + 
+	   + <table>
+	   +    <tr><td><b>Value</b></td><td><b>Meaning</b></td></tr>
+	   +    <tr><td>0</td><td>clock operating correctly</td></tr>
+	   +    <tr><td>1</td><td>carrier loss</td></tr>
+	   +    <tr><td>2</td><td>synch loss</td></tr>
+	   +    <tr><td>3</td><td>format error</td></tr>
+	   +    <tr><td>4</td><td>interface (Type 1) or link (Type 2) failure</td></tr>
+	   + </table>
+	   +/
       ubyte status() const { return _status; }
+	  ///ditto
       void status(ubyte data) { _status = data; }
 
+	  /++
+	   + Code identifying the type of reference clock. Values are defined as follows:
+	   +
+	   + <table>
+	   +    <tr><td><b>Value</b></td><td><b>Meaning</b></td></tr>
+	   +    <tr><td>0</td><td>unspecified</td></tr>
+	   +    <tr><td>1</td><td>primary reference (e.g. radio clock)</td></tr>
+	   +    <tr><td>2</td><td>secondary reference using an Internet host via NTP</td></tr>
+	   +    <tr><td>3</td><td>secondary reference using some other host or protocol</td></tr>
+	   +    <tr><td>4</td><td>eyeball-and-wristwatch</td></tr>
+	   + </table>
+	   +/
       ubyte type() const { return _type; }
+	  ///ditto
       void type(ubyte data) { _type = data; }
 
+	  /++
+	   + Signed integer in the range +32 to -32 indicating the precision of the local 
+	   + clock, in seconds to the nearest power of two.
+	   +/
       ushort precision() const { return _precision; }
+	  ///ditto
       void precision(ushort data) { _precision = data; }
 
+	  /++
+	   + Fixed-point number indicating the estimated error of the local clock at the 
+	   + time last set, in seconds with fraction point between bits 15 and 16.
+	   +/
       uint estimatedError() const { return _estimatedError; }
       void estimatedError(uint data) { _estimatedError = data; }
 
+	  /++
+	   + Signed fixed-point number indicating the estimated drift rate of the local
+	   + clock, in dimensionless units with fraction point to the left of the high-order bit.
+	   +/
       uint estimatedDriftRate() const { return _estimatedDriftRate; }
       void estimatedDriftRate(uint data) { _estimatedDriftRate = data; }
     }
@@ -261,6 +320,7 @@ class NTPv0 : NTPCommon, Protocol {
     uint _estimatedDriftRate;
 }
 
+///
 unittest {
   JSONValue json = [
     "leap_indicator": JSONValue(2u),
@@ -291,6 +351,7 @@ unittest {
   assert(packet.transmitTimestamp == 450u);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -329,6 +390,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   auto packet = cast(NTPv0)(cast(ubyte[])[
     132,  50,   0, 100,

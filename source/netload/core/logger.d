@@ -4,11 +4,14 @@ import netload.core.packet;
 import std.algorithm.mutation;
 import std.stdio;
 
-Packet[] oldLoggedPackets = null;
-Packet[] loggedPackets = new Packet[10];
-uint packetNbr = 10;
-uint packetIdx = 0;
+private Packet[] oldLoggedPackets = null;
+private Packet[] loggedPackets = new Packet[10];
+private uint packetNbr = 10;
+private uint packetIdx = 0;
 
+/++
+ + Adds the given `Packet` to the logged packets working like a stack.
+ +/
 void log(Packet packet) {
   if (packetIdx == (packetNbr - 1)) {
     copy(loggedPackets[1..packetNbr], loggedPackets[0..(packetNbr - 1)]);
@@ -19,6 +22,9 @@ void log(Packet packet) {
   }
 }
 
+/++
+ + Changes the `loggedPackets` length by the given nbr.
+ +/
 void changeLoggedPacketNbr(uint nbr) {
   oldLoggedPackets = loggedPackets;
   loggedPackets = new Packet[nbr];
@@ -36,6 +42,7 @@ void changeLoggedPacketNbr(uint nbr) {
   oldLoggedPackets = null;
 }
 
+///
 unittest {
   import netload.protocols;
   log(new Packet(create!(TCP)()));
@@ -60,6 +67,9 @@ unittest {
   assert(packetIdx == 5);
 }
 
+/++
+ + Prints `loggedPackets` to stdout.
+ +/
 void showLoggedPackets() {
   writeln("---- LOGGED PACKET ----");
   foreach(packet; loggedPackets) {

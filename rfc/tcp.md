@@ -1,6 +1,6 @@
 # TCP
 ## Description
-Transmision Control Protocol. This protocol of transport layer is used to have a synchronized connection without any packet loss.
+The Transmision Control Protocol (TCP) of transport layer is used to have a synchronized connection without any packet loss.
 
 ## Structure
 ```
@@ -59,3 +59,6 @@ Relative position of last urgent data.
 Falcutatives Options.
 #### Padding
 Added zero to align the size on 32 bits words.
+
+## References
+- Transmission Control Protocol [RFC 793](https://www.ietf.org/rfc/rfc793.txt)

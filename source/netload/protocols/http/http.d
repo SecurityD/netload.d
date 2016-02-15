@@ -4,6 +4,16 @@ import netload.core.protocol;
 import stdx.data.json;
 import std.conv;
 
+/++
+ + The Hypertext Transfer Protocol (HTTP) is an application-level
+ + protocol for distributed, collaborative, hypermedia information
+ + systems. It is a generic, stateless, protocol which can be used for
+ + many tasks beyond its use for hypertext, such as name servers and
+ + distributed object management systems, through extension of its
+ + request methods, error codes and headers. A feature of HTTP is
+ + the typing and negotiation of data representation, allowing systems
+ + to be built independently of the data being transferred.
+ +/
 class HTTP : Protocol {
   public:
     static HTTP opCall(inout JSONValue val) {
@@ -37,6 +47,7 @@ class HTTP : Protocol {
       return json;
     }
 
+	///
     unittest {
       HTTP packet = new HTTP("test");
       JSONValue json = [
@@ -50,6 +61,7 @@ class HTTP : Protocol {
       return cast(ubyte[])(_body.dup);
     }
 
+	///
     unittest {
       HTTP packet = new HTTP("test");
       assert(packet.toBytes == cast(ubyte[])("test"));
@@ -57,13 +69,18 @@ class HTTP : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+	/++
+	 + The body as plain text.
+	 +/
     @property string str() const { return _body; }
+	///ditto
     @property void str(string b) { _body = b; }
 
   private:
     string _body;
 }
 
+///
 unittest {
   JSONValue json = [
     "body_": JSONValue("test")
@@ -72,6 +89,7 @@ unittest {
   assert(packet.str == "test");
 }
 
+///
 unittest {
   ubyte[] encoded = [116, 101, 115, 116];
   HTTP packet = cast(HTTP)encoded.to!HTTP();

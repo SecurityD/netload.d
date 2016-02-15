@@ -24,6 +24,15 @@ shared static this() {
   udpType[123] = delegate(ubyte[] encoded) { return cast(Protocol)encoded.to!NTPv4; };
 };
 
+/++
+ + The User Datagram Protocol (UDP) uses a simple connectionless transmission
+ + model with a minimum of protocol mechanism. It has no handshaking dialogues,
+ + and thus exposes the user's program to any unreliability of the underlying
+ + network protocol. There is no guarantee of delivery, ordering,
+ + or duplicate protection. UDP provides checksums for data integrity,
+ + and port numbers for addressing different functions at the source
+ + and destination of the datagram.
+ +/
 class UDP : Protocol {
   public:
     static UDP opCall(inout JSONValue val) {
@@ -74,12 +83,14 @@ class UDP : Protocol {
   		return json;
     }
 
+    ///
     unittest {
       UDP packet = new UDP(8000, 7000);
       assert(packet.toJson["src_port"] == 8000);
       assert(packet.toJson["dest_port"] == 7000);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
       UDP packet = new UDP(8000, 7000);
@@ -106,12 +117,14 @@ class UDP : Protocol {
       return packet;
     }
 
+    ///
     unittest {
       auto packet = new UDP(8000, 7000);
       auto bytes = packet.toBytes;
       assert(bytes == [31, 64, 27, 88, 0, 0, 0, 0]);
     }
 
+    ///
     unittest {
       import netload.protocols.raw;
 
@@ -124,13 +137,29 @@ class UDP : Protocol {
 
     override string toString() const { return toJson.toJSON; }
 
+    /++
+     + Source Port Number
+     +/
     @property ushort srcPort() const { return _srcPort; }
+    ///ditto
     @property void srcPort(ushort port) { _srcPort = port; }
+    /++
+     + Destination Port Number
+     +/
     @property ushort destPort() const { return _destPort; }
+    ///ditto
     @property void destPort(ushort port) { _destPort = port; }
+    /++
+     + Length in octets of this user datagram including this header and the data
+     +/
     @property ushort length() const { return _length; }
+    ///ditto
     @property void length(ushort length) { _length = length; }
+    /++
+     + Checksum of UDP header, data, and part of IP
+     +/
     @property ushort checksum() const { return _checksum; }
+    ///ditto
     @property void checksum(ushort checksum) { _checksum = checksum; }
 
 
@@ -142,6 +171,7 @@ class UDP : Protocol {
       ushort _checksum = 0;
 }
 
+///
 unittest {
   JSONValue json = [
     "src_port": JSONValue(8000),
@@ -156,6 +186,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest  {
   import netload.protocols.raw;
 
@@ -180,6 +211,7 @@ unittest  {
   assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
   ubyte[] encoded = [31, 64, 27, 88, 0, 0, 0, 0];
   UDP packet = cast(UDP)encoded.to!UDP;
@@ -189,6 +221,7 @@ unittest {
   assert(packet.checksum == 0);
 }
 
+///
 unittest {
   ubyte[] encodedPacket = [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 56, 0];
   ubyte[] encoded = cast(ubyte[])[0, 68, 0, 67, 0, 247, 0, 0] ~ encodedPacket;

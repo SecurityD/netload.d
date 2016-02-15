@@ -3,6 +3,7 @@ module netload.core.conversion.json_array;
 import std.conv;
 import stdx.data.json;
 
+/// Converts to JSON array the given array of type `T`.
 JSONValue toJsonArray(T)(inout T[] arg) {
 	JSONValue[] ret = [];
 
@@ -16,6 +17,7 @@ JSONValue toJsonArray(T)(inout T[] arg) {
 	return JSONValue(ret);
 }
 
+/// Converts to array of `T` the given JSON array.
 T[] toArrayOf(T)(inout JSONValue json) {
 	T[] ret = [];
 

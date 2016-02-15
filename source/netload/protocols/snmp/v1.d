@@ -9,6 +9,9 @@ import netload.core.protocol;
 import netload.protocols.snmp.asn_1;
 import netload.core.conversion.json_array;
 
+/++
+ + Simple Network Managment Protocol
+ +/
 class SNMPv1 : Protocol {
   public:
     static SNMPv1 opCall(inout JSONValue val) {
@@ -161,13 +164,37 @@ class SNMPv1 : Protocol {
 
       int osiLayer() const { return 7; }
 
+	  /++
+	   + The SNMP version.
+	   +/
       int ver() const { return _version; }
+	  ///ditto
       void ver(int data) { _version = data; }
 
+	  /++
+	   + Community, location of sender and recipient of message
+	   +/
       string communityString() const { return _communityString; }
+	  ///ditto
       void communityString(string data) { _communityString = data; }
 
+	  /++
+	   + PDU
+	   +  - PDU Type
+	   +  - Request Id, Associates Request with responses
+	   +  - Error Status
+	   +  - Error Index
+	   +  - Variable Bindings
+	   + Trap PDU
+	   +  - Enterprise, type of object generating the trap
+	   +  - Agent Address, address of object generating the trap
+	   +  - Generic trap type
+	   +  - Specific trap code
+	   +  - Time stamp, time elapsed between last network reinitialization and generation of the trap
+	   +  - Variable Bindings
+	   +/
       ref ASN1 pdu() { return _pdu; }
+	  ///ditto
       void pdu(ASN1 data) { _pdu = data; }
     }
 

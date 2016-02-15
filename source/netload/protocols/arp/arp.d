@@ -6,6 +6,11 @@ import std.conv;
 import stdx.data.json;
 import std.bitmanip;
 
+/++
+ + The Address Resolution Protocol (ARP) is a telecommunication protocol 
+ + used for resolution of network layer addresses into link layer addresses, 
+ + a critical function in multiple-access networks.
+ +/
 class ARP : Protocol {
 public:
 	static ARP opCall(inout JSONValue val) {
@@ -73,6 +78,7 @@ public:
 		return json;
 	}
 
+	///
 	unittest {
 		ARP packet = new ARP(1, 1, 6, 4);
 		packet.senderHwAddr = [128, 128, 128, 128, 128, 128];
@@ -91,6 +97,7 @@ public:
 		assert(packet.toJson["targetProtocolAddr"].toArrayOf!ubyte == [10, 14, 255, 255]);
 	}
 
+	///
 	unittest {
 		import netload.protocols.raw;
 
@@ -134,6 +141,7 @@ public:
 		return packet;
 	}
 
+	///
 	unittest {
 		ARP packet = new ARP(1, 1, 6, 4);
 		packet.senderHwAddr = [128, 128, 128, 128, 128, 128];
@@ -143,6 +151,7 @@ public:
 		assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255]);
 	}
 
+	///
 	unittest {
 		import netload.protocols.raw;
 
@@ -159,22 +168,86 @@ public:
 
 	override string toString() const { return toJson.toJSON; }
 
+	/++
+	 + This field specifies the type of hardware used for the local network 
+	 + transmitting the ARP message; thus it also identifies the type of 
+	 + addressing used.
+	 +/
 	@property ushort hwType() const { return _hwType; }
+	///ditto
 	@property void hwType(ushort hwType) { _hwType = hwType; }
+
+	/++
+	 + This field is the complement of the Hardware Type field, specifying 
+	 + the type of layer three addresses used in the message.
+	 +/
 	@property ushort protocolType() const { return _protocolType; }
+	///ditto
 	@property void protocolType(ushort protocolType) { _protocolType = protocolType; }
+
+	/++
+	 + This field specifies how long hardware addresses are in this message.
+	 +/
 	@property ubyte hwAddrLen() const { return _hwAddrLen; }
+	///ditto
 	@property void hwAddrLen(ubyte hwAddrLen) { _hwAddrLen = hwAddrLen; }
+
+	/++
+	 + This fields is, again, the complement of the preceding field; it 
+	 + specifies how long protocol (layer three) addresses are in this message.
+	 +/
 	@property ubyte protocolAddrLen() const { return _protocolAddrLen; }
+	///ditto
 	@property void protocolAddrLen(ubyte protocolAddrLen) { _protocolAddrLen = protocolAddrLen; }
+
+	/++
+	 + This field allows to know the function of the message and therefore its objective.
+	 +
+	 + <table style="width: 100%">
+	 +   <tr><td><b>Opcode</b></td><td><b>ARP Message Type</b></td></tr>
+	 +   <tr><td>1</td><td>ARP Request</td></tr>
+	 +   <tr><td>2</td><td>ARP Reply</td></tr>
+	 +   <tr><td>3</td><td>RARP Request</td></tr>
+	 +   <tr><td>4</td><td>RARP Reply</td></tr>
+	 +   <tr><td>5</td><td>DRARP Request</td></tr>
+	 +   <tr><td>6</td><td>DRARP Reply</td></tr>
+	 +   <tr><td>7</td><td>DRARP Error</td></tr>
+	 +   <tr><td>8</td><td>InARP Request</td></tr>
+	 +   <tr><td>9</td><td>InARP Reply</td></tr>
+	 + </table>
+	 +/
 	@property ushort opcode() const { return _opcode; }
+	///ditto
 	@property void opcode(ushort opcode) { _opcode = opcode; }
+
+	/++
+	 + Size: variable (depending on the Hardware Address Length field)
+	 + The hardware (layer two) address of the device sending this message.
+	 +/
 	@property const(ubyte[]) senderHwAddr() const { return _senderHwAddr; }
+	///ditto
 	@property void senderHwAddr(ubyte[] senderHwAddr) { _senderHwAddr = senderHwAddr; }
+
+	/++
+	 + Size: variable (depending on the Hardware Address Length field)
+	 + The hardware (layer two) address of the device this message is being sent to.
+	 +/
 	@property const(ubyte[]) targetHwAddr() const { return _targetHwAddr; }
+	///ditto
 	@property void targetHwAddr(ubyte[] targetHwAddr) { _targetHwAddr = targetHwAddr; }
+
+	/++
+	 + Size: variable (depending on the Protocol Address Length field)
+	 + The IP address of the device sending this message.
+	 +/
 	@property const(ubyte[]) senderProtocolAddr() const { return _senderProtocolAddr; }
+	///ditto
 	@property void senderProtocolAddr(ubyte[] senderProtocolAddr) { _senderProtocolAddr = senderProtocolAddr; }
+
+	/++
+	 + Size: variable (depending on the Protocol Address Length field)
+	 + The IP address of the device this message is being sent to.
+	 +/
 	@property const(ubyte[]) targetProtocolAddr() const { return _targetProtocolAddr; }
 	@property void targetProtocolAddr(ubyte[] targetProtocolAddr) { _targetProtocolAddr = targetProtocolAddr; }
 
@@ -191,6 +264,7 @@ private:
 	ubyte[] _targetProtocolAddr;
 }
 
+///
 unittest {
 	JSONValue json = [
 		"hwType": JSONValue(1),
@@ -216,6 +290,7 @@ unittest {
 	assert(packet.targetProtocolAddr == [10, 14, 255, 255]);
 }
 
+///
 unittest  {
 	import netload.protocols.raw;
 
@@ -245,6 +320,7 @@ unittest  {
 	assert((cast(Raw)packet.data).bytes == [42,21,84]);
 }
 
+///
 unittest {
 	ubyte[] encodedPacket = [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255];
 	ARP packet = cast(ARP)encodedPacket.to!ARP;
