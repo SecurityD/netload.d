@@ -4,6 +4,8 @@ import netload.core.protocol;
 import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.outbuffer;
+import std.range;
+import std.array;
 import std.conv;
 
 /++
@@ -46,15 +48,16 @@ class Raw : Protocol {
 
 	override ubyte[] toBytes() const { return _bytes.dup; }
 
-	override string toString() const {
-	  OutBuffer b = new OutBuffer();
-	  b.writef("%(\\x%02x %)", bytes);
-	  return b.toString;
-	}
+  override string toIndentedString(uint idt = 0) const {
+    OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+	  buf.writef("%s%s%s%s : %s%(\\x%02x %)%s", indent, FIELD_NAME, "bytes", RESET_SEQ, FIELD_VALUE, bytes, RESET_SEQ);
+	  return buf.toString;
+  }
 
-	unittest {
-	  Raw packet = new Raw([0, 1, 2]);
-	  assert(packet.toString == "\\x00 \\x01 \\x02");
+	override string toString() const {
+    return toIndentedString();
 	}
 
 	/++

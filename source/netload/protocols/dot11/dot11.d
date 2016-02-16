@@ -6,6 +6,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 union Bitfields {
   ubyte[2] raw;
@@ -31,7 +34,7 @@ enum Dot11Type {
 };
 
 /++
- + IEEE 802.11 This protocol implements wireless local area 
+ + IEEE 802.11 This protocol implements wireless local area
  + network (WLAN) computer communication.
  +/
 class Dot11 : Protocol {
@@ -233,14 +236,45 @@ class Dot11 : Protocol {
       assert(packet.toBytes == [8, 0, 0, 0, 255, 255, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "duration", RESET_SEQ, FIELD_VALUE, _duration, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "seq", RESET_SEQ, FIELD_VALUE, _seq, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "fcs", RESET_SEQ, FIELD_VALUE, _fcs, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "addr1", RESET_SEQ, FIELD_VALUE, macToString(_addr[0]), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "addr2", RESET_SEQ, FIELD_VALUE, macToString(_addr[1]), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "addr3", RESET_SEQ, FIELD_VALUE, macToString(_addr[2]), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "addr4", RESET_SEQ, FIELD_VALUE, macToString(_addr[3]), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "subtype", RESET_SEQ, FIELD_VALUE, _frameControl.subtype, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "packet_type", RESET_SEQ, FIELD_VALUE, _frameControl.type, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "vers", RESET_SEQ, FIELD_VALUE, _frameControl.vers, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rsvd", RESET_SEQ, FIELD_VALUE, _frameControl.rsvd, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "wep", RESET_SEQ, FIELD_VALUE, _frameControl.wep, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "more_data", RESET_SEQ, FIELD_VALUE, _frameControl.moreData, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "power", RESET_SEQ, FIELD_VALUE, _frameControl.power, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "retry", RESET_SEQ, FIELD_VALUE, _frameControl.retry, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "more_frag", RESET_SEQ, FIELD_VALUE, _frameControl.moreFrag, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "from_DS", RESET_SEQ, FIELD_VALUE, _frameControl.fromDS, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "to_DS", RESET_SEQ, FIELD_VALUE, _frameControl.toDS, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
 	/++
 	 + Duration ID : 3 different purposes :
 	 +  - Virtual carrier-sense
 	 +  - Legacy power management
 	 +  - Contention-free period
-	 + In case of virtual carrier-sense, it represents the time, in 
+	 + In case of virtual carrier-sense, it represents the time, in
 	 + microseconds, required to transmit the SIFS interval + ACK frame.
 	 +/
     @property ushort duration() const { return _duration; }
@@ -248,22 +282,22 @@ class Dot11 : Protocol {
     @property void duration(ushort duration) { _duration = duration; }
 
 	/++
-	 + MAC Layer addressing : The 802.11 frame can carry 4 different MAC 
+	 + MAC Layer addressing : The 802.11 frame can carry 4 different MAC
 	 + addresses with 5 different meanings :
-	 +  - Source Address(SA) : MAC address of the original sending frame. 
+	 +  - Source Address(SA) : MAC address of the original sending frame.
 	 +    Source an either be wired or wireless
-	 +  - Destination Address(DA) : Final destination of the frame. Could 
+	 +  - Destination Address(DA) : Final destination of the frame. Could
 	 +    be wired or wireless
-	 +  - Transmitter address(TA) : MAC address of the 802.11 radio that 
+	 +  - Transmitter address(TA) : MAC address of the 802.11 radio that
 	 +    is transmitting the frame onto the 802.11 medium
-	 +  - Receiver address(RA) : The MAC address of the 802.11 radio that 
+	 +  - Receiver address(RA) : The MAC address of the 802.11 radio that
 	 +    receives the incoming transmission from the transmitting station
 	 +  - Basic service set ID (BSSID) :
 	 +     - The MAC address that is the L2 identification of the BSS
-	 +     - It could either be just the MAC address of the AP, or a dynamically 
-	 +       generated MAC address in the case where there are multiple BSSs 
+	 +     - It could either be just the MAC address of the AP, or a dynamically
+	 +       generated MAC address in the case where there are multiple BSSs
 	 +       in an AP.
-	 + 
+	 +
 	 + Based on the TO_DS and FROM_DS fields, the meanings change
 	 +/
     @property ubyte[6] addr1() const { return _addr[0]; }
@@ -283,8 +317,8 @@ class Dot11 : Protocol {
     @property void addr4(ubyte[6] addr4) { _addr[3] = addr4; }
 
 	/++
-	 + Sequence Control : The sequence number is constant in all tranmissions 
-	 + and re transmissions of a frame. Also it's constant in all fragments 
+	 + Sequence Control : The sequence number is constant in all tranmissions
+	 + and re transmissions of a frame. Also it's constant in all fragments
 	 + of a frame.
 	 +/
     @property ushort seq() const { return _seq; }
@@ -292,7 +326,7 @@ class Dot11 : Protocol {
     @property void seq(ushort seq) { _seq = seq; }
 
 	/++
-	 + FCS is calculated over all the fields of the MAC header and the frame 
+	 + FCS is calculated over all the fields of the MAC header and the frame
 	 + body fields.
 	 +/
     @property uint fcs() const { return _fcs; }
@@ -338,9 +372,9 @@ class Dot11 : Protocol {
     @property void wep(bool wep) { _frameControl.wep = wep; }
 
 	/++
-	 + More Data :When the client receives a frame with the more 
-	 + data field when it's awake,it knows that it cannot go to 
-	 + sleep and it sends out a PS-POLL message for getting that 
+	 + More Data :When the client receives a frame with the more
+	 + data field when it's awake,it knows that it cannot go to
+	 + sleep and it sends out a PS-POLL message for getting that
 	 + data.
 	 +/
     @property bool moreData() const { return _frameControl.moreData; }
@@ -362,7 +396,7 @@ class Dot11 : Protocol {
     @property void retry(bool retry) { _frameControl.retry = retry; }
 
 	/++
-	 + More Frag : Set when frame is followed by other fragment. 
+	 + More Frag : Set when frame is followed by other fragment.
 	 + Present in data or management frame.
 	 +/
     @property bool moreFrag() const { return _frameControl.moreFrag; }

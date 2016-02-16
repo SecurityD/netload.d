@@ -5,6 +5,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 enum ICMPType {
   ANY,
@@ -143,7 +146,23 @@ class ICMPBase(ICMPType __type__) : Protocol {
       assert(packet.toBytes == [3, 2, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "packetType", RESET_SEQ, FIELD_VALUE, _type, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "code", RESET_SEQ, FIELD_VALUE, _code, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, _checksum, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     @property {
       /++

@@ -7,6 +7,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 alias ICMPv4Error = ICMPv4ErrorBase!(ICMPType.ANY);
 alias ICMPv4DestUnreach = ICMPv4ErrorBase!(ICMPType.DEST_UNREACH);
@@ -249,6 +252,28 @@ class ICMPv4ErrorBase(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       packet.data = new Raw([42, 21, 84]);
 
       assert(packet.toBytes == [12, 2, 0, 0, 1, 0, 0, 0] ~ [42, 21, 84]);
+    }
+
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "packetType", RESET_SEQ, FIELD_VALUE, _type, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "code", RESET_SEQ, FIELD_VALUE, _code, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, _checksum, RESET_SEQ);
+      static if (__type__ == ICMPType.REDIRECT)
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "gateway", RESET_SEQ, FIELD_VALUE, _gateway, RESET_SEQ);
+      else static if (__type__ == ICMPType.PARAM_PROBLEM)
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ptr", RESET_SEQ, FIELD_VALUE, _ptr, RESET_SEQ);
+        if (_data is null)
+    			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+    		else
+    			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
     }
 
     @property {

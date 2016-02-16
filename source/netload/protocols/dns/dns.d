@@ -8,6 +8,9 @@ import stdx.data.json;
 import std.conv;
 import std.bitmanip;
 import std.string;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 alias DNS = DNSBase!(DNSType.ANY);
 alias DNSQuery = DNSBase!(DNSType.QUERY);
@@ -245,7 +248,33 @@ class DNSBase(DNSType __type__) : Protocol {
 	  assert(packet.toBytes == [0, 10, 159, 130, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "id", RESET_SEQ, FIELD_VALUE, _id, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "qr", RESET_SEQ, FIELD_VALUE, _bits.qr, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "opcode", RESET_SEQ, FIELD_VALUE, _bits.opcode, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "auth_answer", RESET_SEQ, FIELD_VALUE, _bits.aa, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "truncation", RESET_SEQ, FIELD_VALUE, _bits.tc, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "record_desired", RESET_SEQ, FIELD_VALUE, _bits.rd, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "record_available", RESET_SEQ, FIELD_VALUE, _bits.ra, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "zero", RESET_SEQ, FIELD_VALUE, _bits.z, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rcode", RESET_SEQ, FIELD_VALUE, _bits.rcode, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "qdcount", RESET_SEQ, FIELD_VALUE, _qdcount, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ancount", RESET_SEQ, FIELD_VALUE, _ancount, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "nscount", RESET_SEQ, FIELD_VALUE, _nscount, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "arcount", RESET_SEQ, FIELD_VALUE, _arcount, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+	override string toString() const {
+    return toIndentedString;
+  }
 
   /++
    + Identifier
@@ -835,8 +864,22 @@ class DNSQR : Protocol {
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1] ~ [42, 21, 84]);
 	}
 
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "qname", RESET_SEQ, FIELD_VALUE, _qname, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "qtype", RESET_SEQ, FIELD_VALUE, _qtype, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "qclass", RESET_SEQ, FIELD_VALUE, _qclass, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
 	override string toString() const {
-	  return toJson.toJSON;
+	  return toIndentedString;
 	}
 
   /++
@@ -1023,8 +1066,24 @@ class DNSRR : Protocol {
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0, 0, 1, 0, 1, 0, 0, 9, 196, 0, 0] ~ [42, 21, 84]);
 	}
 
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rname", RESET_SEQ, FIELD_VALUE, _rname, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rtype", RESET_SEQ, FIELD_VALUE, _rtype, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rclass", RESET_SEQ, FIELD_VALUE, _rclass, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ttl", RESET_SEQ, FIELD_VALUE, _ttl, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rdlength", RESET_SEQ, FIELD_VALUE, _rdlength, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
 	override string toString() const {
-	  return toJson.toJSON;
+	  return toIndentedString;
 	}
 
   /++
@@ -1257,7 +1316,27 @@ class DNSSOAResource  : Protocol {
 	  assert(packet.toBytes == [15, 99, 104, 49, 109, 103, 116, 48, 49, 48, 49, 100, 99, 49, 50, 48, 8, 112, 114, 100, 109, 103, 116, 48, 49, 4, 112, 114, 111, 100, 12, 101, 120, 99, 104, 97, 110, 103, 101, 108, 97, 98, 115, 0, 6, 109, 115, 110, 104, 115, 116, 9, 109, 105, 99, 114, 111, 115, 111, 102, 116, 0, 0, 0, 5, 220, 0, 0, 2, 88, 0, 0, 2, 88, 0, 0, 13, 172, 0, 1, 81, 148] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+    OutBuffer buf = new OutBuffer();
+    string indent = join(repeat("\t", idt));
+    buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "primary", RESET_SEQ, FIELD_VALUE, _primary, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "admin", RESET_SEQ, FIELD_VALUE, _admin, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "serial", RESET_SEQ, FIELD_VALUE, _serial, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "refresh", RESET_SEQ, FIELD_VALUE, _refresh, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "retry", RESET_SEQ, FIELD_VALUE, _retry, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "expirationLimit", RESET_SEQ, FIELD_VALUE, _expirationLimit, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "minTtl", RESET_SEQ, FIELD_VALUE, _minTtl, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+	override string toString() const {
+    return toIndentedString;
+  }
 
   /++
    + The <domain-name> of the name server that was the original or primary
@@ -1481,7 +1560,22 @@ class DNSMXResource : Protocol {
 	  assert(packet.toBytes == [0, 2, 6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "mxname", RESET_SEQ, FIELD_VALUE, _mxname, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "pref", RESET_SEQ, FIELD_VALUE, _pref, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+	override string toString() const {
+    return toIndentedString;
+  }
 
   /++
    + A 16 bit integer which specifies the preference given to this RR among
@@ -1632,7 +1726,21 @@ class DNSAResource : Protocol {
 	  assert(packet.toBytes == [127, 0, 0, 1] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ip", RESET_SEQ, FIELD_VALUE, ipToString(_ip), RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+	override string toString() const {
+    return toIndentedString;
+  }
 
   /++
    + Unsigned 32-bit value representing the IP address.
@@ -1770,7 +1878,21 @@ class DNSPTRResource : Protocol {
 	  assert(packet.toBytes == [6, 103, 111, 111, 103, 108, 101, 2, 102, 114, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ptrname", RESET_SEQ, FIELD_VALUE, _ptrname, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+  override string toString() const {
+    return toIndentedString;
+  }
 
   /++
    + The host name that represents the supplied IP address.

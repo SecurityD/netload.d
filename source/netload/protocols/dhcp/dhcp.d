@@ -7,6 +7,9 @@ import stdx.data.json;
 import std.bitmanip;
 import std.exception;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 private union Bitfields {
   ushort raw;
@@ -17,11 +20,11 @@ private union Bitfields {
 };
 
 /++
- + The Dynamic Host Configuration Protocol (DHCP) is a standardized network 
- + protocol used on Internet Protocol (IP) networks for dynamically distributing 
- + network configuration parameters, such as IP addresses for interfaces and 
- + services. With DHCP, computers request IP addresses and networking parameters 
- + automatically from a DHCP server, reducing the need for a network administrator 
+ + The Dynamic Host Configuration Protocol (DHCP) is a standardized network
+ + protocol used on Internet Protocol (IP) networks for dynamically distributing
+ + network configuration parameters, such as IP addresses for interfaces and
+ + services. With DHCP, computers request IP addresses and networking parameters
+ + automatically from a DHCP server, reducing the need for a network administrator
  + or a user to configure these settings manually.
  +/
 class DHCP : Protocol {
@@ -191,7 +194,35 @@ public:
 	  assert(packet.toBytes == [2, 1, 6, 0, 0, 0, 0, 42, 0, 0, 0, 0, 127, 0, 0, 1, 127, 0, 1, 1, 10, 14, 19, 42, 10, 14, 59, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+  override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "op", RESET_SEQ, FIELD_VALUE, _op, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "htype", RESET_SEQ, FIELD_VALUE, _htype, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "hlen", RESET_SEQ, FIELD_VALUE, _hlen, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "hops", RESET_SEQ, FIELD_VALUE, _hops, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "xid", RESET_SEQ, FIELD_VALUE, _xid, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "secs", RESET_SEQ, FIELD_VALUE, _secs, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "broadcast", RESET_SEQ, FIELD_VALUE, _flags.broadcast, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ciaddr", RESET_SEQ, FIELD_VALUE, ipToString(_ciaddr), RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "yiaddr", RESET_SEQ, FIELD_VALUE, ipToString(_yiaddr), RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "siaddr", RESET_SEQ, FIELD_VALUE, ipToString(_siaddr), RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "giaddr", RESET_SEQ, FIELD_VALUE, ipToString(_giaddr), RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "chaddr", RESET_SEQ, FIELD_VALUE, _chaddr, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "sname", RESET_SEQ, FIELD_VALUE, _sname, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "file", RESET_SEQ, FIELD_VALUE, _file, RESET_SEQ);
+    buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "options", RESET_SEQ, FIELD_VALUE, _options, RESET_SEQ);
+    if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+    return buf.toString;
+  }
+
+	override string toString() const {
+    return toIndentedString();
+  }
 
 	/++
 	 + Message op code / message type. 1 = BOOTREQUEST, 2 = BOOTREPLY
@@ -201,7 +232,7 @@ public:
 	@property void op(ubyte op) { _op = op; };
 
 	/++
-	 + Hardware address type, see ARP section in "Assigned Numbers" RFC; 
+	 + Hardware address type, see ARP section in "Assigned Numbers" RFC;
 	 + e.g., '1' = 10mb ethernet.
 	 +/
 	@property ubyte htype() const { return _htype; };
@@ -216,7 +247,7 @@ public:
 	@property void hlen(ubyte hlen) { _hlen = hlen; };
 
 	/++
-	 + Client sets to zero, optionally used by relay agents when booting 
+	 + Client sets to zero, optionally used by relay agents when booting
 	 + via a relay agent.
 	 +/
 	@property ubyte hops() const { return _hops; };
@@ -224,7 +255,7 @@ public:
 	@property void hops(ubyte hops) { _hops = hops; };
 
 	/++
-	 + Transaction ID, a random number chosen by the client, used by the 
+	 + Transaction ID, a random number chosen by the client, used by the
 	 + client and server to associate messages and responses between a client
 	 + and a server.
 	 +/
@@ -233,7 +264,7 @@ public:
 	@property void xid(uint xid) { _xid = xid; };
 
 	/++
-	 + Filled in by client, seconds elapsed since client began address 
+	 + Filled in by client, seconds elapsed since client began address
 	 + acquisition or renewal process.
 	 +/
 	@property ushort secs() const { return _secs; };
@@ -248,7 +279,7 @@ public:
 	@property void broadcast(bool broadcast) { _flags.broadcast = broadcast; };
 
 	/++
-	 + Client IP address; only filled in if client is in BOUND, 
+	 + Client IP address; only filled in if client is in BOUND,
 	 + RENEW or REBINDING state and can respond to ARP requests.
 	 +/
 	@property const(ubyte[4]) ciaddr() const { return _ciaddr; };
@@ -263,7 +294,7 @@ public:
 	@property void yiaddr(ubyte[4] yiaddr) { _yiaddr = yiaddr; };
 
 	/++
-	 + IP address of next server to use in bootstrap; returned in 
+	 + IP address of next server to use in bootstrap; returned in
 	 + DHCPOFFER, DHCPACK by server.
 	 +/
 	@property const(ubyte[4]) siaddr() const { return _siaddr; };
@@ -292,7 +323,7 @@ public:
 	@property void sname(ubyte[64] sname) { _sname = sname; };
 
 	/++
-	 + Boot file name, null terminated string; "generic" name or null in 
+	 + Boot file name, null terminated string; "generic" name or null in
 	 + DHCPDISCOVER, fully qualified directory-path name in DHCPOFFER.
 	 +/
 	@property const(ubyte[128]) file() const { return _file; };
@@ -300,7 +331,7 @@ public:
 	@property void file(ubyte[128] file) { _file = file; };
 
 	/++
-	 + Optional parameters field. See the options documents for a list of 
+	 + Optional parameters field. See the options documents for a list of
 	 + defined options.
 	 +/
 	@property const(ubyte[]) options() const { return _options; };

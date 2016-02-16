@@ -7,6 +7,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 alias ICMPv4RouterAdvert = ICMPv4Router!(ICMPType.ADVERT);
 alias ICMPv4RouterSollicitation = ICMPv4Router!(ICMPType.SOLLICITATION);
@@ -190,6 +193,37 @@ class ICMPv4Router(ICMPType __type__) : ICMPBase!(ICMPType.NONE) {
       packet.data = new Raw([42, 21, 84]);
 
       assert(packet.toBytes == [10, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
+    }
+
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "packetType", RESET_SEQ, FIELD_VALUE, _type, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "code", RESET_SEQ, FIELD_VALUE, _code, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, _checksum, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "numAddr", RESET_SEQ, FIELD_VALUE, _numAddr, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "addrEntrySize", RESET_SEQ, FIELD_VALUE, _addrEntrySize, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "life", RESET_SEQ, FIELD_VALUE, _life, RESET_SEQ);
+      string[] b = [];
+      foreach(member; _routerAddr) {
+        b ~= ipToString(member);
+      }
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "routerAddr", RESET_SEQ, FIELD_VALUE, b, RESET_SEQ);
+      b = [];
+      foreach(member; _prefAddr) {
+        b ~= ipToString(member);
+      }
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "prefAddr", RESET_SEQ, FIELD_VALUE, b, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
     }
 
     @property {

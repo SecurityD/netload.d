@@ -6,6 +6,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.conv;
 import std.bitmanip;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 private Protocol delegate(ubyte[])[ushort] udpType;
 
@@ -135,7 +138,24 @@ class UDP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "src_port", RESET_SEQ, FIELD_VALUE, _srcPort, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "dest_port", RESET_SEQ, FIELD_VALUE, _destPort, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "len", RESET_SEQ, FIELD_VALUE, _length, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, _checksum, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     /++
      + Source Port Number

@@ -2,6 +2,9 @@ module netload.protocols.smtp.smtp;
 
 import std.conv;
 import stdx.data.json;
+import std.outbuffer;
+import std.range;
+import std.array;
 import netload.core.protocol;
 import netload.core.conversion.json_array;
 
@@ -83,7 +86,17 @@ class SMTP : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "body_", RESET_SEQ, FIELD_VALUE, _body, RESET_SEQ);
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
 	/++
 	 + The body as plain text.

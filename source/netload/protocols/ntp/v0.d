@@ -2,6 +2,9 @@ module netload.protocols.ntp.v0;
 
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 import stdx.data.json;
 
@@ -10,7 +13,7 @@ import netload.protocols.ntp.common;
 import netload.core.conversion.json_array;
 
 /++
- + The Network Time Protocol (NTP) is a protocol for synchronizing a set of 
+ + The Network Time Protocol (NTP) is a protocol for synchronizing a set of
  + network clocks using a set of distributed clients and servers.
  +/
 class NTPv0 : NTPCommon, Protocol {
@@ -231,14 +234,39 @@ class NTPv0 : NTPCommon, Protocol {
 
     @property inout string name() { return "NTPv0"; }
     override @property int osiLayer() const { return 7; };
-    override string toString() const { return toJson.toJSON; }
+
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "leap_indicator", RESET_SEQ, FIELD_VALUE, leapIndicator, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "status", RESET_SEQ, FIELD_VALUE, status, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "type_", RESET_SEQ, FIELD_VALUE, type, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "precision", RESET_SEQ, FIELD_VALUE, precision, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "estimated_error", RESET_SEQ, FIELD_VALUE, estimatedError, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "estimated_drift_rate", RESET_SEQ, FIELD_VALUE, estimatedDriftRate, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reference_clock_identifier", RESET_SEQ, FIELD_VALUE, referenceClockIdentifier, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reference_timestamp", RESET_SEQ, FIELD_VALUE, referenceTimestamp, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "originate_timestamp", RESET_SEQ, FIELD_VALUE, originateTimestamp, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "receive_timestamp", RESET_SEQ, FIELD_VALUE, receiveTimestamp, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "transmit_timestamp", RESET_SEQ, FIELD_VALUE, transmitTimestamp, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     @property {
       override Protocol data() { return _data; }
       override @property void data(Protocol p) { _data = p; }
 
 	  /++
-	   + Code warning of impending leap-second to be inserted at the end of the 
+	   + Code warning of impending leap-second to be inserted at the end of the
 	   + last day of the current month. Bits are coded as follows:
 	   + <table>
 	   +    <tr><td><b>Value</b></td><td><b>Meaning</b></td></tr>
@@ -254,7 +282,7 @@ class NTPv0 : NTPCommon, Protocol {
 
 	  /++
 	   + Code indicating status of local clock. Values are defined as follows:
-	   + 
+	   +
 	   + <table>
 	   +    <tr><td><b>Value</b></td><td><b>Meaning</b></td></tr>
 	   +    <tr><td>0</td><td>clock operating correctly</td></tr>
@@ -285,7 +313,7 @@ class NTPv0 : NTPCommon, Protocol {
       void type(ubyte data) { _type = data; }
 
 	  /++
-	   + Signed integer in the range +32 to -32 indicating the precision of the local 
+	   + Signed integer in the range +32 to -32 indicating the precision of the local
 	   + clock, in seconds to the nearest power of two.
 	   +/
       ushort precision() const { return _precision; }
@@ -293,7 +321,7 @@ class NTPv0 : NTPCommon, Protocol {
       void precision(ushort data) { _precision = data; }
 
 	  /++
-	   + Fixed-point number indicating the estimated error of the local clock at the 
+	   + Fixed-point number indicating the estimated error of the local clock at the
 	   + time last set, in seconds with fraction point between bits 15 and 16.
 	   +/
       uint estimatedError() const { return _estimatedError; }

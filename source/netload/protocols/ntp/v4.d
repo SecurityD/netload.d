@@ -4,6 +4,8 @@ import std.bitmanip;
 import std.bigint;
 import std.array;
 import std.conv;
+import std.outbuffer;
+import std.range;
 
 import stdx.data.json;
 
@@ -288,7 +290,47 @@ public:
 
     @property inout string name() { return "NTPv4"; }
     override @property int osiLayer() const { return 7; };
-    override string toString() const { return toJson.toJSON; }
+
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "leap_indicator", RESET_SEQ, FIELD_VALUE, leapIndicator, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "version_number", RESET_SEQ, FIELD_VALUE, versionNumber, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "mode", RESET_SEQ, FIELD_VALUE, mode, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "stratum", RESET_SEQ, FIELD_VALUE, stratum, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "poll", RESET_SEQ, FIELD_VALUE, poll, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "precision", RESET_SEQ, FIELD_VALUE, precision, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "root_delay", RESET_SEQ, FIELD_VALUE, rootDelay, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "root_dispersion", RESET_SEQ, FIELD_VALUE, rootDispersion, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reference_clock_identifier", RESET_SEQ, FIELD_VALUE, referenceClockIdentifier, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reference_timestamp", RESET_SEQ, FIELD_VALUE, referenceTimestamp, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "originate_timestamp", RESET_SEQ, FIELD_VALUE, originateTimestamp, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "receive_timestamp", RESET_SEQ, FIELD_VALUE, receiveTimestamp, RESET_SEQ);
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "transmit_timestamp", RESET_SEQ, FIELD_VALUE, transmitTimestamp, RESET_SEQ);
+      if (_extensionFields.length > 0) {
+  			string[] fields = [];
+  			foreach(const(NTPv4ExtensionField) field; _extensionFields) {
+  				fields ~= field.toJson.toJSON;
+  			}
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "extension_fields", RESET_SEQ, FIELD_VALUE, fields, RESET_SEQ);
+  		}
+  		if (keyIdentifier != 0)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "key_identifier", RESET_SEQ, FIELD_VALUE, keyIdentifier, RESET_SEQ);
+  		foreach (byte b ; _digest) {
+  			if (b)
+  				buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "digest", RESET_SEQ, FIELD_VALUE, _digest, RESET_SEQ);
+  		}
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     @property {
 		override Protocol data() { return _data; }
@@ -342,11 +384,11 @@ public:
 		 +    <tr><td>16</td><td>unsynchronized</td></tr>
 		 +    <tr><td>17-255</td><td>reserved</td></tr>
 		 + </table>
-		 + It is customary to map the stratum value 0 in received packets to 
-		 + MAXSTRAT (16) in the peer variable p.stratum and to map p.stratum 
-		 + values of MAXSTRAT or greater to 0 in transmitted packets. This allows 
-		 + reference clocks, which normally appear at stratum 0, to be conveniently 
-		 + mitigated using the same clock selection algorithms used for external 
+		 + It is customary to map the stratum value 0 in received packets to
+		 + MAXSTRAT (16) in the peer variable p.stratum and to map p.stratum
+		 + values of MAXSTRAT or greater to 0 in transmitted packets. This allows
+		 + reference clocks, which normally appear at stratum 0, to be conveniently
+		 + mitigated using the same clock selection algorithms used for external
 		 + sources.
 		 +/
 		inout ubyte stratum() { return _stratum; }
@@ -363,10 +405,10 @@ public:
 		void poll(ubyte data) { _poll = data; }
 
 		/++
-		 + 8-bit signed integer representing the precision of the system clock, in 
-		 + log2 seconds. For instance, a value of -18 corresponds to a precision of 
-		 + about one microsecond. The precision can be determined when the service 
-		 + first starts up as the minimum time of several iterations to read the 
+		 + 8-bit signed integer representing the precision of the system clock, in
+		 + log2 seconds. For instance, a value of -18 corresponds to a precision of
+		 + about one microsecond. The precision can be determined when the service
+		 + first starts up as the minimum time of several iterations to read the
 		 + system clock.
 		 +/
 		inout ubyte precision() { return _precision; }

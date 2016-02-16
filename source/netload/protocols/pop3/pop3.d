@@ -2,6 +2,9 @@ module netload.protocols.pop3.pop3;
 
 import stdx.data.json;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 import netload.core.protocol;
 import netload.core.conversion.json_array;
 
@@ -25,7 +28,7 @@ import netload.core.conversion.json_array;
  + host in a useful fashion.  Usually, this means that the POP3 protocol
  + is used to allow a workstation to retrieve mail that the server is
  + holding for it.
- + 
+ +
  + POP3 is not intended to provide extensive manipulation operations of
  + mail on the server; normally, mail is downloaded and then deleted.  A
  + more advanced (and complex) protocol, IMAP4, is discussed in
@@ -86,7 +89,17 @@ class POP3 : Protocol {
       assert(packet.toBytes == cast(ubyte[])("test"));
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "body_", RESET_SEQ, FIELD_VALUE, _body, RESET_SEQ);
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
 	/++
 	 + The body as plain text.

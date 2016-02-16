@@ -7,6 +7,9 @@ import netload.core.conversion.json_array;
 import std.conv;
 import stdx.data.json;
 import std.bitmanip;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 private Protocol delegate(ubyte[])[ushort] etherType;
 
@@ -146,7 +149,25 @@ class Ethernet : Protocol {
       assert(packet.toBytes == [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 8, 0] ~ [42, 21, 84] ~ [0, 0, 0, 0]);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "prelude", RESET_SEQ, FIELD_VALUE, prelude, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "src_mac_address", RESET_SEQ, FIELD_VALUE, macToString(srcMacAddress), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "dest_mac_address", RESET_SEQ, FIELD_VALUE, macToString(destMacAddress), RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "protocol_type", RESET_SEQ, FIELD_VALUE, protocolType, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "fcs", RESET_SEQ, FIELD_VALUE, fcs, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     /++
      + Prelude, Sequence to synchronize clocks : 0b1010101
