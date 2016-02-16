@@ -5,10 +5,13 @@ import netload.core.conversion.json_array;
 import std.conv;
 import stdx.data.json;
 import std.bitmanip;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 /++
- + The Address Resolution Protocol (ARP) is a telecommunication protocol 
- + used for resolution of network layer addresses into link layer addresses, 
+ + The Address Resolution Protocol (ARP) is a telecommunication protocol
+ + used for resolution of network layer addresses into link layer addresses,
  + a critical function in multiple-access networks.
  +/
 class ARP : Protocol {
@@ -166,11 +169,33 @@ public:
 		assert(packet.toBytes == [0, 1, 0, 1, 6, 4, 0, 0, 128, 128, 128, 128, 128, 128, 127, 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 14, 255, 255] ~ [42, 21, 84]);
 	}
 
-	override string toString() const { return toJson.toJSON; }
+	override string toIndentedString(uint idt = 0) const {
+		OutBuffer buf = new OutBuffer();
+		string indent = join(repeat("\t", idt));
+		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "hwType", RESET_SEQ, FIELD_VALUE, _hwType, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "protocolType", RESET_SEQ, FIELD_VALUE, _protocolType, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "hwAddrLen", RESET_SEQ, FIELD_VALUE, _hwAddrLen, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "protocolAddrLen", RESET_SEQ, FIELD_VALUE, _protocolAddrLen, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "opcode", RESET_SEQ, FIELD_VALUE, _opcode, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "senderHwAddr", RESET_SEQ, FIELD_VALUE, _senderHwAddr, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "targetHwAddr", RESET_SEQ, FIELD_VALUE, _targetHwAddr, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "senderProtocolAddr", RESET_SEQ, FIELD_VALUE, _senderProtocolAddr, RESET_SEQ);
+		buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "targetProtocolAddr", RESET_SEQ, FIELD_VALUE, _targetProtocolAddr, RESET_SEQ);
+		if (_data is null)
+			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+		else
+			buf.writef("%s", _data.toIndentedString(idt + 1));
+		return buf.toString;
+	}
+
+	override string toString() const {
+		return toIndentedString();
+	}
 
 	/++
-	 + This field specifies the type of hardware used for the local network 
-	 + transmitting the ARP message; thus it also identifies the type of 
+	 + This field specifies the type of hardware used for the local network
+	 + transmitting the ARP message; thus it also identifies the type of
 	 + addressing used.
 	 +/
 	@property ushort hwType() const { return _hwType; }
@@ -178,7 +203,7 @@ public:
 	@property void hwType(ushort hwType) { _hwType = hwType; }
 
 	/++
-	 + This field is the complement of the Hardware Type field, specifying 
+	 + This field is the complement of the Hardware Type field, specifying
 	 + the type of layer three addresses used in the message.
 	 +/
 	@property ushort protocolType() const { return _protocolType; }
@@ -193,7 +218,7 @@ public:
 	@property void hwAddrLen(ubyte hwAddrLen) { _hwAddrLen = hwAddrLen; }
 
 	/++
-	 + This fields is, again, the complement of the preceding field; it 
+	 + This fields is, again, the complement of the preceding field; it
 	 + specifies how long protocol (layer three) addresses are in this message.
 	 +/
 	@property ubyte protocolAddrLen() const { return _protocolAddrLen; }

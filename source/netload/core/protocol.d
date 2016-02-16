@@ -4,6 +4,11 @@ import std.string;
 import std.file;
 import netload.protocols;
 
+const string PROTOCOL_NAME = "\033[1;32m";
+const string FIELD_NAME = "\033[91m";
+const string FIELD_VALUE = "\033[97m";
+const string RESET_SEQ = "\033[0m";
+
 /++
  + Represents a packet's layer, such as TCP, Ethernet, ARP... All
  + supported protocols will implements this interface.
@@ -11,14 +16,14 @@ import netload.protocols;
  + It also contains a `data`, that is the next layer of the packet.
  + If it's `null`, it means that this is the last layer of the packet,
  + otherwise the layer on it's top is contained in the `data` field.
- + 
+ +
  + This also gives an helper to access to a layer, and one to add
  + a layer at the top of the packet.
  +
  + Examples:
  + ---
  + import netload.protocols;
- + 
+ +
  + UDP packet = new UDP(80, 80);
  + IP ip = new IP();
  + packet.data = ip;
@@ -33,7 +38,7 @@ import netload.protocols;
  + packet
  +	   .add!TCP
  +	   .add!HTTP;
- + 
+ +
  + assert(packet.layer!HTTP);
  + ---
  +/
@@ -84,7 +89,7 @@ interface Protocol {
     }
 
 	/++
-	 + Adds a `Protocol` given as template parameter at the top 
+	 + Adds a `Protocol` given as template parameter at the top
 	 + of the packet.
 	 +/
     final ProtocolType add(ProtocolType : Protocol)() {
@@ -109,6 +114,7 @@ interface Protocol {
     string toString() const;
     JSONValue toJson() const;
     ubyte[] toBytes() const;
+    string toIndentedString(uint) const;
 }
 
 /++

@@ -7,6 +7,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 private Protocol delegate(ubyte[])[ubyte] ipType;
 
@@ -180,7 +183,34 @@ class IP : Protocol {
         assert(packet.toBytes == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
       }
 
-      override string toString() const { return toJson.toJSON; }
+      override string toIndentedString(uint idt = 0) const {
+    		OutBuffer buf = new OutBuffer();
+    		string indent = join(repeat("\t", idt));
+    		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ip_version", RESET_SEQ, FIELD_VALUE, ipVersion, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ihl", RESET_SEQ, FIELD_VALUE, ihl, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "tos", RESET_SEQ, FIELD_VALUE, tos, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "header_length", RESET_SEQ, FIELD_VALUE, length, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "id", RESET_SEQ, FIELD_VALUE, id, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "offset", RESET_SEQ, FIELD_VALUE, offset, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reserved", RESET_SEQ, FIELD_VALUE, reserved, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "df", RESET_SEQ, FIELD_VALUE, df, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "mf", RESET_SEQ, FIELD_VALUE, mf, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ttl", RESET_SEQ, FIELD_VALUE, ttl, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "protocol", RESET_SEQ, FIELD_VALUE, protocol, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, checksum, RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "src_ip_address", RESET_SEQ, FIELD_VALUE, ipToString(srcIpAddress), RESET_SEQ);
+        buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "dest_ip_address", RESET_SEQ, FIELD_VALUE, ipToString(destIpAddress), RESET_SEQ);
+        if (_data is null)
+    			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+    		else
+    			buf.writef("%s", _data.toIndentedString(idt + 1));
+        return buf.toString;
+      }
+
+      override string toString() const {
+        return toIndentedString;
+      }
 
       /++
        + The Version field indicates the format of the internet header.

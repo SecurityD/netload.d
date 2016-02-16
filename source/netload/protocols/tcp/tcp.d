@@ -6,6 +6,9 @@ import netload.core.conversion.json_array;
 import stdx.data.json;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 private Protocol delegate(ubyte[])[ushort] tcpType;
 
@@ -177,7 +180,35 @@ class TCP : Protocol {
       assert(packet.toBytes == [31, 64, 27, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0] ~ [42, 21, 84]);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "src_port", RESET_SEQ, FIELD_VALUE, srcPort, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "dest_port", RESET_SEQ, FIELD_VALUE, destPort, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "sequence_number", RESET_SEQ, FIELD_VALUE, sequenceNumber, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ack_number", RESET_SEQ, FIELD_VALUE, ackNumber, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "fin", RESET_SEQ, FIELD_VALUE, fin, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "syn", RESET_SEQ, FIELD_VALUE, syn, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "rst", RESET_SEQ, FIELD_VALUE, rst, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "psh", RESET_SEQ, FIELD_VALUE, psh, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ack", RESET_SEQ, FIELD_VALUE, ack, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "urg", RESET_SEQ, FIELD_VALUE, urg, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "reserved", RESET_SEQ, FIELD_VALUE, reserved, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "offset", RESET_SEQ, FIELD_VALUE, offset, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "window", RESET_SEQ, FIELD_VALUE, window, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "checksum", RESET_SEQ, FIELD_VALUE, checksum, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "urgent_ptr", RESET_SEQ, FIELD_VALUE, urgPtr, RESET_SEQ);
+      if (_data is null)
+  			buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "data", RESET_SEQ, FIELD_VALUE, _data, RESET_SEQ);
+  		else
+  			buf.writef("%s", _data.toIndentedString(idt + 1));
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     /++
      + Source Port Number

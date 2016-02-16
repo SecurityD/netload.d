@@ -3,6 +3,9 @@ module netload.protocols.snmp.v3;
 import std.string;
 import std.bitmanip;
 import std.conv;
+import std.outbuffer;
+import std.range;
+import std.array;
 
 import stdx.data.json;
 
@@ -187,7 +190,23 @@ class SNMPv3 : Protocol {
       assert (snmp.toBytes == raw);
     }
 
-    override string toString() const { return toJson.toJSON; }
+    override string toIndentedString(uint idt = 0) const {
+  		OutBuffer buf = new OutBuffer();
+  		string indent = join(repeat("\t", idt));
+  		buf.writef("%s%s%s%s\n", indent, PROTOCOL_NAME, name, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "ver", RESET_SEQ, FIELD_VALUE, ver, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "identifier", RESET_SEQ, FIELD_VALUE, identifier, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "max_size", RESET_SEQ, FIELD_VALUE, maxSize, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "flags", RESET_SEQ, FIELD_VALUE, flags, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "security_model", RESET_SEQ, FIELD_VALUE, securityModel, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "security_parameters", RESET_SEQ, FIELD_VALUE,  _securityParameters, RESET_SEQ);
+      buf.writef("%s%s%s%s : %s%s%s\n", indent, FIELD_NAME, "pdu", RESET_SEQ, FIELD_VALUE,  _pdu, RESET_SEQ);
+      return buf.toString;
+    }
+
+    override string toString() const {
+      return toIndentedString;
+    }
 
     @property {
       Protocol data() { return null; }
