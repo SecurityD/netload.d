@@ -1,0 +1,24 @@
+{
+	"name": "netload-d",
+	"description": "Packet manipulation framework for D Language",
+	"copyright": "Copyright © 2015, main",
+	"authors": ["Alan Zanatta", "Matthieu Kern", "Maxime Fischer", "Victor Schubert"],
+	"dependencies": {
+		"std_data_json": "~>0.17.0"
+	},
+	"libs": [
+		"pcap"
+	],
+	"versions" : ["VibeCustomMain"],
+	"targetType": "library",
+	"targetName": "netload.d",
+    "dflags": [
+        "./doc/tpl/bootdoc.ddoc",
+        "./doc/tpl/settings.ddoc",
+        "./doc/tpl/local_settings.ddoc",
+        "./doc/tpl/modules.ddoc",
+		"-c",
+        "-Dddoc",
+		"-op"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+	"name": "sniffer",
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2015, main",
+	"authors": ["main"],
+	"dependencies": {
+		"netload.d": {
+			"version": "~dev",
+			"path": "../../"
+		}
+	}
+}
